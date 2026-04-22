@@ -1,0 +1,88 @@
+{{define "content"}}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <a href="/members" class="text-muted small text-decoration-none"><i class="bi bi-arrow-left"></i> Kembali ke daftar</a>
+        <h2 class="mb-0 mt-1"><i class="bi bi-person-circle text-success"></i> {{.Member.Nama}}</h2>
+    </div>
+    <div>
+        {{if eq .Member.Status "AKTIF"}}
+            <a href="/members/{{.Member.ID}}/simpanan" class="btn btn-outline-success"><i class="bi bi-piggy-bank"></i> Kelola Simpanan</a>
+            <a href="/members/{{.Member.ID}}/resign" class="btn btn-outline-danger"><i class="bi bi-box-arrow-left"></i> Pengunduran Diri</a>
+        {{end}}
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card mb-3">
+            <div class="card-header">Profil Anggota</div>
+            <div class="card-body">
+                <dl class="row mb-0 small">
+                    <dt class="col-5 text-muted">No. Anggota</dt><dd class="col-7"><code>{{.Member.NomorAnggota}}</code></dd>
+                    <dt class="col-5 text-muted">Status</dt><dd class="col-7"><span class="badge {{statusClass .Member.Status}}">{{.Member.Status}}</span></dd>
+                    <dt class="col-5 text-muted">NIK</dt><dd class="col-7">{{.Member.NIK}}</dd>
+                    <dt class="col-5 text-muted">No. HP</dt><dd class="col-7">{{.Member.NoHP}}</dd>
+                    <dt class="col-5 text-muted">Tgl. Masuk</dt><dd class="col-7">{{.Member.TanggalMasuk}}</dd>
+                    <dt class="col-5 text-muted">Alamat</dt><dd class="col-7">{{.Member.Alamat}}</dd>
+                </dl>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">Saldo Simpanan</div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between"><span class="text-muted">Pokok</span><strong>{{rupiah .Member.SimpananPokok}}</strong></div>
+                <div class="d-flex justify-content-between"><span class="text-muted">Wajib</span><strong>{{rupiah .Member.SimpananWajib}}</strong></div>
+                <div class="d-flex justify-content-between"><span class="text-muted">Sukarela</span><strong>{{rupiah .Member.SimpananSukarela}}</strong></div>
+                <hr>
+                <div class="d-flex justify-content-between"><span class="fw-semibold">Total</span><strong class="text-success">{{rupiah .TotalSimpanan}}</strong></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card mb-3">
+            <div class="card-header"><i class="bi bi-piggy-bank"></i> Riwayat Simpanan</div>
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead><tr><th>Tanggal</th><th>Jenis</th><th>Tipe</th><th class="text-end">Nominal</th><th>Keterangan</th></tr></thead>
+                    <tbody>
+                        {{range .SimpananHistory}}
+                        <tr>
+                            <td>{{.CreatedAt}}</td>
+                            <td><span class="badge bg-secondary">{{.Jenis}}</span></td>
+                            <td>{{if eq .Tipe "MASUK"}}<span class="text-success"><i class="bi bi-arrow-down-circle"></i> {{.Tipe}}</span>{{else}}<span class="text-danger"><i class="bi bi-arrow-up-circle"></i> {{.Tipe}}</span>{{end}}</td>
+                            <td class="text-end">{{rupiah .Nominal}}</td>
+                            <td><small class="text-muted">{{.Keterangan}}</small></td>
+                        </tr>
+                        {{else}}
+                        <tr><td colspan="5"><div class="kop-empty-state py-4"><i class="bi bi-inbox"></i><p class="mb-0 mt-2">Belum ada transaksi simpanan.</p></div></td></tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header"><i class="bi bi-cash-stack"></i> Riwayat Pinjaman</div>
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead><tr><th>ID</th><th class="text-end">Nominal</th><th>Tenor</th><th>Tujuan</th><th class="text-end">Sisa Pokok</th><th>Status</th></tr></thead>
+                    <tbody>
+                        {{range .PinjamanHistory}}
+                        <tr>
+                            <td><a href="/loans/{{.ID}}">#{{.ID}}</a></td>
+                            <td class="text-end">{{rupiah .Nominal}}</td>
+                            <td>{{.TenorBulan}} bln</td>
+                            <td><small>{{.Tujuan}}</small></td>
+                            <td class="text-end">{{rupiah .SisaPokok}}</td>
+                            <td><span class="badge {{statusClass .Status}}">{{.Status}}</span></td>
+                        </tr>
+                        {{else}}
+                        <tr><td colspan="6"><div class="kop-empty-state py-4"><i class="bi bi-inbox"></i><p class="mb-0 mt-2">Belum ada riwayat pinjaman.</p></div></td></tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

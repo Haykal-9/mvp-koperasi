@@ -1,0 +1,94 @@
+{{define "content"}}
+<div class="mb-4">
+    <a href="/cart" class="text-muted small text-decoration-none"><i class="bi bi-arrow-left"></i> Kembali ke keranjang</a>
+</div>
+
+<h2 class="mb-4"><i class="bi bi-bag-check text-success"></i> Checkout</h2>
+
+<div class="row g-4">
+    <!-- Order Summary -->
+    <div class="col-lg-7">
+        <div class="card mb-3">
+            <div class="card-header"><i class="bi bi-receipt"></i> Ringkasan Pesanan</div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Produk</th>
+                            <th class="text-center">Qty</th>
+                            <th class="text-end">Harga</th>
+                            <th class="text-end">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range .Items}}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <img src="{{.FotoURL}}" alt="{{.ProductNama}}" class="rounded" style="width:36px;height:36px;object-fit:cover;background:#eee">
+                                    <span>{{.ProductNama}}</span>
+                                </div>
+                            </td>
+                            <td class="text-center">{{.Jumlah}}</td>
+                            <td class="text-end text-nowrap">{{rupiah .HargaSatuan}}</td>
+                            <td class="text-end fw-semibold text-nowrap">{{rupiah .Subtotal}}</td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment -->
+    <div class="col-lg-5">
+        <form method="POST" action="/checkout">
+            <div class="card mb-3">
+                <div class="card-header"><i class="bi bi-credit-card"></i> Metode Pembayaran</div>
+                <div class="card-body">
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" name="metode_bayar" id="bayar_tunai" value="Tunai" checked>
+                        <label class="form-check-label" for="bayar_tunai">
+                            <i class="bi bi-cash-coin text-success me-1"></i> Tunai
+                        </label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" name="metode_bayar" id="bayar_qris" value="QRIS">
+                        <label class="form-check-label" for="bayar_qris">
+                            <i class="bi bi-qr-code text-primary me-1"></i> QRIS
+                        </label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" name="metode_bayar" id="bayar_saldo" value="Saldo Anggota">
+                        <label class="form-check-label" for="bayar_saldo">
+                            <i class="bi bi-wallet2 text-info me-1"></i> Saldo Anggota
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title mb-3">Detail Pembayaran</h6>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Subtotal Belanja</span>
+                        <span>{{rupiah .Total}}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Fee Koperasi (3%)</span>
+                        <span>{{rupiah .FeeKoperasi}}</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="fw-bold">Total Bayar</span>
+                        <span class="fw-bold text-success fs-5">{{rupiah (add .Total .FeeKoperasi)}}</span>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 btn-lg">
+                        <i class="bi bi-check-circle"></i> Bayar Sekarang
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{{end}}

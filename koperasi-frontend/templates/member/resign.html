@@ -1,0 +1,53 @@
+{{define "content"}}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a href="/members/{{.Member.ID}}" class="text-muted small text-decoration-none"><i class="bi bi-arrow-left"></i> Kembali ke detail</a>
+        <h2 class="mb-0 mt-1"><i class="bi bi-box-arrow-left text-danger"></i> Pengunduran Diri — {{.Member.Nama}}</h2>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header">Form Pengunduran Diri <small class="text-muted">(M1.3)</small></div>
+            <div class="card-body">
+                {{if not .BisaResign}}
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Tidak dapat resign.</strong> Anggota masih memiliki kewajiban pinjaman aktif sebesar
+                    <strong>{{rupiah .SisaPinjaman}}</strong>. Lunasi pinjaman terlebih dahulu.
+                </div>
+                {{end}}
+                <form method="POST" action="/members/{{.Member.ID}}/resign">
+                    <div class="mb-3">
+                        <label class="form-label">Alasan Pengunduran Diri <span class="text-danger">*</span></label>
+                        <textarea name="alasan" class="form-control" rows="4" required {{if not .BisaResign}}disabled{{end}}></textarea>
+                    </div>
+                    <div class="alert alert-info small">
+                        <i class="bi bi-info-circle"></i>
+                        Saldo simpanan total <strong>{{rupiah .TotalSimpanan}}</strong> akan dikembalikan ke anggota
+                        setelah dipotong kewajiban (jika ada).
+                    </div>
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a href="/members/{{.Member.ID}}" class="btn btn-outline-secondary">Batal</a>
+                        <button type="submit" class="btn btn-danger" {{if not .BisaResign}}disabled{{end}}>
+                            <i class="bi bi-box-arrow-left"></i> Proses Pengunduran Diri
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header">Ringkasan Kewajiban</div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2"><span class="text-muted">Total Simpanan</span><strong class="text-success">{{rupiah .TotalSimpanan}}</strong></div>
+                <div class="d-flex justify-content-between mb-2"><span class="text-muted">Sisa Pinjaman Aktif</span><strong class="text-danger">{{rupiah .SisaPinjaman}}</strong></div>
+                <hr>
+                <div class="d-flex justify-content-between"><span class="fw-semibold">Net (Diterima)</span><strong>{{rupiah (sub .TotalSimpanan .SisaPinjaman)}}</strong></div>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

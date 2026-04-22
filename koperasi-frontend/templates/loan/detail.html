@@ -1,0 +1,151 @@
+{{define "content"}}
+<div class="mb-4">
+    <a href="/loans" class="text-muted small text-decoration-none"><i class="bi bi-arrow-left"></i> Kembali ke daftar pinjaman</a>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="mb-1"><i class="bi bi-cash-stack text-success"></i> Pinjaman #{{.Loan.ID}}</h2>
+        <p class="text-muted mb-0">{{.Loan.MemberNama}} — {{.Loan.Tujuan}}</p>
+    </div>
+    <span class="badge {{statusClass .Loan.Status}} fs-6 px-3 py-2">{{.Loan.Status}}</span>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <!-- Info Card -->
+        <div class="card mb-3">
+            <div class="card-header"><i class="bi bi-info-circle"></i> Informasi Pinjaman</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-sm-4">
+                        <small class="text-muted d-block">Nominal</small>
+                        <span class="fw-bold fs-5 text-success">{{rupiah .Loan.Nominal}}</span>
+                    </div>
+                    <div class="col-sm-4">
+                        <small class="text-muted d-block">Tenor</small>
+                        <span class="fw-semibold">{{.Loan.TenorBulan}} Bulan</span>
+                    </div>
+                    <div class="col-sm-4">
+                        <small class="text-muted d-block">Bunga</small>
+                        <span class="fw-semibold">{{.Loan.BungaPersen}}% / bulan</span>
+                    </div>
+                    <div class="col-sm-4">
+                        <small class="text-muted d-block">Tanggal Cair</small>
+                        <span>{{if .Loan.TanggalCair}}{{.Loan.TanggalCair}}{{else}}<em class="text-muted">Belum dicairkan</em>{{end}}</span>
+                    </div>
+                    <div class="col-sm-4">
+                        <small class="text-muted d-block">Est. Angsuran/Bulan</small>
+                        <span class="fw-semibold">{{rupiah .EstAngsuran}}</span>
+                    </div>
+                    <div class="col-sm-4">
+                        <small class="text-muted d-block">Tujuan</small>
+                        <span>{{.Loan.Tujuan}}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress bar -->
+        {{if or (eq .Loan.Status "AKTIF") (eq .Loan.Status "LUNAS")}}
+        <div class="card mb-3">
+            <div class="card-header"><i class="bi bi-graph-up"></i> Progress Pelunasan</div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <small class="text-muted">Sisa Pokok: <strong>{{rupiah .Loan.SisaPokok}}</strong></small>
+                    <small class="text-muted">Terbayar: <strong>{{.ProgressPct}}%</strong></small>
+                </div>
+                <div class="progress" style="height:20px">
+                    <div class="progress-bar bg-success" style="width:{{.ProgressPct}}%">{{.ProgressPct}}%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Installment Table -->
+        <div class="card mb-3">
+            <div class="card-header"><i class="bi bi-calendar-check"></i> Jadwal Angsuran</div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Bulan</th>
+                            <th>Jatuh Tempo</th>
+                            <th class="text-end">Pokok</th>
+                            <th class="text-end">Bunga</th>
+                            <th class="text-end">Total</th>
+                            <th>Status</th>
+                            <th>Tgl Bayar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range .Loan.Installments}}
+                        <tr class="{{if eq .Status "OVERDUE"}}table-danger{{else if eq .Status "DIBAYAR"}}table-success{{end}}">
+                            <td>Ke-{{.BulanKe}}</td>
+                            <td>{{.JatuhTempo}}</td>
+                            <td class="text-end text-nowrap">{{rupiah .NominalPokok}}</td>
+                            <td class="text-end text-nowrap">{{rupiah .NominalBunga}}</td>
+                            <td class="text-end fw-semibold text-nowrap">{{rupiah .TotalBayar}}</td>
+                            <td><span class="badge {{statusClass .Status}}">{{.Status}}</span></td>
+                            <td>{{if .TanggalBayar}}{{.TanggalBayar}}{{else}}<span class="text-muted">—</span>{{end}}</td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {{end}}
+    </div>
+
+    <!-- Sidebar Actions -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-lightning-charge"></i> Aksi</div>
+            <div class="card-body d-grid gap-2">
+                {{if eq .Loan.Status "PENDING"}}
+                <form method="POST" action="/loans/{{.Loan.ID}}/approve">
+                    <button class="btn btn-success w-100"><i class="bi bi-check-circle"></i> Setujui</button>
+                </form>
+                <form method="POST" action="/loans/{{.Loan.ID}}/reject">
+                    <button class="btn btn-outline-danger w-100"><i class="bi bi-x-circle"></i> Tolak</button>
+                </form>
+                {{end}}
+
+                {{if eq .Loan.Status "DISETUJUI"}}
+                <form method="POST" action="/loans/{{.Loan.ID}}/disburse">
+                    <button class="btn btn-primary w-100"><i class="bi bi-wallet2"></i> Cairkan Dana</button>
+                </form>
+                {{end}}
+
+                {{if eq .Loan.Status "AKTIF"}}
+                {{if .NextInst}}
+                <div class="alert alert-info small mb-2">
+                    <i class="bi bi-calendar-event"></i> Angsuran berikutnya:<br>
+                    <strong>Ke-{{.NextInst.BulanKe}}</strong> — {{rupiah .NextInst.TotalBayar}}<br>
+                    Jatuh tempo: {{.NextInst.JatuhTempo}}
+                </div>
+                <form method="POST" action="/loans/{{.Loan.ID}}/pay">
+                    <button class="btn btn-success w-100"><i class="bi bi-cash-coin"></i> Bayar Angsuran</button>
+                </form>
+                {{else}}
+                <div class="alert alert-success small mb-0">
+                    <i class="bi bi-check-circle"></i> Semua angsuran lunas.
+                </div>
+                {{end}}
+                {{end}}
+
+                {{if eq .Loan.Status "LUNAS"}}
+                <div class="alert alert-success small mb-0">
+                    <i class="bi bi-trophy"></i> Pinjaman sudah lunas. 🎉
+                </div>
+                {{end}}
+
+                {{if eq .Loan.Status "DITOLAK"}}
+                <div class="alert alert-danger small mb-0">
+                    <i class="bi bi-x-circle"></i> Pengajuan ditolak oleh pengurus.
+                </div>
+                {{end}}
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

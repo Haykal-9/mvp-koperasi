@@ -1,0 +1,91 @@
+{{define "content"}}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a href="/products/{{.Product.ID}}" class="text-muted small text-decoration-none"><i class="bi bi-arrow-left"></i> Kembali ke detail</a>
+        <h2 class="mb-0 mt-1"><i class="bi bi-boxes text-success"></i> Manajemen Stok</h2>
+        <p class="text-muted mb-0">{{.Product.Nama}}</p>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-4">
+        <div class="card kop-stat-card h-100 {{if .StokRendah}}border-danger{{end}}">
+            <div class="card-body">
+                <div class="stat-label">Stok Saat Ini</div>
+                <div class="stat-value">{{.Product.Stok}}</div>
+                {{if .StokRendah}}<small class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> Di bawah batas minimum</small>{{end}}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card kop-stat-card h-100">
+            <div class="card-body">
+                <div class="stat-label">Batas Minimum</div>
+                <div class="stat-value">{{.Product.BatasStokMinimum}}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card kop-stat-card h-100">
+            <div class="card-body">
+                <div class="stat-label">Harga Satuan</div>
+                <div class="stat-value">{{rupiah .Product.Harga}}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-pencil-square"></i> Catat Perubahan Stok <small class="text-muted">(M3.3)</small></div>
+            <div class="card-body">
+                <form method="POST" action="/products/{{.Product.ID}}/stock">
+                    <div class="mb-3">
+                        <label class="form-label">Tipe</label>
+                        <select name="tipe" class="form-select" required>
+                            <option value="RESTOCK" selected>RESTOCK (Tambah)</option>
+                            <option value="KOREKSI">KOREKSI (+/-)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Jumlah</label>
+                        <input type="number" name="jumlah" class="form-control" required>
+                        <small class="text-muted">Untuk KOREKSI bisa negatif. RESTOCK harus positif.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Keterangan</label>
+                        <input type="text" name="keterangan" class="form-control" placeholder="Contoh: Restock dari supplier">
+                    </div>
+                    <button type="submit" class="btn btn-success w-100"><i class="bi bi-check2-circle"></i> Simpan</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-clock-history"></i> Riwayat Perubahan Stok</div>
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead><tr><th>Tanggal</th><th>Tipe</th><th class="text-end">Jumlah</th><th class="text-end">Stok Setelah</th><th>Keterangan</th></tr></thead>
+                    <tbody>
+                        {{range .History}}
+                        <tr>
+                            <td><small>{{.CreatedAt}}</small></td>
+                            <td><span class="badge bg-secondary">{{.Tipe}}</span></td>
+                            <td class="text-end {{if gt .Jumlah 0}}text-success{{else}}text-danger{{end}}">
+                                {{if gt .Jumlah 0}}+{{end}}{{.Jumlah}}
+                            </td>
+                            <td class="text-end fw-bold">{{.StokSetelah}}</td>
+                            <td><small class="text-muted">{{.Keterangan}}</small></td>
+                        </tr>
+                        {{else}}
+                        <tr><td colspan="5"><div class="kop-empty-state py-4"><i class="bi bi-inbox"></i><p class="mb-0 mt-2">Belum ada riwayat perubahan stok.</p></div></td></tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

@@ -1,0 +1,113 @@
+{{define "content"}}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="mb-1"><i class="bi bi-speedometer2 text-success"></i> Dashboard</h2>
+        <p class="text-muted mb-0">Ringkasan operasional Koperasi Digital.</p>
+    </div>
+    <span class="badge bg-light text-dark border"><i class="bi bi-calendar3"></i> 23 April 2026</span>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-xl-3">
+        <div class="card kop-stat-card h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="stat-icon" style="background:#d1e7dd;color:#198754"><i class="bi bi-people-fill"></i></div>
+                <div>
+                    <div class="stat-label">Anggota Aktif</div>
+                    <div class="stat-value">{{.AnggotaAktif}}</div>
+                    {{if gt .AnggotaPending 0}}<small class="text-warning"><i class="bi bi-hourglass-split"></i> {{.AnggotaPending}} menunggu review</small>{{end}}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card kop-stat-card h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="stat-icon" style="background:#cfe2ff;color:#0d6efd"><i class="bi bi-piggy-bank-fill"></i></div>
+                <div>
+                    <div class="stat-label">Total Simpanan</div>
+                    <div class="stat-value">{{rupiah .TotalSimpanan}}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card kop-stat-card h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="stat-icon" style="background:#fff3cd;color:#fd7e14"><i class="bi bi-cash-stack"></i></div>
+                <div>
+                    <div class="stat-label">Pinjaman Aktif</div>
+                    <div class="stat-value">{{.PinjamanAktif}}</div>
+                    {{if gt .PinjamanPending 0}}<small class="text-warning"><i class="bi bi-hourglass-split"></i> {{.PinjamanPending}} pengajuan</small>{{end}}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card kop-stat-card h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="stat-icon" style="background:#f8d7da;color:#dc3545"><i class="bi bi-receipt"></i></div>
+                <div>
+                    <div class="stat-label">Order Hari Ini</div>
+                    <div class="stat-value">{{.OrderHariIni}}</div>
+                    <small class="text-muted">Omzet selesai: {{rupiah .TotalOmzet}}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-bar-chart-line"></i> Aktivitas Terkini</span>
+                <a href="/orders" class="btn btn-sm btn-outline-success">Lihat Semua</a>
+            </div>
+            <div class="card-body p-0">
+                <table class="table mb-0">
+                    <thead><tr><th>Waktu</th><th>Aktivitas</th><th class="text-end">Nominal</th></tr></thead>
+                    <tbody>
+                        {{range .Activities}}
+                        <tr>
+                            <td><small>{{.Waktu}}</small></td>
+                            <td>{{.Aktivitas}}</td>
+                            <td class="text-end">{{rupiah .Nominal}}</td>
+                        </tr>
+                        {{else}}
+                        <tr><td colspan="3"><div class="kop-empty-state py-4"><i class="bi bi-inbox"></i><p class="mb-0 mt-2">Belum ada aktivitas.</p></div></td></tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card mb-3">
+            <div class="card-header"><i class="bi bi-bell"></i> Perlu Perhatian</div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span><a href="/members?status=PENDING" class="text-decoration-none">Anggota pending review</a></span>
+                    <span class="badge bg-warning text-dark">{{.AnggotaPending}}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span><a href="/products/review" class="text-decoration-none">Produk pending review</a></span>
+                    <span class="badge bg-warning text-dark">{{.ProdukPending}}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span><a href="/orders/complaints" class="text-decoration-none">Order disputed</a></span>
+                    <span class="badge" style="background:#6f42c1;color:#fff">{{.OrderDisputed}}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span><a href="/loans" class="text-decoration-none">Pengajuan pinjaman</a></span>
+                    <span class="badge bg-warning text-dark">{{.PinjamanPending}}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>Stok produk menipis</span>
+                    <span class="badge bg-danger">{{.ProdukStokRendah}}</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+{{end}}

@@ -1,0 +1,68 @@
+{{define "content"}}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1"><i class="bi bi-plus-square text-success"></i> Tambah Produk Baru</h2>
+        <p class="text-muted mb-0">OWNER/KASIR auto-approve. Anggota → status PENDING menunggu review.</p>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">Form Produk <small class="text-muted">(M3.1)</small></div>
+            <div class="card-body">
+                <form method="POST" action="/products/create">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label">Nama Produk <span class="text-danger">*</span></label>
+                            <input type="text" name="nama" class="form-control" value="{{.FormNama}}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Kategori <span class="text-danger">*</span></label>
+                            <input type="text" name="kategori" class="form-control" placeholder="Sembako / Snack / dll" value="{{.FormKategori}}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Harga (Rp) <span class="text-danger">*</span></label>
+                            <input type="number" name="harga" class="form-control" min="100" step="100" value="{{.FormHarga}}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Stok Awal <span class="text-danger">*</span></label>
+                            <input type="number" name="stok" class="form-control" min="0" value="{{.FormStok}}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Batas Stok Minimum</label>
+                            <input type="number" name="batas_min" class="form-control" min="0" value="{{.FormMin}}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Deskripsi</label>
+                            <textarea name="deskripsi" class="form-control" rows="3">{{.FormDeskripsi}}</textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Foto Produk</label>
+                            <input type="file" class="form-control" disabled>
+                            <small class="text-muted">(Upload dummy — placeholder akan dipakai)</small>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 justify-content-end mt-3">
+                        <a href="/products" class="btn btn-outline-secondary">Batal</a>
+                        <button type="submit" class="btn btn-success"><i class="bi bi-send"></i> Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">Aturan Penambahan</div>
+            <div class="card-body small">
+                <ul class="mb-0 ps-3">
+                    <li><strong>OWNER / KASIR</strong>: produk langsung tayang (<span class="badge badge-status-approved">APPROVED</span>).</li>
+                    <li><strong>ANGGOTA</strong>: status awal <span class="badge badge-status-pending">PENDING</span>, perlu review pengurus.</li>
+                    <li>Stok awal akan dicatat di riwayat perubahan stok.</li>
+                    <li>Batas stok minimum dipakai untuk warning saat stok menipis.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

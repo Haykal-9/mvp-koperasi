@@ -1,0 +1,70 @@
+{{define "content"}}
+<div class="mb-4">
+    <a href="/orders/{{.Order.ID}}" class="text-muted small text-decoration-none"><i class="bi bi-arrow-left"></i> Kembali ke detail order</a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-exclamation-triangle text-warning"></i> Ajukan Komplain — {{.Order.NomorOrder}}
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info small">
+                    <i class="bi bi-info-circle"></i>
+                    Komplain akan ditinjau oleh pengurus koperasi. Pastikan Anda menyertakan alasan yang jelas dan bukti pendukung.
+                </div>
+
+                <div class="mb-4 p-3 bg-light rounded">
+                    <div class="row g-2">
+                        <div class="col-sm-6">
+                            <small class="text-muted d-block">No. Order</small>
+                            <code class="text-dark">{{.Order.NomorOrder}}</code>
+                        </div>
+                        <div class="col-sm-6">
+                            <small class="text-muted d-block">Status</small>
+                            <span class="badge {{statusClass .Order.Status}}">{{.Order.Status}}</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <small class="text-muted d-block">Total</small>
+                            <span class="fw-semibold">{{rupiah .Order.TotalHarga}}</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <small class="text-muted d-block">Tanggal</small>
+                            <span>{{.Order.CreatedAt}}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <form method="POST" action="/orders/{{.Order.ID}}/complain">
+                    <div class="mb-3">
+                        <label for="alasan" class="form-label fw-semibold">Alasan Komplain <span class="text-danger">*</span></label>
+                        <select class="form-select mb-2" onchange="var ta=document.getElementById('alasan'); if(this.value){ta.value=this.value+' — '; ta.focus();}">
+                            <option value="">— Pilih alasan cepat —</option>
+                            <option value="Barang Rusak">Barang Rusak</option>
+                            <option value="Barang Tidak Sesuai">Barang Tidak Sesuai</option>
+                            <option value="Jumlah Kurang">Jumlah Kurang</option>
+                            <option value="Kadaluarsa">Kadaluarsa</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                        <textarea class="form-control" id="alasan" name="alasan" rows="4" placeholder="Jelaskan detail keluhan Anda..." required></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="bukti" class="form-label fw-semibold">Bukti Pendukung</label>
+                        <input type="text" class="form-control" id="bukti" name="bukti" placeholder="Nama file bukti (contoh: foto-rusak.jpg)">
+                        <div class="form-text">Upload bukti foto/video (simulasi: tulis nama file).</div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-warning flex-grow-1">
+                            <i class="bi bi-send"></i> Kirim Komplain
+                        </button>
+                        <a href="/orders/{{.Order.ID}}" class="btn btn-outline-secondary">Batal</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

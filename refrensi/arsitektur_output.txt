@@ -1,0 +1,423 @@
+﻿[0] normal: SISTEM KOPERASI
+[1] normal: Dokumen Arsitektur & Breakdown Teknis
+[2] normal: Backend (Go)  |  Frontend (Vue + TS)  |  Mobile (Flutter)  |  Security  |  DevOps
+[3] normal: Versi 1.0  |  April 2026
+[4] Heading 1: Daftar Isi
+[5] normal: 1. Overview Sistem
+[6] normal: 2. Backend (Golang)
+[7] normal: 3. Frontend (Vue + TypeScript)
+[8] normal: 4. Mobile (Flutter)
+[9] normal: 5. Security
+[10] normal: 6. Infrastruktur & DevOps
+[11] normal: 7. Roadmap Pengerjaan
+[13] Heading 1: 1. Overview Sistem
+[14] Heading 2: 1.1 Gambaran Umum
+[15] normal: Sistem POS Koperasi adalah platform manajemen bisnis terintegrasi yang terdiri dari tiga aplikasi utama yang saling terhubung melalui satu Backend API terpusat.
+[18] Heading 2: 1.2 Tech Stack Summary
+[20] Heading 2: 1.3 Arsitektur Umum
+[22] normal: Alur komunikasi antar komponen:
+[23] normal: Semua klien (Web, Mobile) berkomunikasi ke Backend melalui HTTPS REST API
+[24] normal: Backend memvalidasi JWT di setiap request
+[25] normal: Backend berinteraksi dengan PostgreSQL (data utama) dan Redis (cache/session)
+[26] normal: Webhook dari payment gateway (Midtrans/Xendit) masuk ke endpoint khusus di Backend
+[27] normal: Backend mengirim notifikasi push ke mobile melalui FCM
+[29] Heading 1: 2. Backend (Golang)
+[30] Heading 2: 2.1 Filosofi & Pendekatan
+[34] Heading 2: 2.2 Struktur Proyek
+[35] normal: koperasi-backend/
+[36] normal: Γö£ΓöÇΓöÇ cmd/
+[37] normal: Γöé   Γö£ΓöÇΓöÇ api/main.go          # Entry point server
+[38] normal: Γöé   ΓööΓöÇΓöÇ migrate/main.go      # DB migration runner
+[39] normal: Γö£ΓöÇΓöÇ internal/
+[40] normal: Γöé   Γö£ΓöÇΓöÇ auth/                # Authentication & Authorization
+[41] normal: Γöé   Γöé   Γö£ΓöÇΓöÇ handler.go
+[42] normal: Γöé   Γöé   Γö£ΓöÇΓöÇ service.go
+[43] normal: Γöé   Γöé   Γö£ΓöÇΓöÇ repository.go
+[44] normal: Γöé   Γöé   ΓööΓöÇΓöÇ model.go
+[45] normal: Γöé   Γö£ΓöÇΓöÇ member/              # Manajemen anggota koperasi
+[46] normal: Γöé   Γö£ΓöÇΓöÇ product/             # Produk, stok, kategori
+[47] normal: Γöé   Γö£ΓöÇΓöÇ order/               # Transaksi POS & order online
+[48] normal: Γöé   Γö£ΓöÇΓöÇ payment/             # Pembayaran & rekonsiliasi
+[49] normal: Γöé   Γö£ΓöÇΓöÇ report/              # Laporan keuangan & penjualan
+[50] normal: Γöé   ΓööΓöÇΓöÇ notification/        # Push notif & email
+[51] normal: Γö£ΓöÇΓöÇ pkg/
+[52] normal: Γöé   Γö£ΓöÇΓöÇ middleware/          # JWT auth, rate limit, CORS, logger
+[53] normal: Γöé   Γö£ΓöÇΓöÇ validator/           # Custom validation rules
+[54] normal: Γöé   Γö£ΓöÇΓöÇ crypto/              # Bcrypt, encryption utils
+[55] normal: Γöé   Γö£ΓöÇΓöÇ response/            # Standard JSON response helper
+[56] normal: Γöé   ΓööΓöÇΓöÇ logger/              # Zerolog setup
+[57] normal: Γö£ΓöÇΓöÇ api/
+[58] normal: Γöé   ΓööΓöÇΓöÇ openapi.yaml         # OpenAPI 3.0 spec (source of truth)
+[59] normal: Γö£ΓöÇΓöÇ migrations/              # SQL migration files
+[60] normal: Γö£ΓöÇΓöÇ config/                  # Config loader (viper)
+[61] normal: Γö£ΓöÇΓöÇ docker-compose.yml
+[62] normal: ΓööΓöÇΓöÇ Makefile                 # build, test, migrate, gen commands
+[65] Heading 2: 2.3 Modul-Modul Backend
+[66] Heading 3: 2.3.1 Module: Auth
+[68] normal: Endpoint utama:
+[69] normal: POST /v1/auth/login ΓÇö Login, return access token + set refresh token di httpOnly cookie
+[70] normal: POST /v1/auth/refresh ΓÇö Perbarui access token menggunakan refresh token
+[71] normal: POST /v1/auth/logout ΓÇö Invalidasi refresh token
+[72] normal: POST /v1/auth/register ΓÇö Registrasi anggota baru (khusus OWNER atau self-register)
+[74] normal: Detail implementasi:
+[75] normal: Access Token: JWT, expire 15 menit, payload berisi user_id + role
+[76] normal: Refresh Token: opaque string (UUID), disimpan di Redis dengan TTL 30 hari, dikirim via httpOnly cookie
+[77] normal: Password: di-hash menggunakan bcrypt (cost 12)
+[78] normal: RBAC: menggunakan library casbin dengan model role OWNER, KASIR, ANGGOTA
+[79] normal: 2FA TOTP opsional untuk role OWNER menggunakan google/authenticator-compatible library
+[81] normal: Library:
+[82] normal: golang-jwt/jwt/v5 ΓÇö JWT generation & validation
+[83] normal: golang.org/x/crypto/bcrypt ΓÇö Password hashing
+[84] normal: casbin/casbin/v2 ΓÇö Role-based access control
+[85] normal: go-redis/redis ΓÇö Refresh token storage
+[87] Heading 3: 2.3.2 Module: Member
+[89] normal: Endpoint utama:
+[90] normal: GET /v1/members ΓÇö Daftar anggota (OWNER only)
+[91] normal: GET /v1/members/:id ΓÇö Detail anggota + riwayat transaksi
+[92] normal: POST /v1/members ΓÇö Tambah anggota baru
+[93] normal: PUT /v1/members/:id ΓÇö Update data anggota
+[94] normal: GET /v1/members/:id/balance ΓÇö Cek saldo simpanan
+[95] normal: GET /v1/members/:id/points ΓÇö Cek poin
+[96] normal: POST /v1/members/:id/topup ΓÇö Top up saldo
+[98] normal: Fitur koperasi:
+[99] normal: Simpanan wajib ΓÇö dipotong otomatis per periode dari saldo
+[100] normal: Simpanan sukarela ΓÇö top up manual kapan saja
+[101] normal: Pinjaman ΓÇö pengajuan, cicilan, tracking lunas/belum
+[102] normal: Poin loyalitas ΓÇö earned per transaksi, redeemable saat checkout
+[104] Heading 3: 2.3.3 Module: Product
+[106] normal: Endpoint utama:
+[107] normal: GET /v1/products ΓÇö Daftar produk (filter by kategori, search)
+[108] normal: POST /v1/products ΓÇö Tambah produk baru
+[109] normal: PUT /v1/products/:id ΓÇö Update produk
+[110] normal: DELETE /v1/products/:id ΓÇö Soft delete produk
+[111] normal: GET /v1/products/barcode/:code ΓÇö Lookup by barcode (untuk app kasir)
+[112] normal: PUT /v1/products/:id/stock ΓÇö Update stok (masuk/keluar)
+[113] normal: GET /v1/products/:id/stock-log ΓÇö Riwayat perubahan stok
+[115] normal: Fitur:
+[116] normal: Upload gambar produk ke object storage (Cloudflare R2 / MinIO)
+[117] normal: Audit log setiap perubahan stok (siapa, kapan, berapa)
+[118] normal: Alert stok menipis via notifikasi ke OWNER
+[119] normal: Support multi-harga (harga normal, harga anggota, harga grosir)
+[121] Heading 3: 2.3.4 Module: Order
+[123] normal: Order State Machine:
+[128] normal: Endpoint utama:
+[129] normal: POST /v1/orders ΓÇö Buat order baru
+[130] normal: GET /v1/orders/:id ΓÇö Detail order
+[131] normal: PUT /v1/orders/:id/confirm ΓÇö Konfirmasi order
+[132] normal: PUT /v1/orders/:id/pay ΓÇö Proses pembayaran
+[133] normal: PUT /v1/orders/:id/cancel ΓÇö Batalkan order
+[134] normal: GET /v1/orders/:id/receipt ΓÇö Generate struk (PDF / ESC-POS)
+[135] normal: GET /v1/orders ΓÇö List order (filter by status, tanggal, kasir)
+[137] normal: Fitur:
+[138] normal: Idempotency key di header untuk mencegah double order
+[139] normal: Optimistic locking pada stok saat checkout
+[140] normal: Generate struk PDF (untuk email) dan ESC-POS raw bytes (untuk thermal printer)
+[141] normal: Sync offline order dari kasir ketika koneksi pulih
+[143] Heading 3: 2.3.5 Module: Payment
+[145] normal: Metode pembayaran yang didukung:
+[146] normal: Tunai ΓÇö input manual, langsung PAID
+[147] normal: QRIS ΓÇö via Midtrans atau Xendit, polling/webhook
+[148] normal: Virtual Account ΓÇö transfer bank, konfirmasi via webhook
+[149] normal: Saldo Anggota ΓÇö potong saldo simpanan sukarela
+[150] normal: Poin ΓÇö redeem poin untuk diskon atau pembayaran penuh
+[152] normal: Endpoint utama:
+[153] normal: POST /v1/payments/initiate ΓÇö Inisiasi pembayaran, return payment URL/QRIS
+[154] normal: POST /v1/payments/webhook/midtrans ΓÇö Webhook dari Midtrans
+[155] normal: POST /v1/payments/webhook/xendit ΓÇö Webhook dari Xendit
+[156] normal: GET /v1/payments/:order_id/status ΓÇö Cek status pembayaran
+[158] normal: Keamanan webhook:
+[159] normal: Verifikasi HMAC signature dari payment gateway sebelum memproses
+[160] normal: Idempotency check: satu order_id hanya bisa PAID sekali
+[161] normal: Simpan raw webhook payload untuk keperluan audit
+[163] Heading 3: 2.3.6 Module: Report
+[165] normal: Endpoint utama:
+[166] normal: GET /v1/reports/sales/daily ΓÇö Laporan penjualan harian
+[167] normal: GET /v1/reports/sales/monthly ΓÇö Laporan penjualan bulanan
+[168] normal: GET /v1/reports/sales/by-product ΓÇö Penjualan per produk
+[169] normal: GET /v1/reports/stock ΓÇö Laporan stok saat ini
+[170] normal: GET /v1/reports/financial ΓÇö Ringkasan keuangan (pemasukan, pengeluaran)
+[171] normal: GET /v1/reports/members ΓÇö Laporan keanggotaan & simpanan
+[172] normal: GET /v1/reports/export ΓÇö Export ke Excel atau PDF
+[174] normal: Real-time dashboard:
+[175] normal: Endpoint SSE (Server-Sent Events) untuk update real-time di dashboard
+[176] normal: Metric: total penjualan hari ini, jumlah transaksi, produk terlaris
+[178] Heading 2: 2.4 Library & Dependency Stack
+[180] Heading 2: 2.5 API Design & Standar
+[181] Heading 3: 2.5.1 Konvensi URL
+[182] normal: Semua endpoint diawali /v1/ untuk versioning
+[183] normal: Gunakan noun jamak: /v1/products (bukan /v1/product)
+[184] normal: Nested resource untuk relasi: /v1/orders/:id/items
+[185] normal: Query param untuk filter/sort: /v1/products?category=makanan&sort=price_asc
+[187] Heading 3: 2.5.2 Standard Response
+[188] normal: // Success
+[189] normal: { "success": true, "data": { ... }, "meta": { "page": 1, "total": 50 } }
+[191] normal: // Error
+[192] normal: { "success": false, "error": { "code": "INVALID_INPUT", "message": "..." } }
+[194] Heading 3: 2.5.3 OpenAPI Spec
+[195] normal: Definisi API menggunakan OpenAPI 3.0 YAML (api/openapi.yaml) sebagai single source of truth. Dari spec ini di-generate:
+[196] normal: Go types & handler interfaces (oapi-codegen)
+[197] normal: TypeScript types untuk Frontend (openapi-typescript)
+[198] normal: Dart types untuk Flutter (openapi-generator)
+[199] normal: Swagger UI documentation otomatis
+[201] Heading 1: 3. Frontend (Vue + TypeScript)
+[202] Heading 2: 3.1 Strategi Repo
+[204] Heading 2: 3.2 Struktur Monorepo
+[205] normal: koperasi-frontend/
+[206] normal: Γö£ΓöÇΓöÇ packages/
+[207] normal: Γöé   ΓööΓöÇΓöÇ ui-kit/                  # Reusable component library
+[208] normal: Γöé       Γö£ΓöÇΓöÇ src/
+[209] normal: Γöé       Γöé   Γö£ΓöÇΓöÇ components/      # Semua UI components
+[210] normal: Γöé       Γöé   Γö£ΓöÇΓöÇ composables/     # Reusable Vue composables
+[211] normal: Γöé       Γöé   Γö£ΓöÇΓöÇ tokens/          # Design tokens (warna, spacing, typo)
+[212] normal: Γöé       Γöé   ΓööΓöÇΓöÇ index.ts         # Barrel export
+[213] normal: Γöé       Γö£ΓöÇΓöÇ .storybook/          # Storybook config
+[214] normal: Γöé       Γö£ΓöÇΓöÇ vite.config.ts       # Library mode build
+[215] normal: Γöé       ΓööΓöÇΓöÇ package.json
+[216] normal: Γö£ΓöÇΓöÇ apps/
+[217] normal: Γöé   ΓööΓöÇΓöÇ backoffice/              # Vue 3 Back Office app
+[218] normal: Γöé       Γö£ΓöÇΓöÇ src/
+[219] normal: Γöé       Γöé   Γö£ΓöÇΓöÇ modules/         # Feature modules
+[220] normal: Γöé       Γöé   Γöé   Γö£ΓöÇΓöÇ auth/
+[221] normal: Γöé       Γöé   Γöé   Γö£ΓöÇΓöÇ product/
+[222] normal: Γöé       Γöé   Γöé   Γö£ΓöÇΓöÇ order/
+[223] normal: Γöé       Γöé   Γöé   Γö£ΓöÇΓöÇ member/
+[224] normal: Γöé       Γöé   Γöé   ΓööΓöÇΓöÇ report/
+[225] normal: Γöé       Γöé   Γö£ΓöÇΓöÇ stores/          # Pinia stores
+[226] normal: Γöé       Γöé   Γö£ΓöÇΓöÇ services/        # API layer (axios)
+[227] normal: Γöé       Γöé   Γö£ΓöÇΓöÇ router/          # Vue Router config
+[228] normal: Γöé       Γöé   Γö£ΓöÇΓöÇ layouts/         # Layout components
+[229] normal: Γöé       Γöé   ΓööΓöÇΓöÇ main.ts
+[230] normal: Γöé       ΓööΓöÇΓöÇ vite.config.ts
+[231] normal: Γö£ΓöÇΓöÇ turbo.json                   # Build pipeline
+[232] normal: Γö£ΓöÇΓöÇ pnpm-workspace.yaml
+[233] normal: ΓööΓöÇΓöÇ package.json
+[235] Heading 2: 3.3 packages/ui-kit
+[236] Heading 3: 3.3.1 Build Setup
+[237] normal: Menggunakan Vite dalam Library Mode untuk menghasilkan output ESM + CJS yang tree-shakeable.
+[240] Heading 3: 3.3.2 Daftar Komponen UI Kit
+[242] normal: Form Components
+[243] normal: BaseInput ΓÇö text, email, password, number, dengan label, error message, prefix/suffix icon
+[244] normal: BaseSelect ΓÇö single & multi select, searchable, dengan async options
+[245] normal: BaseTextarea ΓÇö auto-resize, character counter
+[246] normal: BaseCheckbox ΓÇö single & checkbox group
+[247] normal: BaseRadio ΓÇö radio button group
+[248] normal: BaseSwitch ΓÇö toggle on/off
+[249] normal: BaseFormGroup ΓÇö wrapper dengan label, hint, error state
+[250] normal: BaseDatePicker ΓÇö date & date range picker
+[252] normal: Display & Data Components
+[253] normal: DataTable ΓÇö sortable, filterable, selectable rows, pagination built-in
+[254] normal: BasePagination ΓÇö page number navigation
+[255] normal: BaseBadge ΓÇö status badge (success, warning, error, info)
+[256] normal: BaseAvatar ΓÇö foto atau initials, berbagai ukuran
+[257] normal: BaseChip ΓÇö tag/label yang bisa di-dismiss
+[258] normal: BaseTooltip ΓÇö hover tooltip
+[259] normal: BaseSkeleton ΓÇö loading skeleton untuk berbagai bentuk
+[260] normal: BaseEmptyState ΓÇö ilustrasi + CTA ketika data kosong
+[261] normal: BaseTag ΓÇö label kategorisasi
+[263] normal: Layout & Navigation Components
+[264] normal: BaseCard ΓÇö container dengan header, body, footer slot
+[265] normal: BaseModal ΓÇö dialog dengan berbagai ukuran & animasi
+[266] normal: BaseDrawer ΓÇö side panel (kiri/kanan)
+[267] normal: BaseTabs ΓÇö tab navigation horizontal
+[268] normal: BaseAccordion ΓÇö collapsible content
+[269] normal: BaseSidebar ΓÇö navigasi sidebar dengan nested menu
+[270] normal: BasePageHeader ΓÇö judul halaman + breadcrumb + actions slot
+[271] normal: BaseDivider ΓÇö garis pemisah horizontal/vertikal
+[273] normal: Feedback Components
+[274] normal: BaseToast ΓÇö notifikasi pop-up (composable: useToast)
+[275] normal: BaseAlert ΓÇö inline alert message
+[276] normal: BaseConfirmDialog ΓÇö dialog konfirmasi (composable: useConfirm)
+[277] normal: BaseLoadingSpinner ΓÇö loading indicator
+[278] normal: BaseProgressBar ΓÇö progress linear
+[279] normal: BaseStepIndicator ΓÇö wizard step progress
+[281] normal: Composables (Reusable Logic)
+[282] normal: useForm ΓÇö form state, validation, submit handler
+[283] normal: useTable ΓÇö table state, sorting, filtering, pagination
+[284] normal: usePagination ΓÇö pagination logic
+[285] normal: useToast ΓÇö trigger toast notification dari mana saja
+[286] normal: useConfirm ΓÇö trigger confirmation dialog
+[287] normal: useInfiniteScroll ΓÇö infinite scroll dengan Intersection Observer
+[288] normal: useDebounce ΓÇö debounced reactive value
+[290] Heading 3: 3.3.3 Aturan Publishing
+[291] normal: Saat ui-kit sudah siap dipublish ke npm:
+[292] normal: Scope: @namaanda/ui-kit (ganti dengan nama organisasi)
+[293] normal: Setiap PR yang mengubah komponen wajib membuat changeset file
+[294] normal: GitHub Action akan auto-publish ke npm saat PR dengan changeset di-merge ke main
+[295] normal: Consumer (backoffice) menggunakan exact version, bukan ^ atau ~
+[298] Heading 2: 3.4 apps/backoffice
+[299] Heading 3: 3.4.1 Routing (Vue Router 4)
+[300] normal: Struktur routing per module dengan lazy loading:
+[315] normal: Navigation Guard:
+[316] normal: Route yang membutuhkan login diperiksa via beforeEach guard
+[317] normal: Role check untuk halaman sensitif (hanya OWNER)
+[318] normal: Redirect ke /login jika token expired
+[320] Heading 3: 3.4.2 State Management (Pinia)
+[322] normal: Persistensi: useAuthStore di-persist ke localStorage menggunakan pinia-plugin-persistedstate.
+[324] Heading 3: 3.4.3 API Layer
+[325] normal: Satu instance Axios dengan interceptor:
+[326] normal: Request interceptor: attach Authorization: Bearer <token> di setiap request
+[328] normal: Jika refresh gagal, logout dan redirect ke /login
+[329] normal: Types API diambil dari openapi-typescript hasil generate dari OpenAPI spec Backend
+[331] Heading 3: 3.4.4 Fitur Per Module
+[334] Heading 1: 4. Mobile (Flutter)
+[335] Heading 2: 4.1 Dua Aplikasi Terpisah
+[337] Heading 2: 4.2 App Kasir (POS Terminal)
+[338] Heading 3: 4.2.1 Fitur Utama
+[339] normal: Halaman POS: grid produk, scan barcode, tambah ke keranjang, hitung kembalian
+[340] normal: Offline mode: bisa transaksi tanpa internet, sync otomatis saat online
+[341] normal: Manajemen shift: buka kasir (input modal awal), tutup kasir (laporan shift)
+[342] normal: Print struk: Bluetooth/USB thermal printer via ESC-POS
+[343] normal: Riwayat transaksi shift aktif
+[344] normal: Cek stok produk
+[345] normal: Notifikasi dari OWNER
+[347] Heading 3: 4.2.2 Offline-First Architecture
+[348] normal: Implementasi offline menggunakan SQLite lokal:
+[349] normal: Sinkronisasi produk & harga dari server saat ada koneksi (background sync)
+[350] normal: Transaksi saat offline disimpan di SQLite dengan status PENDING_SYNC
+[351] normal: Saat koneksi kembali, order dikirim ke server secara berurutan
+[352] normal: Conflict resolution: jika produk sudah dihapus di server, kasir mendapat notifikasi
+[354] Heading 3: 4.2.3 Library Stack
+[356] Heading 2: 4.3 App Pelanggan (Order Online)
+[357] Heading 3: 4.3.1 Fitur Utama
+[358] normal: Onboarding & login via OTP nomor HP
+[359] normal: Katalog produk dengan pencarian dan filter kategori
+[360] normal: Detail produk dengan foto dan deskripsi
+[361] normal: Keranjang belanja dengan manajemen jumlah
+[362] normal: Checkout: pilih metode bayar (QRIS, saldo anggota, poin)
+[363] normal: Tracking status order real-time
+[364] normal: Riwayat transaksi lengkap
+[365] normal: Profil anggota: saldo simpanan, poin, data diri
+[366] normal: Push notification untuk update status order
+[368] Heading 3: 4.3.2 Library Stack
+[370] Heading 2: 4.4 Shared Code Flutter
+[371] normal: Buat package Flutter bersama (packages/koperasi_shared) yang digunakan oleh kedua app:
+[372] normal: API models dan response types (dari generated OpenAPI)
+[373] normal: Constants (API base URL, error codes)
+[374] normal: Utility functions (currency format, date format, validators)
+[375] normal: Shared widgets sederhana (LoadingWidget, ErrorWidget)
+[377] Heading 1: 5. Security
+[378] Heading 2: 5.1 Authentication Flow
+[379] Heading 3: 5.1.1 JWT + Refresh Token
+[381] normal: Alur refresh token:
+[382] normal: Client request ke /v1/auth/refresh dengan refresh token
+[383] normal: Server validasi refresh token di Redis (belum expired, belum dipakai)
+[384] normal: Server issue access token baru + refresh token baru (rotate)
+[385] normal: Server delete refresh token lama dari Redis
+[386] normal: Server return access token baru + set refresh token baru di cookie
+[388] Heading 3: 5.1.2 Role-Based Access Control (RBAC)
+[390] Heading 2: 5.2 Security Checklist Backend
+[392] Heading 3: 5.2.1 Input Validation & Injection Prevention
+[393] normal: Semua input divalidasi menggunakan go-playground/validator sebelum masuk ke service
+[394] normal: TIDAK pernah string concatenation untuk query SQL ΓÇö selalu gunakan parameterized query
+[395] normal: Sanitasi input teks bebas yang akan ditampilkan di FE (HTML escape)
+[396] normal: Validasi ukuran dan tipe file upload (image only, max 5MB)
+[398] Heading 3: 5.2.2 Rate Limiting
+[399] normal: Global rate limit: 100 request per menit per IP
+[400] normal: Auth endpoints: 5 percobaan login per menit per IP (lebih ketat)
+[401] normal: Payment webhook: whitelist IP dari payment gateway
+[403] Heading 3: 5.2.3 HTTP Security Headers
+[404] normal: Strict-Transport-Security: max-age=31536000 (HSTS)
+[405] normal: X-Content-Type-Options: nosniff
+[406] normal: X-Frame-Options: DENY
+[407] normal: Content-Security-Policy: disesuaikan
+[408] normal: Referrer-Policy: strict-origin-when-cross-origin
+[410] Heading 3: 5.2.4 CORS
+[411] normal: Whitelist hanya domain FE yang diizinkan (bukan *)
+[412] normal: Credentials: true hanya untuk domain yang sudah diverifikasi
+[413] normal: Expose headers terbatas
+[415] Heading 3: 5.2.5 Data Encryption
+[416] normal: Password: bcrypt dengan cost factor 12
+[417] normal: Data sensitif anggota (NIK, nomor rekening): dienkripsi AES-256-GCM sebelum disimpan ke DB
+[418] normal: Semua komunikasi via HTTPS (TLS 1.3)
+[420] Heading 2: 5.3 Security Per Aplikasi
+[422] Heading 2: 5.4 Audit Log
+[423] normal: Semua aksi penting dicatat di tabel audit_log:
+[424] normal: Siapa yang melakukan (user_id, role)
+[425] normal: Aksi apa (action: CREATE_PRODUCT, UPDATE_PRICE, DELETE_ORDER)
+[426] normal: Data sebelum dan sesudah perubahan (JSON)
+[427] normal: Timestamp dan IP address
+[428] normal: Audit log tidak bisa dihapus (immutable, hanya append)
+[430] Heading 1: 6. Infrastruktur & DevOps
+[431] Heading 2: 6.1 Deployment Architecture
+[433] Heading 3: 6.1.1 Docker Compose Services
+[434] normal: services:
+[435] normal:   api:          # Go binary
+[436] normal:   postgres:     # PostgreSQL 16
+[437] normal:   redis:        # Redis 7
+[438] normal:   nginx:        # Reverse proxy + SSL termination
+[439] normal:   minio:        # Object storage (gambar produk) - opsional
+[441] Heading 3: 6.1.2 Environment Variables
+[442] normal: Semua konfigurasi via environment variable (bukan hardcode), disimpan di .env yang tidak di-commit ke Git:
+[443] normal: DATABASE_URL, REDIS_URL
+[444] normal: JWT_SECRET (min 64 karakter random)
+[445] normal: MIDTRANS_SERVER_KEY, XENDIT_SECRET_KEY
+[446] normal: FCM_SERVER_KEY
+[447] normal: STORAGE_BUCKET, STORAGE_ACCESS_KEY
+[449] Heading 2: 6.2 CI/CD Pipeline
+[450] normal: Menggunakan GitHub Actions:
+[452] Heading 3: 6.2.1 Pipeline Backend (Go)
+[453] normal: Push ke branch feature: run unit tests + go vet
+[454] normal: Pull Request ke main: run integration tests + lint + security scan
+[456] normal: Migration otomatis dijalankan sebelum server baru aktif
+[458] Heading 3: 6.2.2 Pipeline Frontend (Vue)
+[459] normal: Push: run Vitest + ESLint + TypeScript check
+[460] normal: PR ke main: run Storybook build test + Lighthouse CI
+[462] normal: Tag release di ui-kit: auto-publish ke npm via Changesets
+[464] Heading 3: 6.2.3 Pipeline Mobile (Flutter)
+[465] normal: Push: flutter analyze + flutter test
+[466] normal: PR: build iOS + Android debug
+[469] Heading 2: 6.3 Database
+[470] Heading 3: 6.3.1 Schema Utama
+[472] Heading 3: 6.3.2 Backup & Monitoring
+[474] normal: Retensi backup: 30 hari
+[475] normal: Monitoring: Uptime Robot (availability) + Grafana + Prometheus (metrics)
+[476] normal: Alert Telegram jika error rate > 5% atau response time > 2 detik
+[478] Heading 1: 7. Roadmap Pengerjaan
+[479] Heading 2: 7.1 Prinsip Prioritas
+[481] Heading 2: 7.2 Phase Breakdown
+[482] Heading 3: Phase 1 ΓÇö Foundation (2-3 minggu)
+[483] normal: Setup monorepo (pnpm workspaces + Turborepo)
+[484] normal: Setup Golang project structure
+[485] normal: Definisi OpenAPI spec untuk semua endpoint
+[486] normal: Setup database + migration scripts
+[487] normal: Implement Auth module (login, JWT, refresh token, RBAC)
+[488] normal: Setup CI/CD pipeline dasar
+[489] normal: UI Kit: setup Storybook + komponen dasar (Button, Input, Table, Modal)
+[491] Heading 3: Phase 2 ΓÇö Core Backend (3-4 minggu)
+[492] normal: Module Product (CRUD, stok, barcode)
+[493] normal: Module Order (buat order, state machine, struk)
+[494] normal: Module Payment (tunai + QRIS via Midtrans)
+[495] normal: Module Member (data anggota, saldo dasar)
+[496] normal: Unit test untuk setiap module
+[498] Heading 3: Phase 3 ΓÇö Back Office Web (3-4 minggu)
+[499] normal: Layout dasar (sidebar, header, routing)
+[500] normal: Dashboard dengan metric dasar
+[501] normal: Halaman manajemen produk (CRUD + foto)
+[502] normal: Halaman daftar & detail order
+[503] normal: Laporan penjualan dasar
+[504] normal: Manajemen anggota
+[506] Heading 3: Phase 4 ΓÇö App Kasir (3-4 minggu)
+[507] normal: UI POS: grid produk, cart, checkout
+[508] normal: Barcode scanner integration
+[509] normal: Offline mode dengan SQLite sync
+[510] normal: Thermal printer integration
+[511] normal: Manajemen shift (buka/tutup kasir)
+[513] Heading 3: Phase 5 ΓÇö App Pelanggan (2-3 minggu)
+[514] normal: Onboarding + OTP login
+[515] normal: Katalog produk + search
+[516] normal: Cart & checkout flow
+[517] normal: Payment QRIS + saldo anggota
+[518] normal: Tracking status order
+[519] normal: Push notification
+[521] Heading 3: Phase 6 ΓÇö Polish & Advanced Features (ongoing)
+[522] normal: 2FA TOTP untuk OWNER
+[523] normal: Laporan export Excel/PDF
+[524] normal: Fitur pinjaman anggota
+[525] normal: Audit log UI di Back Office
+[526] normal: Real-time dashboard via SSE
+[527] normal: Monitoring & alerting setup
+[528] normal: Performance testing & optimization
+[530] Heading 2: 7.3 Concern & Risiko
+[533] normal: ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+[534] normal: Dokumen ini bersifat living document ΓÇö update sesuai perkembangan sistem.
+[535] normal: Sistem POS Koperasi  |  v1.0  |  April 2026

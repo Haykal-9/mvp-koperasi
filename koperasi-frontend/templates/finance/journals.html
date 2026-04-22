@@ -1,0 +1,83 @@
+{{define "content"}}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="mb-1"><i class="bi bi-journal-text text-success"></i> Jurnal Keuangan</h2>
+        <p class="text-muted mb-0">Catatan seluruh transaksi keuangan koperasi.</p>
+    </div>
+    <a href="/finance/journals/create" class="btn btn-success"><i class="bi bi-plus-square"></i> Input Manual</a>
+</div>
+
+<ul class="nav nav-pills mb-4 flex-wrap gap-1">
+    <li class="nav-item">
+        <a class="nav-link {{if or (eq .TipeFilter "") (eq .TipeFilter "ALL")}}active{{end}}" href="/finance/journals">
+            Semua <span class="badge bg-light text-dark ms-1">{{.CountAll}}</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{if eq .TipeFilter "SIMPANAN"}}active{{end}}" href="/finance/journals?tipe=SIMPANAN">
+            Simpanan <span class="badge bg-light text-dark ms-1">{{.CountSimpanan}}</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{if eq .TipeFilter "POS"}}active{{end}}" href="/finance/journals?tipe=POS">
+            POS <span class="badge bg-light text-dark ms-1">{{.CountPOS}}</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{if eq .TipeFilter "PINJAMAN"}}active{{end}}" href="/finance/journals?tipe=PINJAMAN">
+            Pinjaman <span class="badge bg-light text-dark ms-1">{{.CountPinjaman}}</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{if eq .TipeFilter "MANUAL"}}active{{end}}" href="/finance/journals?tipe=MANUAL">
+            Manual <span class="badge bg-light text-dark ms-1">{{.CountManual}}</span>
+        </a>
+    </li>
+</ul>
+
+{{if .Journals}}
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Tanggal</th>
+                    <th>Keterangan</th>
+                    <th>Debit</th>
+                    <th>Kredit</th>
+                    <th class="text-end">Nominal</th>
+                    <th>Tipe</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Journals}}
+                <tr>
+                    <td><small class="text-muted">{{.ID}}</small></td>
+                    <td class="text-nowrap">{{.Tanggal}}</td>
+                    <td>{{.Keterangan}}</td>
+                    <td><span class="badge bg-success-subtle text-success">{{.AkunDebit}}</span></td>
+                    <td><span class="badge bg-danger-subtle text-danger">{{.AkunKredit}}</span></td>
+                    <td class="text-end fw-semibold text-nowrap">{{rupiah .Nominal}}</td>
+                    <td>
+                        {{if eq .TipeTransaksi "SIMPANAN"}}<span class="badge bg-info">SIMPANAN</span>
+                        {{else if eq .TipeTransaksi "POS"}}<span class="badge bg-primary">POS</span>
+                        {{else if eq .TipeTransaksi "PINJAMAN"}}<span class="badge bg-warning text-dark">PINJAMAN</span>
+                        {{else}}<span class="badge bg-secondary">MANUAL</span>
+                        {{end}}
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+{{else}}
+<div class="card">
+    <div class="card-body kop-empty-state">
+        <i class="bi bi-journal-x"></i>
+        <p class="mb-0 mt-2">Tidak ada jurnal yang ditemukan.</p>
+    </div>
+</div>
+{{end}}
+{{end}}

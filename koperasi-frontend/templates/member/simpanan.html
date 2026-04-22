@@ -1,0 +1,75 @@
+{{define "content"}}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <a href="/members/{{.Member.ID}}" class="text-muted small text-decoration-none"><i class="bi bi-arrow-left"></i> Kembali ke detail</a>
+        <h2 class="mb-0 mt-1"><i class="bi bi-piggy-bank text-success"></i> Simpanan — {{.Member.Nama}}</h2>
+        <small class="text-muted">No. Anggota <code>{{.Member.NomorAnggota}}</code></small>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-3"><div class="card kop-stat-card h-100"><div class="card-body"><div class="stat-label">Pokok</div><div class="stat-value">{{rupiah .Member.SimpananPokok}}</div></div></div></div>
+    <div class="col-md-3"><div class="card kop-stat-card h-100"><div class="card-body"><div class="stat-label">Wajib</div><div class="stat-value">{{rupiah .Member.SimpananWajib}}</div></div></div></div>
+    <div class="col-md-3"><div class="card kop-stat-card h-100"><div class="card-body"><div class="stat-label">Sukarela</div><div class="stat-value">{{rupiah .Member.SimpananSukarela}}</div></div></div></div>
+    <div class="col-md-3"><div class="card kop-stat-card h-100 border-success"><div class="card-body"><div class="stat-label">Total</div><div class="stat-value text-success">{{rupiah .TotalSimpanan}}</div></div></div></div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-pencil-square"></i> Catat Transaksi Simpanan <small class="text-muted">(M1.2)</small></div>
+            <div class="card-body">
+                <form method="POST" action="/members/{{.Member.ID}}/simpanan">
+                    <div class="mb-3">
+                        <label class="form-label">Jenis Simpanan</label>
+                        <select name="jenis" class="form-select" required>
+                            <option value="">— Pilih jenis —</option>
+                            <option value="POKOK">Pokok</option>
+                            <option value="WAJIB">Wajib</option>
+                            <option value="SUKARELA" selected>Sukarela</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tipe</label>
+                        <select name="tipe" class="form-select" required>
+                            <option value="MASUK" selected>MASUK (Setor)</option>
+                            <option value="KELUAR">KELUAR (Tarik)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nominal (Rp)</label>
+                        <input type="number" name="nominal" class="form-control" min="1000" step="1000" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Keterangan</label>
+                        <input type="text" name="keterangan" class="form-control" placeholder="Contoh: Setoran sukarela April">
+                    </div>
+                    <button type="submit" class="btn btn-success w-100"><i class="bi bi-check2-circle"></i> Simpan Transaksi</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-clock-history"></i> Riwayat Transaksi</div>
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead><tr><th>Tanggal</th><th>Jenis</th><th>Tipe</th><th class="text-end">Nominal</th></tr></thead>
+                    <tbody>
+                        {{range .SimpananHistory}}
+                        <tr>
+                            <td>{{.CreatedAt}}</td>
+                            <td><span class="badge bg-secondary">{{.Jenis}}</span></td>
+                            <td>{{if eq .Tipe "MASUK"}}<span class="text-success"><i class="bi bi-arrow-down-circle"></i> {{.Tipe}}</span>{{else}}<span class="text-danger"><i class="bi bi-arrow-up-circle"></i> {{.Tipe}}</span>{{end}}</td>
+                            <td class="text-end">{{rupiah .Nominal}}</td>
+                        </tr>
+                        {{else}}
+                        <tr><td colspan="4"><div class="kop-empty-state py-4"><i class="bi bi-inbox"></i><p class="mb-0 mt-2">Belum ada transaksi.</p></div></td></tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

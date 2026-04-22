@@ -1,0 +1,27 @@
+{{define "auth_base"}}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}} — Koperasi Digital</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+</head>
+<body class="kop-auth-body">
+    <div class="kop-auth-wrapper">
+        <div class="kop-auth-card shadow-lg">
+            <div class="kop-auth-brand text-center mb-4">
+                <i class="bi bi-bank2 kop-auth-logo"></i>
+                <h3 class="fw-bold mt-2 mb-0">Koperasi Digital</h3>
+                <p class="text-muted small mb-0">Sistem Manajemen Koperasi Terpadu</p>
+            </div>
+            {{template "content" .}}
+        </div>
+        <p class="text-center text-muted small mt-3 mb-0">&copy; 2026 Koperasi Digital — MVP Frontend</p>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+{{end}}

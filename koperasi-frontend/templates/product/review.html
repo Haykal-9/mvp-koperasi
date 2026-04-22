@@ -1,0 +1,43 @@
+{{define "content"}}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1"><i class="bi bi-check2-square text-success"></i> Review Produk Pending</h2>
+        <p class="text-muted mb-0">Produk yang diajukan anggota dan menunggu persetujuan pengurus.</p>
+    </div>
+</div>
+
+<div class="row g-3">
+    {{range .Products}}
+    <div class="col-md-6 col-xl-4">
+        <div class="card h-100">
+            <img src="{{.FotoURL}}" class="card-img-top" alt="{{.Nama}}" style="height:160px;object-fit:cover;background:#eee">
+            <div class="card-body d-flex flex-column">
+                <span class="badge badge-status-pending mb-2 align-self-start">PENDING</span>
+                <h6 class="card-title mb-1">{{.Nama}}</h6>
+                <p class="text-success fw-bold mb-1">{{rupiah .Harga}}</p>
+                <p class="small text-muted mb-2"><i class="bi bi-tag"></i> {{.Kategori}} · Stok: {{.Stok}}</p>
+                <p class="small mb-2"><i class="bi bi-person"></i> Diajukan oleh <strong>{{.PenjualNama}}</strong></p>
+                {{if .Deskripsi}}<p class="small text-muted mb-3">{{.Deskripsi}}</p>{{end}}
+                <div class="mt-auto d-flex gap-2">
+                    <form method="POST" action="/products/{{.ID}}/approve" class="flex-grow-1">
+                        <button class="btn btn-sm btn-success w-100"><i class="bi bi-check-lg"></i> Approve</button>
+                    </form>
+                    <form method="POST" action="/products/{{.ID}}/reject" class="flex-grow-1">
+                        <button class="btn btn-sm btn-outline-danger w-100"><i class="bi bi-x-lg"></i> Reject</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{else}}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body kop-empty-state">
+                <i class="bi bi-check-circle"></i>
+                <p class="mb-0 mt-2">Tidak ada produk yang menunggu review.</p>
+            </div>
+        </div>
+    </div>
+    {{end}}
+</div>
+{{end}}

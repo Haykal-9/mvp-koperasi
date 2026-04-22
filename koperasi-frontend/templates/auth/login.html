@@ -1,0 +1,39 @@
+{{define "content"}}
+{{if .FlashError}}
+<div class="alert alert-danger d-flex align-items-center" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    <div>{{.FlashError}}</div>
+</div>
+{{end}}
+{{if .FlashSuccess}}
+<div class="alert alert-success d-flex align-items-center" role="alert">
+    <i class="bi bi-check-circle-fill me-2"></i>
+    <div>{{.FlashSuccess}}</div>
+</div>
+{{end}}
+
+<form method="POST" action="/login">
+    <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input type="email" name="email" class="form-control" placeholder="nama@koperasi.id"
+               value="{{.FormEmail}}" required autofocus>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Password</label>
+        <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+    </div>
+    <button type="submit" class="btn btn-success w-100">
+        <i class="bi bi-box-arrow-in-right"></i> Masuk
+    </button>
+    <div class="text-center mt-3">
+        <small class="text-muted">Belum punya akun? <a href="/register">Daftar di sini</a></small>
+    </div>
+</form>
+
+<div class="mt-4 p-3 bg-light rounded small">
+    <div class="fw-semibold mb-2"><i class="bi bi-info-circle"></i> Akun Demo</div>
+    <div class="d-flex justify-content-between"><span>Owner:</span><code>owner@koperasi.id / owner123</code></div>
+    <div class="d-flex justify-content-between"><span>Kasir:</span><code>kasir@koperasi.id / kasir123</code></div>
+    <div class="d-flex justify-content-between"><span>Anggota:</span><code>anggota@koperasi.id / anggota123</code></div>
+</div>
+{{end}}

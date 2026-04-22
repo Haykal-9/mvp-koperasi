@@ -1,0 +1,30 @@
+{{define "content"}}
+{{if .FlashError}}
+<div class="alert alert-danger d-flex align-items-center" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    <div>{{.FlashError}}</div>
+</div>
+{{end}}
+
+<form method="POST" action="/register">
+    <div class="mb-3">
+        <label class="form-label">Nama Lengkap</label>
+        <input type="text" name="nama" class="form-control" value="{{.FormNama}}" required autofocus>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input type="email" name="email" class="form-control" value="{{.FormEmail}}" required>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Password</label>
+        <input type="password" name="password" class="form-control" required>
+        <small class="text-muted">Minimal 6 karakter</small>
+    </div>
+    <button type="submit" class="btn btn-success w-100">
+        <i class="bi bi-person-plus"></i> Daftar
+    </button>
+    <div class="text-center mt-3">
+        <small class="text-muted">Sudah punya akun? <a href="/login">Login di sini</a></small>
+    </div>
+</form>
+{{end}}

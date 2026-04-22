@@ -1,0 +1,56 @@
+{{define "content"}}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <a href="/products" class="text-muted small text-decoration-none"><i class="bi bi-arrow-left"></i> Kembali ke katalog</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-5">
+        <img src="{{.Product.FotoURL}}" class="img-fluid rounded shadow-sm" alt="{{.Product.Nama}}" style="width:100%;background:#eee">
+    </div>
+    <div class="col-md-7">
+        <div class="d-flex gap-2 mb-2">
+            <span class="badge bg-light text-dark">{{.Product.Kategori}}</span>
+            <span class="badge {{statusClass .Product.Status}}">{{.Product.Status}}</span>
+        </div>
+        <h2 class="mb-1">{{.Product.Nama}}</h2>
+        <p class="text-muted small mb-3"><i class="bi bi-person"></i> Dijual oleh <strong>{{.Product.PenjualNama}}</strong></p>
+        <h3 class="text-success fw-bold mb-3">{{rupiah .Product.Harga}}</h3>
+
+        <div class="row g-2 mb-4">
+            <div class="col-6">
+                <div class="border rounded p-2 small">
+                    <div class="text-muted">Stok Tersedia</div>
+                    <div class="fw-bold">
+                        {{.Product.Stok}}
+                        {{if lt .Product.Stok .Product.BatasStokMinimum}}
+                        <span class="badge bg-danger ms-1">Menipis</span>
+                        {{end}}
+                    </div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="border rounded p-2 small">
+                    <div class="text-muted">Batas Stok Min.</div>
+                    <div class="fw-bold">{{.Product.BatasStokMinimum}}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">Deskripsi</div>
+            <div class="card-body small">{{if .Product.Deskripsi}}{{.Product.Deskripsi}}{{else}}<em class="text-muted">Tidak ada deskripsi.</em>{{end}}</div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <form method="POST" action="/cart/add" class="flex-grow-1">
+                <input type="hidden" name="product_id" value="{{.Product.ID}}">
+                <input type="hidden" name="jumlah" value="1">
+                <button class="btn btn-success w-100" {{if eq .Product.Stok 0}}disabled{{end}}>
+                    <i class="bi bi-cart-plus"></i> Tambah ke Keranjang
+                </button>
+            </form>
+            <a href="/products/{{.Product.ID}}/stock" class="btn btn-outline-secondary"><i class="bi bi-boxes"></i> Stok</a>
+        </div>
+    </div>
+</div>
+{{end}}

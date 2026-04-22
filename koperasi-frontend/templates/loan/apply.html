@@ -1,0 +1,123 @@
+{{define "content"}}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="mb-1"><i class="bi bi-pencil-square text-success"></i> Ajukan Pinjaman</h2>
+        <p class="text-muted mb-0">Isi formulir pengajuan pinjaman kepada koperasi.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-clipboard-data"></i> Formulir Pengajuan</div>
+            <div class="card-body">
+                <form method="POST" action="/loans/apply">
+                    <div class="mb-3">
+                        <label for="nominal" class="form-label fw-semibold">Nominal Pinjaman <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">Rp</span>
+                            <input type="number" class="form-control" id="nominal" name="nominal" min="500000" step="100000" placeholder="5000000" required
+                                onchange="updateEstimasi()">
+                        </div>
+                        <div class="form-text">Minimal Rp 500.000</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="tenor" class="form-label fw-semibold">Tenor (Bulan) <span class="text-danger">*</span></label>
+                        <select class="form-select" id="tenor" name="tenor" required onchange="updateEstimasi()">
+                            <option value="">— Pilih Tenor —</option>
+                            <option value="3">3 Bulan</option>
+                            <option value="6">6 Bulan</option>
+                            <option value="10">10 Bulan</option>
+                            <option value="12">12 Bulan</option>
+                            <option value="18">18 Bulan</option>
+                            <option value="24">24 Bulan</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="tujuan" class="form-label fw-semibold">Tujuan Pinjaman <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="tujuan" name="tujuan" rows="3" placeholder="Contoh: Modal usaha warung, biaya sekolah anak, dll." required></textarea>
+                    </div>
+
+                    <div class="card bg-light mb-3" id="estimasi-card" style="display:none">
+                        <div class="card-body">
+                            <h6 class="card-title mb-3"><i class="bi bi-calculator"></i> Estimasi Angsuran</h6>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Pokok/Bulan</small>
+                                    <span class="fw-semibold" id="est-pokok">-</span>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Bunga/Bulan (1.5%)</small>
+                                    <span class="fw-semibold" id="est-bunga">-</span>
+                                </div>
+                                <div class="col-12 mt-2">
+                                    <small class="text-muted d-block">Total Angsuran/Bulan</small>
+                                    <span class="fw-bold text-success fs-5" id="est-total">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 btn-lg">
+                        <i class="bi bi-send"></i> Ajukan Pinjaman
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card mb-3">
+            <div class="card-header"><i class="bi bi-shield-check"></i> Credit Scoring</div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="text-muted">Total Simpanan</span>
+                    <span class="fw-bold text-success">{{rupiah .TotalSimpanan}}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="text-muted">Pinjaman Aktif</span>
+                    <span class="fw-bold {{if gt .TunggakanAktif 0}}text-warning{{else}}text-success{{end}}">{{.TunggakanAktif}}</span>
+                </div>
+                <hr>
+                <div class="small text-muted">
+                    <i class="bi bi-info-circle"></i> Penilaian kredit berdasarkan saldo simpanan dan riwayat pinjaman. Semakin tinggi simpanan dan tanpa tunggakan, semakin mudah pinjaman disetujui.
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header"><i class="bi bi-question-circle"></i> Ketentuan</div>
+            <div class="card-body small text-muted">
+                <ul class="mb-0">
+                    <li>Bunga: <strong>1.5% per bulan</strong> (flat)</li>
+                    <li>Minimal pinjaman: <strong>Rp 500.000</strong></li>
+                    <li>Tenor: <strong>1 – 24 bulan</strong></li>
+                    <li>Pencairan setelah disetujui pengurus</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function formatRp(n) {
+    return 'Rp ' + Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+function updateEstimasi() {
+    var nominal = parseInt(document.getElementById('nominal').value) || 0;
+    var tenor = parseInt(document.getElementById('tenor').value) || 0;
+    var card = document.getElementById('estimasi-card');
+    if (nominal > 0 && tenor > 0) {
+        var pokok = nominal / tenor;
+        var bunga = nominal * 0.015;
+        document.getElementById('est-pokok').textContent = formatRp(pokok);
+        document.getElementById('est-bunga').textContent = formatRp(bunga);
+        document.getElementById('est-total').textContent = formatRp(pokok + bunga);
+        card.style.display = 'block';
+    } else {
+        card.style.display = 'none';
+    }
+}
+</script>
+{{end}}

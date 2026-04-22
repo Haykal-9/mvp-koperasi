@@ -1,0 +1,298 @@
+﻿[0] normal: Koperasi Produsen: Beranggotakan produsen (petani, nelayan, pengrajin) untuk membantu proses produksi dan memasarkan hasil.
+[2] normal: Koperasi Konsumen: Menyediakan barang-barang kebutuhan pokok sehari-hari bagi anggotanya dengan harga bersaing.
+[4] normal: Koperasi Simpan Pinjam (KSP): Melayani simpanan dan pinjaman uang khusus bagi anggota.
+[6] normal: Koperasi Pemasaran: Membantu anggota memasarkan produk atau jasa yang dihasilkan.
+[8] normal: Koperasi Jasa: Menyelenggarakan layanan jasa tertentu, seperti angkutan atau asuransi.
+[10] normal: Koperasi Serba Usaha (KSU): Mengelola lebih dari satu jenis usaha, contohnya 
+[11] normal: menggabungkan simpan pinjam dan konsumen.
+[13] normal: Koperasi Unit Desa (KUD): Koperasi pedesaan yang menyediakan berbagai kebutuhan tani dan layanan ekonomi desa.
+[19] normal: Proses Bisnis Koperasi 
+[20] normal: Modul Utama : 
+[21] normal: Manajemen Anggota : Pendaftaran online, validasi identitas, dan pengunduran diri anggota.
+[22] normal: Manajemen Simpanan (Ekuitas): Pencatatan simpanan pokok, wajib, sukarela, dan tabungan khusus (seperti Qurban/Hari Raya).
+[23] normal: Manajemen Pinjaman & Angsuran : Pengajuan pinjaman, persetujuan admin/ketua, hingga monitoring cicilan.
+[24] normal: Modul akuntansi SHU : Penghitungan otomatis Sisa Hasil Usaha (SHU) berdasarkan jasa modal dan jasa usaha masing-masing anggota.
+[26] normal: LAYER 1: AGREGATOR (Onboarding & Klasifikasi Sistem)
+[27] normal:  BPMN_Onboarding_Koperasi
+[28] normal:     (Koperasi daftar ΓåÆ Pilih Tingkatan ΓåÆ Pilih Jenis Usaha ΓåÆ Assign modul)
+[30] normal:     NOTE: 
+[31] normal: Koperasi Primer: anggotanya orang-perorangan, daftar pakai KTP  individu 
+[32] normal: Koperasi Sekunder: anggotanya koperasi primer, daftar pakai badan hukum koperasi 
+[33] normal: Perbedaan ini mempengaruhi field pendaftaran di M1_Registrasi_Anggota dan fitur dashboard monitoring untuk sekunder
+[35] normal: LAYER 2: PROSES BISNIS KOPERASI (Core & Services)
+[37] normal: Modul 1: Keanggotaan 
+[38] normal: M1.1_Registrasi_Anggota
+[39] normal: Narasi alur:
+[40] normal: Calon Anggota memiliki keinginan untuk bergabung dengan koperasi (Start Event)
+[41] normal: Calon Anggota mengisi formulir pendaftaran online dan upload dokumen persyaratan (KTP, foto, dll) melalui aplikasi
+[42] normal: Sistem Koperasi menerima data formulir pendaftaran yang masuk
+[43] normal: Sistem Koperasi melakukan validasi otomatis terhadap data (format KTP, kelengkapan field, cek duplikasi data)
+[44] normal: Gateway ΓÇö Data Valid?
+[45] normal: Jika Tidak Valid ΓåÆ lanjut ke langkah 6
+[46] normal: Jika Valid ΓåÆ lanjut ke langkah 9
+[47] normal: Sistem Koperasi mengirim notifikasi ke Calon Anggota bahwa data tidak lengkap/tidak valid beserta keterangan bagian mana yang perlu diperbaiki
+[48] normal: Calon Anggota menerima notifikasi data tidak valid
+[49] normal: Calon Anggota memperbaiki data dan mengirim ulang formulir ΓåÆ kembali ke langkah 3
+[50] normal: Sistem Koperasi menyimpan data sementara dengan status PENDING REVIEW dan menampilkan data tersebut di dashboard admin Pengurus
+[51] normal: Pengurus melihat dan me-review data calon anggota di dashboard admin
+[52] normal: Pengurus melakukan verifikasi dokumen: memeriksa identitas (KTP/KK), menilai kesamaan kepentingan ekonomi sesuai Pasal 19 ayat 1, dan menilai kelayakan sesuai persyaratan AD/ART berdasarkan Pasal 18 ayat 1
+[53] normal: Gateway ΓÇö Disetujui oleh Pengurus? 
+[54] normal: Jika Tidak Disetujui ΓåÆ lanjut ke langkah 13
+[55] normal: Jika Disetujui ΓåÆ lanjut ke langkah 17
+[56] normal: Pengurus menginput alasan penolakan di dashboard admin
+[57] normal: Sistem Koperasi mengirim notifikasi penolakan ke Calon Anggota beserta alasan penolakan
+[58] normal: Calon Anggota menerima notifikasi penolakan
+[59] normal: Pendaftaran ditolak (End Event)
+[60] normal: Pengurus menyetujui pendaftaran (klik Approve di dashboard admin)
+[61] normal: Sistem Koperasi mengirim notifikasi diterima ke Calon Anggota beserta instruksi pembayaran simpanan pokok dan simpanan wajib pertama 
+[62] normal: Calon Anggota menerima notifikasi diterima dan instruksi pembayaran
+[63] normal: Calon Anggota melakukan pembayaran simpanan pokok dan simpanan wajib pertama (via transfer/QRIS)
+[64] normal: Sistem Koperasi menerima dan memverifikasi pembayaran simpanan secara otomatis (auto-check)
+[65] normal: Pengurus melakukan konfirmasi pembayaran di dashboard admin (jika diperlukan pengecekan manual)
+[66] normal: Sistem Koperasi meng-generate nomor anggota secara otomatis (auto-increment)
+[67] normal: Sistem Koperasi menyimpan data anggota secara permanen ke database (profil, kontak, alamat, tanggal masuk)
+[68] normal: Sistem Koperasi membuat akun simpanan untuk anggota baru: simpanan pokok dan simpanan wajib dengan saldo awal sesuai nominal setoran
+[69] normal: Sistem Koperasi meng-set status keanggotaan menjadi AKTIF
+[70] normal: Sistem Koperasi mencatat anggota baru di daftar buku anggota digital 
+[71] normal: Sistem Koperasi meng-generate dan mengirim kartu anggota digital beserta bukti setor simpanan ke anggota baru
+[72] normal: Calon Anggota menerima kartu anggota digital dan bukti setor
+[73] normal: Calon Anggota resmi menjadi anggota koperasi (End Event)
+[76] normal: BPMN Regist anggota
+[78] normal: M1.2_Simpanan_Bulanan         ΓåÉ Data simpanan = Jasa Modal SHU
+[79] normal: Narasi alur:
+[80] normal: Sistem Koperasi mendeteksi jatuh tempo simpanan wajib bulanan berdasarkan jadwal yang sudah ditentukan di AD/ART (Start Event ΓÇö Timer)
+[81] normal: Sistem Koperasi mengirim notifikasi reminder pembayaran simpanan wajib ke Anggota (beserta nominal dan batas waktu)
+[82] normal: Anggota menerima notifikasi reminder
+[83] normal: Anggota melakukan pembayaran simpanan wajib (via transfer/QRIS/potong gaji)
+[84] normal: Sistem Koperasi menerima dan memverifikasi pembayaran secara otomatis (auto-check nominal dan identitas anggota)
+[85] normal: Sistem Koperasi mencatat transaksi simpanan (tanggal, jumlah, jenis simpanan)
+[86] normal: Sistem Koperasi meng-update saldo simpanan wajib anggota
+[87] normal: Sistem Koperasi mengirim bukti setor digital ke Anggota
+[88] normal: Anggota menerima bukti setor (End Event ΓÇö path normal)
+[89] normal: Sistem Koperasi mengecek apakah ada anggota yang belum bayar setelah batas waktu (Timer Event ΓÇö setelah jatuh tempo lewat)
+[90] normal: Gateway ΓÇö Ada anggota menunggak?
+[91] normal: Jika Tidak ΓåÆ lanjut ke langkah 14
+[92] normal: Jika Ya ΓåÆ lanjut ke langkah 12
+[93] normal: Sistem Koperasi mengirim notifikasi teguran ke anggota yang menunggak
+[94] normal: Pengurus memonitor daftar anggota menunggak di dashboard admin dan menindaklanjuti sesuai ketentuan AD/ART (teguran lisan/tertulis, sanksi, dll)
+[95] normal: Proses simpanan bulanan selesai (End Event)
+[97] normal: BPMN Simpanan Bulanan
+[100] normal: M1.3_Pengunduran_Diri
+[101] normal: Anggota memiliki keinginan untuk mengundurkan diri dari koperasi (Start Event)
+[102] normal: Anggota mengajukan permohonan pengunduran diri melalui aplikasi (mengisi formulir pengunduran diri beserta alasan)
+[103] normal: Sistem Koperasi menerima permohonan pengunduran diri
+[104] normal: Sistem Koperasi melakukan pengecekan otomatis terhadap kewajiban anggota yang masih berjalan (pinjaman aktif, tunggakan simpanan wajib, denda)
+[105] normal: Sistem Koperasi menampilkan data permohonan dan hasil pengecekan kewajiban di dashboard admin Pengurus
+[106] normal: Pengurus me-review permohonan pengunduran diri dan data kewajiban anggota di dashboard admin
+[107] normal: Gateway ΓÇö Ada kewajiban belum lunas?
+[108] normal: Jika Ya ΓåÆ lanjut ke langkah 8
+[109] normal: Jika Tidak ΓåÆ lanjut ke langkah 11
+[110] normal: Pengurus menginformasikan ke anggota bahwa ada kewajiban yang harus diselesaikan terlebih dahulu
+[111] normal: Anggota menerima notifikasi kewajiban yang belum lunas
+[112] normal: Anggota menyelesaikan kewajiban (melunasi pinjaman/tunggakan) ΓåÆ kembali ke langkah 4 (Sistem cek ulang)
+[113] normal: Pengurus menyetujui pengunduran diri 
+[114] normal: Sistem Koperasi menghitung total pengembalian simpanan: simpanan pokok + simpanan wajib + simpanan sukarela . Catatan: anggota hanya menanggung kerugian sebatas simpanan pokok, wajib, dan modal penyertaan 
+[115] normal: Sistem Koperasi memproses pengembalian dana ke rekening anggota
+[116] normal: Sistem Koperasi meng-set status keanggotaan menjadi NON-AKTIF dan mencatat tanggal keluar
+[117] normal: Sistem Koperasi mengarsipkan data anggota (soft delete ΓÇö data tetap tersimpan untuk keperluan audit/riwayat)
+[118] normal: Sistem Koperasi meng-update daftar buku anggota 
+[119] normal: Sistem Koperasi mengirim notifikasi konfirmasi pengunduran diri beserta bukti pengembalian simpanan ke anggota
+[120] normal: Anggota menerima konfirmasi dan bukti pengembalian simpanan
+[121] normal: Anggota resmi keluar dari koperasi (End Event)
+[124] normal: BPMN Pengunduran diri
+[126] normal: Modul 2: Finance & Muara SHU
+[127] normal: M2.1_Pencatatan_Keuangan Otomatis
+[128] normal: Trigger: Ada transaksi berhasil di Modul 1, 3, atau 4.
+[129] normal: Sistem Koperasi mendeteksi payload data transaksi baru yang masuk. (Start Event)
+[130] normal: Sistem Koperasi memvalidasi tipe transaksi dan keutuhan data (nominal, ID transaksi, timestamp).
+[131] normal: Gateway ΓÇö Data Valid?
+[132] normal: Jika Tidak Valid ΓåÆ Sistem mencatat error di log dan mengirim alert ke dashboard Pengurus ΓåÆ (End Event ΓÇö Gagal Catat)
+[133] normal: Jika Valid ΓåÆ Lanjut ke langkah 4.
+[134] normal: Gateway ΓÇö Apa Tipe Transaksinya?
+[135] normal: Jika M1 (Simpanan) ΓåÆ Lanjut ke langkah 5.
+[136] normal: Jika M3 (POS/Commerce) ΓåÆ Lanjut ke langkah 6.
+[137] normal: Jika M4 (Angsuran Pinjaman) ΓåÆ Lanjut ke langkah 7.
+[138] normal: (Path M1) Sistem mencatat Jurnal Otomatis: Debit (Kas/Bank) & Kredit (Simpanan Anggota X). Lanjut ke langkah 8.
+[139] normal: (Path M3) Sistem mencatat Jurnal Otomatis: Debit (Kas/Bank) & Kredit (Pendapatan Fee Koperasi / Penjualan). Lanjut ke langkah 8. 
+[140] normal: (Path M4) Sistem mencatat Jurnal Otomatis: Debit (Kas/Bank) & Kredit (Piutang Anggota X + Pendapatan Jasa). Lanjut ke langkah 8.
+[141] normal: Sistem Koperasi memposting jurnal tersebut ke Buku Besar (General Ledger) secara real-time.
+[142] normal: Sistem Koperasi secara otomatis memperbarui Neraca (Balance Sheet) dan Laba Rugi (Income Statement).
+[143] normal: Pencatatan otomatis selesai. (End Event)
+[145] normal: BPMN Pencatatan otomatis
+[148] normal: M2.2_Pencatatan_Keuangan Manual/Periodik
+[149] normal: Trigger: Pengurus membuka dashboard keuangan (harian/mingguan/bulanan)
+[151] normal: Pengurus membuka Dashboard Keuangan untuk melihat mutasi dan ringkasan keuangan. (Start Event)
+[152] normal: Gateway ΓÇö Apakah Perlu Jurnal Penyesuaian/Manual?
+[154] normal: Jika Tidak ΓåÆ (End Event)
+[155] normal: Jika Ya ΓåÆ lanjut ke langkah 3.
+[157] normal: Pengurus menginput nominal, tanggal, dan memilih akun perkiraan di form Jurnal Manual.
+[158] normal: Sistem Koperasi memvalidasi dan memposting jurnal manual ke Buku Besar.
+[159] normal: Sistem Koperasi secara otomatis memperbarui Laporan Keuangan (Neraca dan Laba Rugi).
+[160] normal: Pencatatan manual selesai. (End Event)
+[162] normal: BPMN Pencatatan Manual
+[165] normal: M2.3_Kalkulasi_Distribusi_SHU ΓåÉ Consume data dari Modul 1, 3, 4
+[166] normal: Trigger: Akhir Tahun Buku
+[167] normal: Pengurus menekan tombol "Mulai Kalkulasi SHU Tahunan" di dashboard. (Start Event)
+[168] normal: Sistem Koperasi mengecek apakah Tahun Buku sudah ditutup dan Laporan Laba Rugi sudah final.
+[169] normal: Gateway ΓÇö Laporan Keuangan Sudah Final?
+[170] normal: Jika Belum ΓåÆ Sistem menampilkan pesan "Tutup buku terlebih dahulu" ΓåÆ (End Event ΓÇö Belum bisa kalkulasi)
+[171] normal: Jika Sudah ΓåÆ Lanjut ke langkah 4.
+[172] normal: Sistem Koperasi mengunci sementara seluruh mutasi di Modul 1 (Simpanan), Modul 3 (POS), dan Modul 4 (Pinjaman) agar data tidak berubah saat dihitung.
+[173] normal: Sistem Koperasi menarik (query) Total Laba Bersih Koperasi dari Laporan Laba Rugi.
+[174] normal: Sistem Koperasi menarik data akumulasi Jasa Modal (saldo akhir simpanan dari M1) dari seluruh anggota.
+[175] normal: Sistem Koperasi menarik data akumulasi Poin Jasa Usaha dari seluruh anggota ΓÇö baik poin sebagai Pembeli maupun poin sebagai Penjual dari M3, serta poin dari bunga/margin pinjaman di M4. (Sesuai prinsip rapat: "yang beli juga dapat untung")
+[176] normal: Sistem Koperasi menghitung berdasarkan persentase alokasi SHU yang sudah di-configure sesuai AD/ART masing-masing koperasi (misal: cadangan 40%, jasa anggota 40%, pengurus 5%, karyawan 5%, pendidikan 5%, sosial 5%). Persentase ini bukan hardcoded ΓÇö setiap koperasi bisa berbeda.
+[177] normal: Sistem Koperasi menghitung Rate Konversi (Nilai Rupiah per 1 Poin Partisipasi) berdasarkan rumus pembagian di AD/ART.
+[178] normal: Sistem Koperasi menghitung nominal final SHU masing-masing anggota (Rupiah Jasa Modal + Rupiah Jasa Usaha).
+[179] normal: Sistem Koperasi menampilkan Draft Laporan Pembagian SHU di dashboard.
+[180] normal: Gateway ΓÇö Draft Disetujui oleh Pengurus?
+[181] normal: Jika Tidak ΓåÆ Pengurus melakukan penyesuaian parameter/data ΓåÆ kembali ke langkah 5.
+[182] normal: Jika Ya ΓåÆ Lanjut ke langkah 13.
+[183] normal: Pengurus menekan tombol "Distribusikan SHU".
+[184] normal: Sistem Koperasi mengeksekusi transfer nilai SHU ke dompet digital (Wallet) atau menambahkannya ke Simpanan Sukarela masing-masing anggota.
+[185] normal: Sistem Koperasi membuat Jurnal Otomatis pengeluaran SHU di M2.1.
+[186] normal: Sistem Koperasi mengirim notifikasi rincian SHU ke aplikasi masing-masing anggota.
+[187] normal: Anggota menerima notifikasi rincian SHU dan dapat melihat detail perhitungan di aplikasi.
+[188] normal: Distribusi SHU Selesai. (End Event)
+[189] normal: BPMN Distribusi SHU
+[193] Heading 2: Modul 3: UNIT LAYANAN - POS / Commerce 
+[194] normal: M3.1_Tambah_Produk
+[195] normal: Trigger: Anggota atau Pengurus ingin menambah barang ke katalog
+[197] normal: Penambahan_Produk.png
+[199] normal: Anggota / Pengurus menekan tombol "Tambah Produk Baru" di aplikasi. (Start Event)
+[200] normal: Anggota / Pengurus mengisi form detail produk (Foto, Nama, Kategori, Harga, Stok, dan Berat Barang).
+[201] normal: Sistem Koperasi memvalidasi kelengkapan data form dan format gambar secara otomatis.
+[202] normal: Gateway ΓÇö Data Form Valid?
+[203] normal: Jika Tidak Valid ΓåÆ Sistem menampilkan pesan error spesifik (misal: "Foto terlalu kecil", "Harga wajib diisi") ΓåÆ Anggota/Pengurus memperbaiki data ΓåÆ kembali ke langkah 3. (Loop)
+[204] normal: Jika Valid ΓåÆ Lanjut ke langkah 5.
+[205] normal: Sistem Koperasi mengecek role aktor yang login.
+[206] normal: Gateway ΓÇö Siapa Aktor (Role) yang Meng-upload?
+[207] normal: Jika Pengurus (Barang inventaris resmi koperasi) ΓåÆ Lanjut ke langkah 7 (Auto-Approve).
+[208] normal: Jika Anggota (Barang dagangan pribadi anggota) ΓåÆ Lanjut ke langkah 9 (Pending Review).
+[209] normal: (Path Pengurus) Sistem Koperasi memberikan persetujuan otomatis (Auto-Approve) dan mem-publish produk ke database Katalog.
+[210] normal: Sistem Koperasi mengirim notifikasi "Produk Berhasil Tayang". Produk siap dibeli oleh sesama anggota. (End Event ΓÇö Selesai)
+[211] normal: (Path Anggota) Sistem Koperasi menyimpan data dengan status Pending Review dan memunculkan alert di dashboard Pengurus.
+[212] normal: Pengurus membuka dashboard, melihat detail barang, dan me-review kelayakannya (cek kewajaran harga dan memastikan bukan barang terlarang).
+[213] normal: Gateway ΓÇö Apakah Produk Disetujui Pengurus?
+[214] normal: Jika Tidak ΓåÆ Lanjut ke langkah 12.
+[215] normal: Jika Ya ΓåÆ Lanjut ke langkah 14.
+[216] normal: (Path Ditolak) Pengurus menekan tombol tolak dan menginput alasan penolakan.
+[217] normal: Sistem Koperasi mengubah status produk menjadi Rejected dan mengirim notifikasi beserta alasan penolakan ke Anggota. (End Event ΓÇö Ditolak)
+[218] normal: (Path Disetujui) Pengurus menekan tombol setuju/Approve.
+[219] normal: Sistem Koperasi mem-publish produk ke database Katalog.
+[220] normal: Sistem Koperasi mengirim notifikasi "Produk Berhasil Tayang" ke Anggota.
+[221] normal: Produk tayang di aplikasi dan siap dibeli oleh sesama anggota. (End Event ΓÇö Selesai)
+[225] normal: M3.2_Transaksi_Penjualan      ΓåÉ Data transaksi = Jasa Usaha SHU
+[226] normal: Trigger: Pembeli ingin membeli produk
+[228] normal: Transaksi_Penjualan.png
+[229] normal: Pembeli (Anggota) mencari produk di katalog aplikasi, memasukkan ke keranjang, dan melakukan checkout. (Start Event)
+[230] normal: Sistem Koperasi memvalidasi ketersediaan stok produk di database secara real-time.
+[231] normal: Gateway ΓÇö Stok Tersedia?
+[232] normal: Jika Tidak ΓåÆ Lanjut ke Langkah 4
+[233] normal: Jika Ya ΓåÆ Lanjut ke langkah 6.
+[234] normal: Sistem Koperasi menampilkan pesan ΓÇ£Stok HabisΓÇ¥ 
+[235] normal: Gateway ΓÇö Ingin beritahu jika stok sudah tersedia?
+[236] normal: Jika Tidak ΓåÆ Maka Proses transaksi berhenti dan batal (End Event)
+[237] normal: Jika Ya ΓåÆ Sistem koperasi akan memberikan notifikasi ketika produk tersedia ke pembeli/anggota dan anggota/pembeli bisa memulai kembali untuk pembeliannya(ke langkah chekcout)
+[238] normal: Sistem Koperasi mengunci stok sementara (agar tidak dibeli orang lain bersamaan) dan meng-generate Invoice + Nomor Pembayaran (VA/QRIS/Potong Saldo).
+[239] normal: Pembeli melakukan pembayaran.
+[240] normal: Sistem Koperasi (terintegrasi dengan Payment Gateway/Sistem Saldo) mengecek status pembayaran.
+[241] normal: Gateway ΓÇö Pembayaran Berhasil (Sesuai Batas Waktu)?
+[242] normal: Jika Tidak (Expired) ΓåÆ Sistem membatalkan order, melepas kunci stok ΓåÆ (End Event ΓÇö Batal)
+[243] normal: Jika Ya ΓåÆ Lanjut ke langkah 8.
+[244] normal: Sistem Koperasi meng-update status pesanan menjadi "Dibayar" dan memotong stok secara permanen.
+[245] normal: Sistem Koperasi mengirimkan notifikasi Pesanan Baru ke aplikasi Penjual.
+[246] normal: Penjual menyiapkan barang dan menyerahkan ke kurir / pembeli mengambil langsung, lalu meng-klik "Kirim Barang" di aplikasi.
+[247] normal: Sistem Koperasi meng-update status pesanan menjadi "Sedang Dikirim" dan memberi notifikasi ke Pembeli.
+[248] normal: Pembeli menerima barang dan meng-klik tombol "Pesanan Selesai / Diterima".
+[249] normal: Gateway ΓÇö Ada Komplain/Retur?
+[250] normal: Jika Ya ΓåÆ Masuk ke sub-proses resolusi komplain (ditengahi oleh Pengurus sebagai Admin). 
+[251] normal: Jika Tidak ΓåÆ Lanjut ke langkah 14.
+[252] normal: Sistem Koperasi secara otomatis membagi dana transaksi (Split Payment): menghitung persentase Fee Koperasi dan Nominal Bersih Penjual. (Fee ini adalah pendapatan koperasi dari setiap transaksi ΓÇö sesuai model bisnis yang disepakati di rapat: gratis pakai platform, potongan per transaksi.)
+[253] normal: Sistem Koperasi mencatat pengumpulan Poin SHU (Jasa Usaha) ke akun Pembeli ΓÇö karena Pembeli berkontribusi pada perputaran ekonomi koperasi. (Sesuai prinsip rapat: "yang beli juga dapat untung")
+[254] normal: Sistem Koperasi mencatat pengumpulan Poin SHU (Jasa Usaha) ke akun Penjual (syarat: Penjual harus berstatus anggota koperasi).
+[255] normal: Sistem Koperasi mencatat jurnal akuntansi pendapatan fee dan mutasi kas ΓÇö memicu M2.1.
+[256] normal: Sistem Koperasi mentransfer/menambahkan saldo dana bersih ke dompet Penjual.
+[257] normal: Sistem Koperasi mengirim notifikasi "Dana Masuk" ke Penjual dan "Transaksi Selesai" ke Pembeli.
+[258] normal: Transaksi selesai. (End Event)
+[262] normal: M3.3_Manajemen_Stok
+[263] normal: Trigger: Sistem mendeteksi ada transaksi yang berhasil dibayar 
+[265] normal: manajemen_stok.png
+[266] normal: Sistem Koperasi mendeteksi Event Pembayaran Sukses dari M3.2 (e-commerce) atau dari transaksi POS offline. (Start Event)
+[267] normal: Sistem Koperasi mengidentifikasi ID Produk yang terjual.
+[268] normal: Sistem Koperasi mengurangi kuantitas stok di database sesuai jumlah pembelian.
+[269] normal: Sistem Koperasi mengecek sisa stok saat ini.
+[270] normal: Gateway ΓÇö Sisa Stok?
+[271] normal: Jika Dalam Batas Aman (stok masih cukup) ΓåÆ Stok aman, tidak perlu tindakan. (End Event)
+[272] normal: Jika Kurang dari Batas Minimum (stok menipis) ΓåÆ Lanjut ke langkah 6.
+[273] normal: Sistem Koperasi meng-generate System Warning (Peringatan Stok Menipis).
+[274] normal: Sistem Koperasi mengirimkan Push Notification ke aplikasi Penjual (Pengurus jika barang inventaris koperasi, Anggota jika barang dagangan pribadi).
+[275] normal: Penjual menerima notifikasi untuk segera restock. (End Event)
+[276] normal: M3.4 _Resolusi_Komplain (Sub-Process) ; lanjutan dari M3.2
+[278] normal: Sub-Process Transaksi (Pengembalian_Barang).png
+[280] normal: Pembeli: Mengisi form komplain di aplikasi (memilih alasan seperti barang rusak/tidak sesuai, dan mengunggah bukti foto/video).
+[281] normal: Sistem Koperasi: * Mengubah status pesanan menjadi "Komplain Diajukan" (Disputed).
+[282] normal: Menahan (Hold) dana transaksi agar proses split payment dan perhitungan Poin SHU (alur "Tidak" di gambar) dihentikan sementara.
+[283] normal: Mengirim notifikasi ke Penjual dan memunculkan alert di dashboard Pengurus.
+[284] normal: Penjual: Melihat detail komplain dan memberikan tanggapan (bisa berupa penjelasan, persetujuan retur, atau penolakan) melalui aplikasi.
+[285] normal: Pengurus (Admin): Membuka dashboard resolusi, melihat bukti dari Pembeli dan tanggapan dari Penjual, lalu bertindak sebagai mediator atau hakim.
+[286] normal: Gateway Keputusan Pengurus - Apakah Komplain Valid / Retur Disetujui?
+[287] normal: `Jalur A: Tidak Disetujui (Ditolak)
+[288] normal: Sistem Koperasi: Mengubah status pesanan menjadi "Selesai (Komplain Ditolak)".
+[289] normal: Sistem Koperasi: Mengirim notifikasi penolakan ke Pembeli.
+[290] normal: Sistem Koperasi: Mengembalikan alur ke jalur utama e-commerce, yaitu melanjutkan proses pembayaran ke Penjual dan mencatat Poin SHU (menyambung ke kotak otomatis membagi dana transaksi di alur bawah gambarmu).
+[291] normal: Jalur B: Ya, Disetujui (Retur & Refund)
+[292] normal: Pengurus: Menginstruksikan Pembeli untuk mengirimkan kembali barang ke Penjual (atau ke kantor Koperasi).
+[293] normal: Pembeli: Menginput nomor resi pengembalian (jika pakai kurir) atau menyerahkan langsung.
+[294] normal: Penjual: Mengonfirmasi bahwa barang retur sudah diterima kembali.
+[295] normal: Sistem Koperasi: Mengubah status pesanan menjadi "Dibatalkan / Refund".
+[296] normal: Sistem Koperasi: Memproses pengembalian dana (Refund) sepenuhnya ke saldo/dompet Pembeli.
+[297] normal: Sistem Koperasi: Mengembalikan kuantitas stok produk ke database Katalog.
+[298] normal: (End Event - Pesanan batal, tidak ada pencatatan Fee Koperasi maupun Poin SHU).
+[301] normal: Modul 4: UNIT LAYANAN - Pinjaman / Lending 
+[302] normal: M4.1_Pengajuan_Pinjaman
+[303] normal: Trigger: Anggota butuh dana dan masuk ke menu Pinjaman
+[304] normal: Anggota mengisi form pengajuan pinjaman digital (Nominal, Tenor/Bulan, dan Tujuan Pinjaman). (Start Event)
+[305] normal: Sistem Koperasi melakukan validasi Credit Scoring dasar (cek saldo simpanan anggota, riwayat tunggakan, dan limit maksimal pinjaman sesuai AD/ART ΓÇö misal: maks 3x total simpanan).
+[306] normal: Gateway ΓÇö Lolos Validasi Sistem?
+[307] normal: Jika Tidak ΓåÆ Sistem menampilkan pesan "Limit tidak cukup / Ada tunggakan aktif", pengajuan dibatalkan ΓåÆ (End Event)
+[308] normal: Jika Ya ΓåÆ Lanjut ke langkah 4.
+[309] normal: Sistem Koperasi menyimpan data pengajuan dengan status Pending Approval dan mengirim alert ke dashboard Pengurus.
+[310] normal: Pengurus membuka detail pengajuan pinjaman dan melakukan analisis kredit manual.
+[311] normal: Gateway ΓÇö Pengajuan Disetujui Pengurus?
+[312] normal: Jika Tidak ΓåÆ Pengurus input alasan penolakan ΓåÆ Sistem kirim notifikasi penolakan ke Anggota ΓåÆ (End Event)
+[313] normal: Jika Ya ΓåÆ Lanjut ke langkah 7.
+[314] normal: Sistem Koperasi meng-generate Dokumen Perjanjian Hutang (Akad) digital.
+[315] normal: Anggota membaca akad dan memberikan Persetujuan Digital (Klik Setuju / Input PIN).
+[316] normal: Sistem Koperasi memverifikasi PIN/tanda tangan digital valid.
+[317] normal: Sistem Koperasi meng-update status menjadi "Disetujui ΓÇö Menunggu Pencairan".
+[318] normal: Pengurus menekan tombol "Cairkan" di dashboard admin (trigger manual oleh Pengurus, eksekusi otomatis oleh Sistem).
+[319] normal: Sistem Koperasi memproses pencairan dana secara otomatis ke rekening/dompet Anggota.
+[320] normal: Sistem Koperasi mencatat Pinjaman Aktif di database dan membuat jadwal tagihan angsuran bulanan.
+[321] normal: Sistem Koperasi memicu jurnal otomatis pencairan dana di Sub-flow A M2.1.
+[322] normal: Sistem Koperasi mengirim notifikasi pencairan ke Anggota: "Pinjaman Anda sebesar Rp X telah dicairkan ke rekening/dompet Anda."
+[323] normal: Anggota menerima dana dan notifikasi pencairan. (End Event)
+[327] normal: M4.2_Angsuran_Pinjaman         ΓåÉ Data jasa pinjam = Jasa Usaha SHU
+[328] normal: Trigger: Jatuh tempo tagihan pinjaman per bulan
+[329] normal: Sistem Koperasi mendeteksi jatuh tempo angsuran (Timer). (Start Event)
+[330] normal: Sistem Koperasi meng-generate Invoice tagihan dan mengirim notifikasi reminder ke Anggota.
+[331] normal: Event-Based Gateway (Sistem Menunggu):
+[332] normal: Kejadian A: Anggota membayar tagihan ΓåÆ Lanjut ke langkah 7.
+[333] normal: Kejadian B: Lewat batas waktu (Jatuh tempo + toleransi sesuai AD/ART) ΓåÆ Lanjut ke langkah 4.
+[334] normal: (Path B ΓÇö Overdue) Sistem Koperasi mengubah status tagihan menjadi Overdue (Tunggakan) dan menambahkan denda jika ada sesuai ketentuan AD/ART.
+[335] normal: Sistem Koperasi memunculkan nama anggota di "Daftar Tunggakan" dashboard Pengurus.
+[336] normal: Pengurus menindaklanjuti secara manual sesuai ketentuan AD/ART (teguran lisan, surat peringatan 1/2/3, negosiasi restrukturisasi, atau sanksi). Jika Anggota akhirnya membayar setelah overdue, pembayaran diproses di siklus berikutnya dengan status "Bayar Terlambat". ΓåÆ (End Event ΓÇö Angsuran Bulan Ini Selesai, Menunggu Tindak Lanjut)
+[337] normal: (Path A ΓÇö Bayar Tepat Waktu) Anggota melakukan pembayaran (Transfer/QRIS/Potong Saldo M1).
+[338] normal: Sistem Koperasi memverifikasi pembayaran berhasil.
+[339] normal: Sistem Koperasi memecah dana angsuran secara otomatis (Split):
+[340] normal: Mengurangi Sisa Pokok Pinjaman.
+[341] normal: Mencatat Bunga/Margin/Jasa sebagai Pendapatan Koperasi (memicu jurnal otomatis di Sub-flow A M2.1).
+[342] normal: Sistem Koperasi mengonversi nilai Bunga/Jasa yang dibayar menjadi Poin SHU (Jasa Usaha Pinjaman) ke akun Anggota tersebut (sesuai ketentuan AD/ART).
+[343] normal: Sistem Koperasi mengirimkan bukti pembayaran digital ke Anggota.
+[344] normal: Gateway ΓÇö Sisa Pokok Pinjaman = Nol (Lunas)?
+[345] normal: Jika Tidak ΓåÆ (End Event ΓÇö Angsuran Bulan Ini Selesai, menunggu siklus bulan depan via Timer di langkah 1)
+[346] normal: Jika Ya ΓåÆ Lanjut ke langkah 13.
+[347] normal: Sistem Koperasi mengubah status Pinjaman Aktif menjadi LUNAS.
+[348] normal: Sistem Koperasi mengirim notifikasi ke Anggota: "Selamat, pinjaman Anda telah lunas." ΓåÆ (End Event ΓÇö Pinjaman Selesai)
+
+=== TABLES ===

@@ -1,0 +1,59 @@
+{{define "content"}}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1"><i class="bi bi-person-plus text-success"></i> Pendaftaran Anggota Baru</h2>
+        <p class="text-muted mb-0">Setelah submit, status akan PENDING menunggu review pengurus.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">Form Pendaftaran <small class="text-muted">(M1.1)</small></div>
+            <div class="card-body">
+                <form method="POST" action="/members/register">
+                    <div class="mb-3">
+                        <label class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
+                        <input type="text" name="nama" class="form-control" value="{{.FormNama}}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">NIK (16 digit) <span class="text-danger">*</span></label>
+                        <input type="text" name="nik" class="form-control" maxlength="16" value="{{.FormNIK}}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Alamat <span class="text-danger">*</span></label>
+                        <textarea name="alamat" class="form-control" rows="2" required>{{.FormAlamat}}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">No. HP <span class="text-danger">*</span></label>
+                        <input type="tel" name="no_hp" class="form-control" value="{{.FormNoHP}}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Foto KTP</label>
+                        <input type="file" class="form-control" disabled>
+                        <small class="text-muted">(Upload dummy — tidak diproses di MVP)</small>
+                    </div>
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a href="/members" class="btn btn-outline-secondary">Batal</a>
+                        <button type="submit" class="btn btn-success"><i class="bi bi-send"></i> Daftarkan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">Alur Pendaftaran</div>
+            <div class="card-body">
+                <ol class="small mb-0 ps-3">
+                    <li>Isi form data diri lengkap.</li>
+                    <li>Status awal: <span class="badge badge-status-pending">PENDING</span></li>
+                    <li>Pengurus melakukan review.</li>
+                    <li>Disetujui → status <span class="badge badge-status-aktif">AKTIF</span> + nomor anggota digenerate.</li>
+                    <li>Bayar simpanan pokok minimal Rp 500.000.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
