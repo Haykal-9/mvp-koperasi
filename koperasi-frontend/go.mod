@@ -1,6 +1,6 @@
 module koperasi-frontend
 
-go 1.26.2
+go 1.25.0
 
 require (
 	github.com/gin-contrib/sessions v1.1.0
