@@ -3,17 +3,17 @@ package api
 import (
 	"net/http"
 
+	koperasifrontend "koperasi-frontend"
 	"koperasi-frontend/core/server"
 )
 
-var app *http.Handler
+var app http.Handler
 
 func init() {
-	r := server.SetupApp()
-	h := http.Handler(r)
-	app = &h
+	server.Assets = koperasifrontend.FS
+	app = server.SetupApp()
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {
-	(*app).ServeHTTP(w, r)
+	app.ServeHTTP(w, r)
 }

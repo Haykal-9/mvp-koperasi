@@ -1,9 +1,4 @@
 {
-  "functions": {
-    "api/**/*.go": {
-      "includeFiles": "templates/**"
-    }
-  },
   "rewrites": [
     {
       "source": "/(.*)",

@@ -1,11 +1,13 @@
 package server
 
 import (
+	"embed"
 	"fmt"
 	"html/template"
+	"io/fs"
 	"log"
 	"net/http"
-	"path/filepath"
+	"path"
 	"strings"
 
 	"koperasi-frontend/core/handler"
@@ -15,6 +17,9 @@ import (
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 )
+
+// Assets is assigned from outside (api/index.go or cmd/web/main.go) using go:embed
+var Assets embed.FS
 
 // pageTemplates holds {layoutName: {pagePath: parsedTemplate}}
 var pageTemplates = map[string]map[string]*template.Template{}
@@ -57,34 +62,62 @@ var templateFuncs = template.FuncMap{
 	},
 }
 
-// loadTemplates parses each page template together with its layout.
+// readTemplate reads a template file from the embedded FS.
+func readTemplate(p string) (string, error) {
+	b, err := Assets.ReadFile(p)
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
+}
+
+// loadTemplates parses each page template together with its layout from the embedded FS.
 func loadTemplates() {
 	pageTemplates["base"] = map[string]*template.Template{}
 	pageTemplates["auth"] = map[string]*template.Template{}
 
+	baseLayout := "templates/layouts/base.html"
+	authLayout := "templates/layouts/auth.html"
+
 	register := func(layout, layoutFile, pagePath string) {
 		name := pageNameFromPath(pagePath)
-		tmpl := template.New(filepath.Base(layoutFile)).Funcs(templateFuncs)
-		tmpl = template.Must(tmpl.ParseFiles(layoutFile, pagePath))
+
+		layoutContent, err := readTemplate(layoutFile)
+		if err != nil {
+			log.Printf("failed to read layout %s: %v", layoutFile, err)
+			return
+		}
+		pageContent, err := readTemplate(pagePath)
+		if err != nil {
+			log.Printf("failed to read page %s: %v", pagePath, err)
+			return
+		}
+
+		tmpl := template.New(path.Base(layoutFile)).Funcs(templateFuncs)
+		tmpl = template.Must(tmpl.Parse(layoutContent))
+		tmpl = template.Must(tmpl.New(path.Base(pagePath)).Parse(pageContent))
+
 		pageTemplates[layout][name] = tmpl
 	}
 
-	authPages, _ := filepath.Glob("templates/auth/*.html")
-	for _, p := range authPages {
-		register("auth", "templates/layouts/auth.html", p)
+	// Auth pages
+	authEntries, _ := fs.Glob(Assets, "templates/auth/*.html")
+	for _, p := range authEntries {
+		register("auth", authLayout, p)
 	}
 
+	// Module pages
 	moduleDirs := []string{"dashboard", "member", "product", "order", "loan", "finance"}
 	for _, dir := range moduleDirs {
-		pages, _ := filepath.Glob("templates/" + dir + "/*.html")
-		for _, p := range pages {
-			register("base", "templates/layouts/base.html", p)
+		entries, _ := fs.Glob(Assets, "templates/"+dir+"/*.html")
+		for _, p := range entries {
+			register("base", baseLayout, p)
 		}
 	}
 }
 
 func pageNameFromPath(p string) string {
-	p = filepath.ToSlash(p)
+	p = strings.ReplaceAll(p, "\\", "/")
 	p = strings.TrimPrefix(p, "templates/")
 	p = strings.TrimSuffix(p, ".html")
 	return p
@@ -106,7 +139,6 @@ func renderPage(c *gin.Context, layout, page string, data gin.H) {
 		}
 	}
 
-	// auto-pop flash unless caller already provided values (auth pages provide their own)
 	if _, ok := data["FlashError"]; !ok {
 		if msg, has := handler.PopFlash(c, "error"); has {
 			data["FlashError"] = msg
@@ -118,7 +150,6 @@ func renderPage(c *gin.Context, layout, page string, data gin.H) {
 		}
 	}
 
-	// inject cart count for navbar badge
 	if _, ok := data["CartCount"]; !ok {
 		data["CartCount"] = handler.CartCount(c)
 	}
@@ -148,7 +179,12 @@ func SetupApp() *gin.Engine {
 	store := cookie.NewStore([]byte("koperasi-secret-key-change-me"))
 	r.Use(sessions.Sessions("koperasi_session", store))
 
-	r.Static("/static", "./static")
+	// Serve static files from embedded FS
+	staticFS, err := fs.Sub(Assets, "static")
+	if err != nil {
+		log.Fatalf("failed to sub static FS: %v", err)
+	}
+	r.StaticFS("/static", http.FS(staticFS))
 
 	r.GET("/", func(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/dashboard")
@@ -175,7 +211,6 @@ func SetupApp() *gin.Engine {
 	{
 		protected.GET("/dashboard", dashH.Index)
 
-		// Member routes
 		protected.GET("/members", memH.List)
 		protected.GET("/members/register", memH.ShowRegister)
 		protected.POST("/members/register", memH.DoRegister)
@@ -187,7 +222,6 @@ func SetupApp() *gin.Engine {
 		protected.GET("/members/:id/resign", memH.ShowResign)
 		protected.POST("/members/:id/resign", memH.DoResign)
 
-		// Product routes
 		protected.GET("/products", prodH.Catalog)
 		protected.GET("/products/create", prodH.ShowCreate)
 		protected.POST("/products/create", prodH.DoCreate)
@@ -198,7 +232,6 @@ func SetupApp() *gin.Engine {
 		protected.GET("/products/:id/stock", prodH.ShowStock)
 		protected.POST("/products/:id/stock", prodH.DoStock)
 
-		// Order & Cart routes
 		protected.GET("/cart", orderH.ShowCart)
 		protected.POST("/cart/add", orderH.AddToCart)
 		protected.POST("/cart/update", orderH.UpdateCart)
@@ -214,7 +247,6 @@ func SetupApp() *gin.Engine {
 		protected.POST("/orders/:id/complain", orderH.DoComplain)
 		protected.POST("/orders/:id/resolve", orderH.Resolve)
 
-		// Loan routes
 		protected.GET("/loans", loanH.List)
 		protected.GET("/loans/apply", loanH.ShowApply)
 		protected.POST("/loans/apply", loanH.DoApply)
@@ -224,7 +256,6 @@ func SetupApp() *gin.Engine {
 		protected.POST("/loans/:id/disburse", loanH.Disburse)
 		protected.POST("/loans/:id/pay", loanH.Pay)
 
-		// Finance routes
 		protected.GET("/finance/journals", finH.Journals)
 		protected.GET("/finance/journals/create", finH.ShowCreateJournal)
 		protected.POST("/finance/journals/create", finH.DoCreateJournal)
