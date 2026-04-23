@@ -1,7 +1,6 @@
 package server
 
 import (
-	"embed"
 	"fmt"
 	"html/template"
 	"io/fs"
@@ -18,8 +17,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Assets is assigned from outside (api/index.go or cmd/web/main.go) using go:embed
-var Assets embed.FS
+// Assets is assigned from outside (api/index.go or cmd/web/main.go).
+// For Vercel: assigned an embed.FS. For local dev: assigned an os.DirFS.
+var Assets fs.FS
 
 // pageTemplates holds {layoutName: {pagePath: parsedTemplate}}
 var pageTemplates = map[string]map[string]*template.Template{}
@@ -64,7 +64,7 @@ var templateFuncs = template.FuncMap{
 
 // readTemplate reads a template file from the embedded FS.
 func readTemplate(p string) (string, error) {
-	b, err := Assets.ReadFile(p)
+	b, err := fs.ReadFile(Assets, p)
 	if err != nil {
 		return "", err
 	}

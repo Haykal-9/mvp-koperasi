@@ -1,16 +1,20 @@
 package api
 
 import (
+	"embed"
+	"io/fs"
 	"net/http"
 
-	koperasifrontend "koperasi-frontend"
 	"koperasi-frontend/core/server"
 )
+
+//go:embed templates static
+var embeddedAssets embed.FS
 
 var app http.Handler
 
 func init() {
-	server.Assets = koperasifrontend.FS
+	server.Assets, _ = fs.Sub(embeddedAssets, ".")
 	app = server.SetupApp()
 }
 
