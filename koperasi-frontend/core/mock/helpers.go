@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"koperasi-frontend/internal/model"
+	"koperasi-frontend/core/model"
 )
 
 // NextMemberID returns the next ID for a new member.

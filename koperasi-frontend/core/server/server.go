@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"koperasi-frontend/internal/handler"
-	"koperasi-frontend/internal/model"
+	"koperasi-frontend/core/handler"
+	"koperasi-frontend/core/model"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"

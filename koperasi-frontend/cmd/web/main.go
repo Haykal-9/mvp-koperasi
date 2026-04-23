@@ -2,7 +2,7 @@ package main
 
 import (
 	"log"
-	"koperasi-frontend/internal/server"
+	"koperasi-frontend/core/server"
 )
 
 func main() {

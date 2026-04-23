@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strings"
 
-	"koperasi-frontend/internal/mock"
-	"koperasi-frontend/internal/model"
+	"koperasi-frontend/core/mock"
+	"koperasi-frontend/core/model"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"

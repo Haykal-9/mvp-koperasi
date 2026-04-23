@@ -3,7 +3,7 @@ package api
 import (
 	"net/http"
 
-	"koperasi-frontend/internal/server"
+	"koperasi-frontend/core/server"
 )
 
 var app *http.Handler

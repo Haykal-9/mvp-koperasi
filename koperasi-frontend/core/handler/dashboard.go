@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"koperasi-frontend/internal/mock"
+	"koperasi-frontend/core/mock"
 
 	"github.com/gin-gonic/gin"
 )

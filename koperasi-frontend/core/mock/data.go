@@ -1,6 +1,6 @@
 package mock
 
-import "koperasi-frontend/internal/model"
+import "koperasi-frontend/core/model"
 
 var Users = []model.User{
 	{ID: 1, Email: "owner@koperasi.id", Password: "owner123", Role: "OWNER", Nama: "Budi Santoso"},
