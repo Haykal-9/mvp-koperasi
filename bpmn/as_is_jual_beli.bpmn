@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions
+  xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+  targetNamespace="http://bpmn.io/schema/bpmn"
+  id="Defs_AIJB">
+
+  <bpmn:collaboration id="Collab_AIJB">
+    <bpmn:participant id="Part_AIJB" name="As-Is: Jual Beli Barang Koperasi" processRef="Proc_AIJB"/>
+  </bpmn:collaboration>
+
+  <bpmn:process id="Proc_AIJB" name="As-Is: Jual Beli Barang Koperasi" isExecutable="false">
+    <bpmn:laneSet id="LS_AIJB">
+      <bpmn:lane id="Lane_Pembeli" name="Pembeli (Anggota)">
+        <bpmn:flowNodeRef>SE_JB</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_JB_HWA</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_JB_TK</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GW_JB_S</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_JB_SH</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_JB_DTM</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_JB_BT</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_JB_TB</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EE_JB_OK</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EE_JB_BT</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Penjual" name="Penjual (Anggota / Koperasi)">
+        <bpmn:flowNodeRef>T_JB_TC</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_JB_CS</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_JB_KS</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_JB_SB</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_JB_CT</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <!-- Pembeli lane -->
+    <bpmn:startEvent id="SE_JB" name="Ingin Membeli Barang">
+      <bpmn:outgoing>FJB1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="T_JB_HWA" name="Hubungi Penjual via WhatsApp / Pertemuan">
+      <bpmn:incoming>FJB1</bpmn:incoming>
+      <bpmn:outgoing>FJB2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="T_JB_TK" name="Tanya Ketersediaan, Harga &amp; Lokasi">
+      <bpmn:incoming>FJB2</bpmn:incoming>
+      <bpmn:incoming>FJB_back</bpmn:incoming>
+      <bpmn:outgoing>FJB3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="GW_JB_S" name="Barang Tersedia?">
+      <bpmn:incoming>FJB5</bpmn:incoming>
+      <bpmn:outgoing>FJB6</bpmn:outgoing>
+      <bpmn:outgoing>FJB_NA</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="T_JB_SH" name="Sepakat Harga &amp; Waktu Temu">
+      <bpmn:incoming>FJB6</bpmn:incoming>
+      <bpmn:outgoing>FJB7</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="T_JB_DTM" name="Datang ke Lokasi / Pertemuan Fisik">
+      <bpmn:incoming>FJB7</bpmn:incoming>
+      <bpmn:outgoing>FJB8</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="T_JB_BT" name="Bayar Tunai">
+      <bpmn:incoming>FJB8</bpmn:incoming>
+      <bpmn:outgoing>FJB9</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="T_JB_TB" name="Terima &amp; Periksa Barang">
+      <bpmn:incoming>FJB11</bpmn:incoming>
+      <bpmn:outgoing>FJB12</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="EE_JB_OK" name="Transaksi Selesai">
+      <bpmn:incoming>FJB12</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="EE_JB_BT" name="Transaksi Batal (Barang Tidak Ada)">
+      <bpmn:incoming>FJB_NA</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Penjual lane -->
+    <bpmn:userTask id="T_JB_TC" name="Terima Pesan / Chat dari Pembeli">
+      <bpmn:incoming>FJB3</bpmn:incoming>
+      <bpmn:outgoing>FJB4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="T_JB_CS" name="Cek Stok Barang Secara Fisik">
+      <bpmn:incoming>FJB4</bpmn:incoming>
+      <bpmn:outgoing>FJB5</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="T_JB_KS" name="Konfirmasi Ketersediaan ke Pembeli">
+      <bpmn:incoming>FJB6b</bpmn:incoming>
+      <bpmn:outgoing>FJB_back</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="T_JB_SB" name="Siapkan Barang">
+      <bpmn:incoming>FJB9</bpmn:incoming>
+      <bpmn:outgoing>FJB10</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="T_JB_CT" name="Catat Transaksi di Buku / Nota Manual">
+      <bpmn:incoming>FJB10</bpmn:incoming>
+      <bpmn:outgoing>FJB11</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:sequenceFlow id="FJB1"  sourceRef="SE_JB"    targetRef="T_JB_HWA"/>
+    <bpmn:sequenceFlow id="FJB2"  sourceRef="T_JB_HWA" targetRef="T_JB_TK"/>
+    <bpmn:sequenceFlow id="FJB3"  sourceRef="T_JB_TK"  targetRef="T_JB_TC"/>
+    <bpmn:sequenceFlow id="FJB4"  sourceRef="T_JB_TC"  targetRef="T_JB_CS"/>
+    <bpmn:sequenceFlow id="FJB5"  sourceRef="T_JB_CS"  targetRef="GW_JB_S"/>
+    <bpmn:sequenceFlow id="FJB6"  name="Ya"    sourceRef="GW_JB_S" targetRef="T_JB_SH"/>
+    <bpmn:sequenceFlow id="FJB_NA" name="Tidak" sourceRef="GW_JB_S" targetRef="EE_JB_BT"/>
+    <bpmn:sequenceFlow id="FJB6b" sourceRef="GW_JB_S" targetRef="T_JB_KS"/>
+    <bpmn:sequenceFlow id="FJB_back" sourceRef="T_JB_KS" targetRef="T_JB_TK"/>
+    <bpmn:sequenceFlow id="FJB7"  sourceRef="T_JB_SH"  targetRef="T_JB_DTM"/>
+    <bpmn:sequenceFlow id="FJB8"  sourceRef="T_JB_DTM" targetRef="T_JB_BT"/>
+    <bpmn:sequenceFlow id="FJB9"  sourceRef="T_JB_BT"  targetRef="T_JB_SB"/>
+    <bpmn:sequenceFlow id="FJB10" sourceRef="T_JB_SB"  targetRef="T_JB_CT"/>
+    <bpmn:sequenceFlow id="FJB11" sourceRef="T_JB_CT"  targetRef="T_JB_TB"/>
+    <bpmn:sequenceFlow id="FJB12" sourceRef="T_JB_TB"  targetRef="EE_JB_OK"/>
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="Diagram_AIJB">
+    <bpmndi:BPMNPlane id="Plane_AIJB" bpmnElement="Collab_AIJB">
+
+      <bpmndi:BPMNShape id="Part_AIJB_di" bpmnElement="Part_AIJB" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="1410" height="460"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Pembeli_di" bpmnElement="Lane_Pembeli" isHorizontal="true">
+        <dc:Bounds x="190" y="80" width="1380" height="230"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Penjual_di" bpmnElement="Lane_Penjual" isHorizontal="true">
+        <dc:Bounds x="190" y="310" width="1380" height="230"/>
+      </bpmndi:BPMNShape>
+
+      <!-- Pembeli lane -->
+      <bpmndi:BPMNShape id="SE_JB_di" bpmnElement="SE_JB">
+        <dc:Bounds x="222" y="177" width="36" height="36"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="200" y="220" width="80" height="27"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_JB_HWA_di" bpmnElement="T_JB_HWA">
+        <dc:Bounds x="310" y="155" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_JB_TK_di" bpmnElement="T_JB_TK">
+        <dc:Bounds x="460" y="155" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_JB_S_di" bpmnElement="GW_JB_S" isMarkerVisible="true">
+        <dc:Bounds x="665" y="170" width="50" height="50"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="650" y="146" width="80" height="14"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_JB_SH_di" bpmnElement="T_JB_SH">
+        <dc:Bounds x="770" y="155" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_JB_DTM_di" bpmnElement="T_JB_DTM">
+        <dc:Bounds x="920" y="155" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_JB_BT_di" bpmnElement="T_JB_BT">
+        <dc:Bounds x="1070" y="155" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_JB_TB_di" bpmnElement="T_JB_TB">
+        <dc:Bounds x="1220" y="155" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EE_JB_OK_di" bpmnElement="EE_JB_OK">
+        <dc:Bounds x="1382" y="177" width="36" height="36"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="1358" y="220" width="84" height="27"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EE_JB_BT_di" bpmnElement="EE_JB_BT">
+        <dc:Bounds x="690" y="252" width="36" height="36"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="660" y="295" width="96" height="40"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Penjual lane -->
+      <bpmndi:BPMNShape id="T_JB_TC_di" bpmnElement="T_JB_TC">
+        <dc:Bounds x="460" y="385" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_JB_CS_di" bpmnElement="T_JB_CS">
+        <dc:Bounds x="610" y="385" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_JB_KS_di" bpmnElement="T_JB_KS">
+        <dc:Bounds x="760" y="385" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_JB_SB_di" bpmnElement="T_JB_SB">
+        <dc:Bounds x="1070" y="385" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_JB_CT_di" bpmnElement="T_JB_CT">
+        <dc:Bounds x="1220" y="385" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <!-- Edges -->
+      <bpmndi:BPMNEdge id="FJB1_di"  bpmnElement="FJB1"><di:waypoint x="258" y="195"/><di:waypoint x="310" y="195"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FJB2_di"  bpmnElement="FJB2"><di:waypoint x="410" y="195"/><di:waypoint x="460" y="195"/></bpmndi:BPMNEdge>
+      <!-- cross-lane down: TanyaKetersediaan → TerimaChat -->
+      <bpmndi:BPMNEdge id="FJB3_di"  bpmnElement="FJB3">
+        <di:waypoint x="510" y="235"/><di:waypoint x="510" y="385"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FJB4_di"  bpmnElement="FJB4"><di:waypoint x="560" y="425"/><di:waypoint x="610" y="425"/></bpmndi:BPMNEdge>
+      <!-- cross-lane up: CekStok → Gateway -->
+      <bpmndi:BPMNEdge id="FJB5_di"  bpmnElement="FJB5">
+        <di:waypoint x="660" y="385"/><di:waypoint x="660" y="235"/>
+        <di:waypoint x="665" y="195"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FJB6_di"  bpmnElement="FJB6">
+        <di:waypoint x="715" y="195"/><di:waypoint x="770" y="195"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="731" y="178" width="16" height="14"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FJB_NA_di" bpmnElement="FJB_NA">
+        <di:waypoint x="690" y="220"/><di:waypoint x="690" y="252"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="698" y="232" width="30" height="14"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <!-- Barang tidak ada: cross-lane down to KonfirmasiStok, then back up -->
+      <bpmndi:BPMNEdge id="FJB6b_di" bpmnElement="FJB6b">
+        <di:waypoint x="690" y="220"/><di:waypoint x="690" y="312"/><di:waypoint x="810" y="312"/><di:waypoint x="810" y="385"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FJB_back_di" bpmnElement="FJB_back">
+        <di:waypoint x="810" y="385"/><di:waypoint x="810" y="312"/><di:waypoint x="510" y="312"/><di:waypoint x="510" y="235"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FJB7_di"  bpmnElement="FJB7"><di:waypoint x="870" y="195"/><di:waypoint x="920" y="195"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FJB8_di"  bpmnElement="FJB8"><di:waypoint x="1020" y="195"/><di:waypoint x="1070" y="195"/></bpmndi:BPMNEdge>
+      <!-- cross-lane down: BayarTunai → SiapkanBarang -->
+      <bpmndi:BPMNEdge id="FJB9_di"  bpmnElement="FJB9">
+        <di:waypoint x="1120" y="235"/><di:waypoint x="1120" y="385"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FJB10_di" bpmnElement="FJB10"><di:waypoint x="1170" y="425"/><di:waypoint x="1220" y="425"/></bpmndi:BPMNEdge>
+      <!-- cross-lane up: CatatTransaksi → TerimaBarang -->
+      <bpmndi:BPMNEdge id="FJB11_di" bpmnElement="FJB11">
+        <di:waypoint x="1270" y="385"/><di:waypoint x="1270" y="235"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FJB12_di" bpmnElement="FJB12"><di:waypoint x="1320" y="195"/><di:waypoint x="1382" y="195"/></bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

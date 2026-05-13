@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions
+  xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+  targetNamespace="http://bpmn.io/schema/bpmn"
+  id="Defs_TBPL">
+
+  <bpmn:collaboration id="Collab_TBPL">
+    <bpmn:participant id="Part_TBPL" name="To-Be: Pengajuan Pinjaman Digital (KopHub)" processRef="Proc_TBPL"/>
+  </bpmn:collaboration>
+
+  <bpmn:process id="Proc_TBPL" name="To-Be: Pengajuan Pinjaman Digital (KopHub)" isExecutable="false">
+    <bpmn:laneSet id="LS_TBPL">
+      <bpmn:lane id="TBP_Lane_A" name="Anggota">
+        <bpmn:flowNodeRef>TBP_SE</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>TBP_T_Login</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>TBP_T_IsiForm</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>TBP_T_LihatScore</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>TBP_T_Submit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>TBP_T_TerimaNotif</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>TBP_GW_A</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>TBP_T_Cairkan</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>TBP_T_BayarOnline</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>TBP_EE_Lunas</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>TBP_EE_Tolak</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="TBP_Lane_SYS" name="Sistem KopHub (Otomatis)">
+        <bpmn:flowNodeRef>TBP_T_HitungScore</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>TBP_T_GenJadwal</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>TBP_T_Jurnal</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>TBP_T_UpdateDashboard</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>TBP_T_NotifTolak</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>TBP_GW_Lunas</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="TBP_Lane_PG" name="Owner / Kasir">
+        <bpmn:flowNodeRef>TBP_T_ReviewDB</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>TBP_GW_PG</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <!-- Anggota -->
+    <bpmn:startEvent id="TBP_SE" name="Login ke Platform KopHub">
+      <bpmn:outgoing>TBPF1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="TBP_T_Login" name="Akses Menu Pinjaman">
+      <bpmn:incoming>TBPF1</bpmn:incoming>
+      <bpmn:outgoing>TBPF2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="TBP_T_IsiForm" name="Isi Form Pinjaman Online (Nominal, Tenor, Tujuan)">
+      <bpmn:incoming>TBPF2</bpmn:incoming>
+      <bpmn:outgoing>TBPF3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="TBP_T_LihatScore" name="Lihat Credit Score &amp; Estimasi Angsuran Otomatis">
+      <bpmn:incoming>TBPF_score_back</bpmn:incoming>
+      <bpmn:outgoing>TBPF4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="TBP_T_Submit" name="Konfirmasi &amp; Submit Pengajuan">
+      <bpmn:incoming>TBPF4</bpmn:incoming>
+      <bpmn:outgoing>TBPF5</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="TBP_T_TerimaNotif" name="Terima Notifikasi Keputusan (Email / Dashboard)">
+      <bpmn:incoming>TBPF8</bpmn:incoming>
+      <bpmn:incoming>TBPF9b</bpmn:incoming>
+      <bpmn:outgoing>TBPF10</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="TBP_GW_A" name="Disetujui?">
+      <bpmn:incoming>TBPF10</bpmn:incoming>
+      <bpmn:outgoing>TBPF11</bpmn:outgoing>
+      <bpmn:outgoing>TBPF12</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="TBP_T_Cairkan" name="Cairkan Pinjaman (Konfirmasi Penerimaan Dana)">
+      <bpmn:incoming>TBPF13</bpmn:incoming>
+      <bpmn:outgoing>TBPF14</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="TBP_T_BayarOnline" name="Bayar Angsuran Bulanan via Platform (Transfer/QRIS/Saldo)">
+      <bpmn:incoming>TBPF14</bpmn:incoming>
+      <bpmn:incoming>TBPF_loop</bpmn:incoming>
+      <bpmn:outgoing>TBPF15</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="TBP_EE_Lunas" name="Pinjaman Lunas — Otomatis Tercatat">
+      <bpmn:incoming>TBPF18</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="TBP_EE_Tolak" name="Pengajuan Ditolak (Notifikasi Terkirim)">
+      <bpmn:incoming>TBPF12</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Sistem KopHub -->
+    <bpmn:serviceTask id="TBP_T_HitungScore" name="Hitung Credit Score Otomatis (Simpanan + Riwayat Pinjaman)" camunda:type="external" camunda:topic="creditScore">
+      <bpmn:incoming>TBPF3</bpmn:incoming>
+      <bpmn:outgoing>TBPF_score_back</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="TBP_T_GenJadwal" name="Generate Jadwal Angsuran Otomatis" camunda:type="external" camunda:topic="jadwalAngsuran">
+      <bpmn:incoming>TBPF11</bpmn:incoming>
+      <bpmn:outgoing>TBPF13</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="TBP_T_Jurnal" name="Create Jurnal Akuntansi Pencairan Otomatis" camunda:type="external" camunda:topic="jurnalAkuntansi">
+      <bpmn:incoming>TBPF15</bpmn:incoming>
+      <bpmn:outgoing>TBPF16</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="TBP_T_UpdateDashboard" name="Update Dashboard &amp; Progress Pelunasan Anggota" camunda:type="external" camunda:topic="updateDashboard">
+      <bpmn:incoming>TBPF16</bpmn:incoming>
+      <bpmn:outgoing>TBPF17</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="TBP_T_NotifTolak" name="Kirim Notifikasi Penolakan + Alasan" camunda:type="external" camunda:topic="kirimNotifikasi">
+      <bpmn:incoming>TBPF9b</bpmn:incoming>
+      <bpmn:outgoing>TBPF9c</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="TBP_GW_Lunas" name="Semua Angsuran Lunas?">
+      <bpmn:incoming>TBPF17</bpmn:incoming>
+      <bpmn:outgoing>TBPF_loop</bpmn:outgoing>
+      <bpmn:outgoing>TBPF18</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- Owner / Kasir -->
+    <bpmn:userTask id="TBP_T_ReviewDB" name="Review Pengajuan di Dashboard KopHub">
+      <bpmn:incoming>TBPF5</bpmn:incoming>
+      <bpmn:outgoing>TBPF6</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="TBP_GW_PG" name="Disetujui?">
+      <bpmn:incoming>TBPF6</bpmn:incoming>
+      <bpmn:outgoing>TBPF8</bpmn:outgoing>
+      <bpmn:outgoing>TBPF9b</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="TBPF1"  sourceRef="TBP_SE"          targetRef="TBP_T_Login"/>
+    <bpmn:sequenceFlow id="TBPF2"  sourceRef="TBP_T_Login"     targetRef="TBP_T_IsiForm"/>
+    <bpmn:sequenceFlow id="TBPF3"  sourceRef="TBP_T_IsiForm"   targetRef="TBP_T_HitungScore"/>
+    <bpmn:sequenceFlow id="TBPF_score_back" sourceRef="TBP_T_HitungScore" targetRef="TBP_T_LihatScore"/>
+    <bpmn:sequenceFlow id="TBPF4"  sourceRef="TBP_T_LihatScore" targetRef="TBP_T_Submit"/>
+    <bpmn:sequenceFlow id="TBPF5"  sourceRef="TBP_T_Submit"    targetRef="TBP_T_ReviewDB"/>
+    <bpmn:sequenceFlow id="TBPF6"  sourceRef="TBP_T_ReviewDB"  targetRef="TBP_GW_PG"/>
+    <bpmn:sequenceFlow id="TBPF8"  name="Ya"    sourceRef="TBP_GW_PG" targetRef="TBP_T_TerimaNotif"/>
+    <bpmn:sequenceFlow id="TBPF9b" name="Tidak" sourceRef="TBP_GW_PG" targetRef="TBP_T_TerimaNotif"/>
+    <bpmn:sequenceFlow id="TBPF9c" sourceRef="TBP_T_NotifTolak" targetRef="TBP_T_TerimaNotif"/>
+    <bpmn:sequenceFlow id="TBPF10" sourceRef="TBP_T_TerimaNotif" targetRef="TBP_GW_A"/>
+    <bpmn:sequenceFlow id="TBPF11" name="Ya"      sourceRef="TBP_GW_A" targetRef="TBP_T_GenJadwal"/>
+    <bpmn:sequenceFlow id="TBPF12" name="Tidak"   sourceRef="TBP_GW_A" targetRef="TBP_EE_Tolak"/>
+    <bpmn:sequenceFlow id="TBPF13" sourceRef="TBP_T_GenJadwal"     targetRef="TBP_T_Cairkan"/>
+    <bpmn:sequenceFlow id="TBPF14" sourceRef="TBP_T_Cairkan"       targetRef="TBP_T_BayarOnline"/>
+    <bpmn:sequenceFlow id="TBPF15" sourceRef="TBP_T_BayarOnline"   targetRef="TBP_T_Jurnal"/>
+    <bpmn:sequenceFlow id="TBPF16" sourceRef="TBP_T_Jurnal"        targetRef="TBP_T_UpdateDashboard"/>
+    <bpmn:sequenceFlow id="TBPF17" sourceRef="TBP_T_UpdateDashboard" targetRef="TBP_GW_Lunas"/>
+    <bpmn:sequenceFlow id="TBPF_loop" name="Belum Lunas" sourceRef="TBP_GW_Lunas" targetRef="TBP_T_BayarOnline"/>
+    <bpmn:sequenceFlow id="TBPF18" name="Lunas"  sourceRef="TBP_GW_Lunas" targetRef="TBP_EE_Lunas"/>
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="Diagram_TBPL">
+    <bpmndi:BPMNPlane id="Plane_TBPL" bpmnElement="Collab_TBPL">
+
+      <bpmndi:BPMNShape id="Part_TBPL_di" bpmnElement="Part_TBPL" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="1660" height="630"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TBP_Lane_A_di" bpmnElement="TBP_Lane_A" isHorizontal="true">
+        <dc:Bounds x="190" y="80" width="1630" height="210"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TBP_Lane_SYS_di" bpmnElement="TBP_Lane_SYS" isHorizontal="true">
+        <dc:Bounds x="190" y="290" width="1630" height="210"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TBP_Lane_PG_di" bpmnElement="TBP_Lane_PG" isHorizontal="true">
+        <dc:Bounds x="190" y="500" width="1630" height="210"/>
+      </bpmndi:BPMNShape>
+
+      <!-- Anggota (y-center=185) -->
+      <bpmndi:BPMNShape id="TBP_SE_di" bpmnElement="TBP_SE">
+        <dc:Bounds x="222" y="167" width="36" height="36"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="196" y="210" width="88" height="27"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TBP_T_Login_di" bpmnElement="TBP_T_Login">
+        <dc:Bounds x="310" y="145" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TBP_T_IsiForm_di" bpmnElement="TBP_T_IsiForm">
+        <dc:Bounds x="460" y="145" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TBP_T_LihatScore_di" bpmnElement="TBP_T_LihatScore">
+        <dc:Bounds x="610" y="145" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TBP_T_Submit_di" bpmnElement="TBP_T_Submit">
+        <dc:Bounds x="760" y="145" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TBP_T_TerimaNotif_di" bpmnElement="TBP_T_TerimaNotif">
+        <dc:Bounds x="960" y="145" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TBP_GW_A_di" bpmnElement="TBP_GW_A" isMarkerVisible="true">
+        <dc:Bounds x="1115" y="160" width="50" height="50"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="1105" y="136" width="70" height="14"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TBP_T_Cairkan_di" bpmnElement="TBP_T_Cairkan">
+        <dc:Bounds x="1280" y="145" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TBP_T_BayarOnline_di" bpmnElement="TBP_T_BayarOnline">
+        <dc:Bounds x="1430" y="145" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TBP_EE_Lunas_di" bpmnElement="TBP_EE_Lunas">
+        <dc:Bounds x="1702" y="167" width="36" height="36"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="1676" y="210" width="88" height="40"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TBP_EE_Tolak_di" bpmnElement="TBP_EE_Tolak">
+        <dc:Bounds x="1210" y="252" width="36" height="36"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="1184" y="295" width="88" height="40"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Sistem KopHub (y-center=395) -->
+      <bpmndi:BPMNShape id="TBP_T_HitungScore_di" bpmnElement="TBP_T_HitungScore">
+        <dc:Bounds x="460" y="355" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TBP_T_GenJadwal_di" bpmnElement="TBP_T_GenJadwal">
+        <dc:Bounds x="1180" y="355" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TBP_T_Jurnal_di" bpmnElement="TBP_T_Jurnal">
+        <dc:Bounds x="1430" y="355" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TBP_T_UpdateDashboard_di" bpmnElement="TBP_T_UpdateDashboard">
+        <dc:Bounds x="1580" y="355" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TBP_T_NotifTolak_di" bpmnElement="TBP_T_NotifTolak">
+        <dc:Bounds x="1050" y="355" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TBP_GW_Lunas_di" bpmnElement="TBP_GW_Lunas" isMarkerVisible="true">
+        <dc:Bounds x="1705" y="370" width="50" height="50"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="1688" y="346" width="84" height="40"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Pengurus (y-center=605) -->
+      <bpmndi:BPMNShape id="TBP_T_ReviewDB_di" bpmnElement="TBP_T_ReviewDB">
+        <dc:Bounds x="760" y="565" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TBP_GW_PG_di" bpmnElement="TBP_GW_PG" isMarkerVisible="true">
+        <dc:Bounds x="915" y="580" width="50" height="50"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="903" y="556" width="74" height="14"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Edges -->
+      <bpmndi:BPMNEdge id="TBPF1_di"  bpmnElement="TBPF1"><di:waypoint x="258" y="185"/><di:waypoint x="310" y="185"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="TBPF2_di"  bpmnElement="TBPF2"><di:waypoint x="410" y="185"/><di:waypoint x="460" y="185"/></bpmndi:BPMNEdge>
+      <!-- IsiForm → HitungScore (cross-lane down) -->
+      <bpmndi:BPMNEdge id="TBPF3_di"  bpmnElement="TBPF3">
+        <di:waypoint x="510" y="225"/><di:waypoint x="510" y="355"/>
+      </bpmndi:BPMNEdge>
+      <!-- HitungScore → LihatScore (cross-lane up) -->
+      <bpmndi:BPMNEdge id="TBPF_score_back_di" bpmnElement="TBPF_score_back">
+        <di:waypoint x="560" y="355"/><di:waypoint x="560" y="290"/><di:waypoint x="660" y="290"/><di:waypoint x="660" y="225"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="TBPF4_di"  bpmnElement="TBPF4"><di:waypoint x="710" y="185"/><di:waypoint x="760" y="185"/></bpmndi:BPMNEdge>
+      <!-- Submit → ReviewDB (cross-lane down) -->
+      <bpmndi:BPMNEdge id="TBPF5_di"  bpmnElement="TBPF5">
+        <di:waypoint x="810" y="225"/><di:waypoint x="810" y="565"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="TBPF6_di"  bpmnElement="TBPF6"><di:waypoint x="860" y="605"/><di:waypoint x="915" y="605"/></bpmndi:BPMNEdge>
+      <!-- Ya → TerimaNotif (cross-lane up) -->
+      <bpmndi:BPMNEdge id="TBPF8_di"  bpmnElement="TBPF8">
+        <di:waypoint x="940" y="580"/><di:waypoint x="940" y="500"/><di:waypoint x="1010" y="500"/><di:waypoint x="1010" y="225"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="946" y="508" width="16" height="14"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <!-- Tidak → NotifTolak (cross-lane) -->
+      <bpmndi:BPMNEdge id="TBPF9b_di" bpmnElement="TBPF9b">
+        <di:waypoint x="965" y="605"/><di:waypoint x="1100" y="605"/><di:waypoint x="1100" y="500"/><di:waypoint x="1100" y="435"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="1013" y="588" width="30" height="14"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <!-- NotifTolak → TerimaNotif (cross-lane up) -->
+      <bpmndi:BPMNEdge id="TBPF9c_di" bpmnElement="TBPF9c">
+        <di:waypoint x="1100" y="355"/><di:waypoint x="1100" y="290"/><di:waypoint x="1010" y="290"/><di:waypoint x="1010" y="225"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="TBPF10_di" bpmnElement="TBPF10"><di:waypoint x="1060" y="185"/><di:waypoint x="1115" y="185"/></bpmndi:BPMNEdge>
+      <!-- Ya → GenJadwal (cross-lane down) -->
+      <bpmndi:BPMNEdge id="TBPF11_di" bpmnElement="TBPF11">
+        <di:waypoint x="1140" y="210"/><di:waypoint x="1140" y="290"/><di:waypoint x="1230" y="290"/><di:waypoint x="1230" y="355"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="1146" y="248" width="16" height="14"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="TBPF12_di" bpmnElement="TBPF12">
+        <di:waypoint x="1165" y="185"/><di:waypoint x="1210" y="185"/><di:waypoint x="1210" y="252"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="1173" y="210" width="30" height="14"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <!-- GenJadwal → Cairkan (cross-lane up) -->
+      <bpmndi:BPMNEdge id="TBPF13_di" bpmnElement="TBPF13">
+        <di:waypoint x="1280" y="355"/><di:waypoint x="1280" y="290"/><di:waypoint x="1330" y="290"/><di:waypoint x="1330" y="225"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="TBPF14_di" bpmnElement="TBPF14"><di:waypoint x="1380" y="185"/><di:waypoint x="1430" y="185"/></bpmndi:BPMNEdge>
+      <!-- BayarOnline → Jurnal (cross-lane down) -->
+      <bpmndi:BPMNEdge id="TBPF15_di" bpmnElement="TBPF15">
+        <di:waypoint x="1480" y="225"/><di:waypoint x="1480" y="355"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="TBPF16_di" bpmnElement="TBPF16"><di:waypoint x="1530" y="395"/><di:waypoint x="1580" y="395"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="TBPF17_di" bpmnElement="TBPF17"><di:waypoint x="1680" y="395"/><di:waypoint x="1705" y="395"/></bpmndi:BPMNEdge>
+      <!-- Belum Lunas: loop up to BayarOnline -->
+      <bpmndi:BPMNEdge id="TBPF_loop_di" bpmnElement="TBPF_loop">
+        <di:waypoint x="1730" y="370"/><di:waypoint x="1730" y="290"/><di:waypoint x="1480" y="290"/><di:waypoint x="1480" y="225"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="1590" y="272" width="56" height="27"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <!-- Lunas → EE_Lunas (cross-lane up) -->
+      <bpmndi:BPMNEdge id="TBPF18_di" bpmnElement="TBPF18">
+        <di:waypoint x="1755" y="395"/><di:waypoint x="1780" y="395"/><di:waypoint x="1780" y="290"/><di:waypoint x="1720" y="290"/><di:waypoint x="1720" y="203"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="1761" y="372" width="30" height="14"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

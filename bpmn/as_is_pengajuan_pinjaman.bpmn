@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions
+  xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+  targetNamespace="http://bpmn.io/schema/bpmn"
+  id="Defs_AIPL">
+
+  <bpmn:collaboration id="Collab_AIPL">
+    <bpmn:participant id="Part_AIPL" name="As-Is: Pengajuan Pinjaman Anggota" processRef="Proc_AIPL"/>
+  </bpmn:collaboration>
+
+  <bpmn:process id="Proc_AIPL" name="As-Is: Pengajuan Pinjaman Anggota" isExecutable="false">
+    <bpmn:laneSet id="LS_AIPL">
+      <bpmn:lane id="Lane_Anggota" name="Anggota Koperasi">
+        <bpmn:flowNodeRef>SE_P1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_P_DK</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_P_IF</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_P_SJ</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_P_TK</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GW_P</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_P_TS</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_P_TU</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_P_BA</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EE_P_L</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EE_P_D</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Kasir" name="Kasir / Pengurus Koperasi">
+        <bpmn:flowNodeRef>T_P_VD</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_P_HK</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_P_KP</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_P_CP</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_P_SP</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_P_TA</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GW_P_L</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EE_P_K</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <!-- Anggota lane -->
+    <bpmn:startEvent id="SE_P1" name="Membutuhkan Dana / Pinjaman">
+      <bpmn:outgoing>FP1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="T_P_DK" name="Datang ke Kantor Koperasi">
+      <bpmn:incoming>FP1</bpmn:incoming>
+      <bpmn:outgoing>FP2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="T_P_IF" name="Mengisi Formulir Pinjaman (Kertas)">
+      <bpmn:incoming>FP2</bpmn:incoming>
+      <bpmn:outgoing>FP3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="T_P_SJ" name="Menyerahkan Jaminan &amp; Dokumen Pendukung">
+      <bpmn:incoming>FP3</bpmn:incoming>
+      <bpmn:outgoing>FP4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="T_P_TK" name="Menunggu Keputusan Pengurus">
+      <bpmn:incoming>FP7</bpmn:incoming>
+      <bpmn:outgoing>FP8</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="GW_P" name="Pinjaman Disetujui?">
+      <bpmn:incoming>FP8</bpmn:incoming>
+      <bpmn:outgoing>FP9</bpmn:outgoing>
+      <bpmn:outgoing>FP10</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="T_P_TS" name="Tanda Tangan Surat Perjanjian">
+      <bpmn:incoming>FP11</bpmn:incoming>
+      <bpmn:outgoing>FP12</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="T_P_TU" name="Menerima Uang Tunai (Pencairan)">
+      <bpmn:incoming>FP12</bpmn:incoming>
+      <bpmn:outgoing>FP13</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="T_P_BA" name="Bayar Angsuran Bulanan (Datang ke Kantor)">
+      <bpmn:incoming>FP13</bpmn:incoming>
+      <bpmn:incoming>FP16</bpmn:incoming>
+      <bpmn:outgoing>FP14</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="EE_P_L" name="Pinjaman Lunas">
+      <bpmn:incoming>FP17</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="EE_P_D" name="Pengajuan Ditolak">
+      <bpmn:incoming>FP10</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Kasir / Pengurus lane -->
+    <bpmn:userTask id="T_P_VD" name="Verifikasi Dokumen &amp; Jaminan Manual">
+      <bpmn:incoming>FP4</bpmn:incoming>
+      <bpmn:outgoing>FP5</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="T_P_HK" name="Hitung Kelayakan &amp; Kemampuan Bayar (Manual)">
+      <bpmn:incoming>FP5</bpmn:incoming>
+      <bpmn:outgoing>FP6</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="T_P_KP" name="Keputusan Persetujuan Komite">
+      <bpmn:incoming>FP6</bpmn:incoming>
+      <bpmn:outgoing>FP7</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="T_P_CP" name="Catat Pinjaman di Buku Pinjaman Manual">
+      <bpmn:incoming>FP9</bpmn:incoming>
+      <bpmn:outgoing>FP11a</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="T_P_SP" name="Siapkan Dana Tunai">
+      <bpmn:incoming>FP11a</bpmn:incoming>
+      <bpmn:outgoing>FP11</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="T_P_TA" name="Terima &amp; Catat Pembayaran Angsuran di Buku">
+      <bpmn:incoming>FP14</bpmn:incoming>
+      <bpmn:outgoing>FP15</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="GW_P_L" name="Semua Angsuran Lunas?">
+      <bpmn:incoming>FP15</bpmn:incoming>
+      <bpmn:outgoing>FP16</bpmn:outgoing>
+      <bpmn:outgoing>FP17</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="EE_P_K" name="Arsip Pinjaman Selesai">
+      <bpmn:incoming>FP18</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="FP1"  sourceRef="SE_P1"  targetRef="T_P_DK"/>
+    <bpmn:sequenceFlow id="FP2"  sourceRef="T_P_DK" targetRef="T_P_IF"/>
+    <bpmn:sequenceFlow id="FP3"  sourceRef="T_P_IF" targetRef="T_P_SJ"/>
+    <bpmn:sequenceFlow id="FP4"  sourceRef="T_P_SJ" targetRef="T_P_VD"/>
+    <bpmn:sequenceFlow id="FP5"  sourceRef="T_P_VD" targetRef="T_P_HK"/>
+    <bpmn:sequenceFlow id="FP6"  sourceRef="T_P_HK" targetRef="T_P_KP"/>
+    <bpmn:sequenceFlow id="FP7"  sourceRef="T_P_KP" targetRef="T_P_TK"/>
+    <bpmn:sequenceFlow id="FP8"  sourceRef="T_P_TK" targetRef="GW_P"/>
+    <bpmn:sequenceFlow id="FP9"  name="Ya"    sourceRef="GW_P" targetRef="T_P_CP"/>
+    <bpmn:sequenceFlow id="FP10" name="Tidak" sourceRef="GW_P" targetRef="EE_P_D"/>
+    <bpmn:sequenceFlow id="FP11a" sourceRef="T_P_CP" targetRef="T_P_SP"/>
+    <bpmn:sequenceFlow id="FP11" sourceRef="T_P_SP" targetRef="T_P_TS"/>
+    <bpmn:sequenceFlow id="FP12" sourceRef="T_P_TS" targetRef="T_P_TU"/>
+    <bpmn:sequenceFlow id="FP13" sourceRef="T_P_TU" targetRef="T_P_BA"/>
+    <bpmn:sequenceFlow id="FP14" sourceRef="T_P_BA" targetRef="T_P_TA"/>
+    <bpmn:sequenceFlow id="FP15" sourceRef="T_P_TA" targetRef="GW_P_L"/>
+    <bpmn:sequenceFlow id="FP16" name="Belum Lunas" sourceRef="GW_P_L" targetRef="T_P_BA"/>
+    <bpmn:sequenceFlow id="FP17" name="Lunas" sourceRef="GW_P_L" targetRef="EE_P_L"/>
+    <bpmn:sequenceFlow id="FP18" sourceRef="GW_P_L" targetRef="EE_P_K"/>
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="Diagram_AIPL">
+    <bpmndi:BPMNPlane id="Plane_AIPL" bpmnElement="Collab_AIPL">
+
+      <bpmndi:BPMNShape id="Part_AIPL_di" bpmnElement="Part_AIPL" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="1560" height="460"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Anggota_di" bpmnElement="Lane_Anggota" isHorizontal="true">
+        <dc:Bounds x="190" y="80" width="1530" height="230"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Kasir_di" bpmnElement="Lane_Kasir" isHorizontal="true">
+        <dc:Bounds x="190" y="310" width="1530" height="230"/>
+      </bpmndi:BPMNShape>
+
+      <!-- Anggota lane -->
+      <bpmndi:BPMNShape id="SE_P1_di" bpmnElement="SE_P1">
+        <dc:Bounds x="222" y="177" width="36" height="36"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="196" y="220" width="88" height="40"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_P_DK_di" bpmnElement="T_P_DK">
+        <dc:Bounds x="310" y="155" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_P_IF_di" bpmnElement="T_P_IF">
+        <dc:Bounds x="460" y="155" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_P_SJ_di" bpmnElement="T_P_SJ">
+        <dc:Bounds x="610" y="155" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_P_TK_di" bpmnElement="T_P_TK">
+        <dc:Bounds x="900" y="155" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_P_di" bpmnElement="GW_P" isMarkerVisible="true">
+        <dc:Bounds x="1055" y="170" width="50" height="50"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="1038" y="146" width="84" height="27"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EE_P_D_di" bpmnElement="EE_P_D">
+        <dc:Bounds x="1157" y="177" width="36" height="36"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="1133" y="220" width="84" height="27"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_P_TS_di" bpmnElement="T_P_TS">
+        <dc:Bounds x="1260" y="155" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_P_TU_di" bpmnElement="T_P_TU">
+        <dc:Bounds x="1410" y="155" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_P_BA_di" bpmnElement="T_P_BA">
+        <dc:Bounds x="1560" y="155" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EE_P_L_di" bpmnElement="EE_P_L">
+        <dc:Bounds x="1702" y="177" width="36" height="36"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="1686" y="220" width="68" height="27"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Kasir lane -->
+      <bpmndi:BPMNShape id="T_P_VD_di" bpmnElement="T_P_VD">
+        <dc:Bounds x="610" y="385" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_P_HK_di" bpmnElement="T_P_HK">
+        <dc:Bounds x="760" y="385" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_P_KP_di" bpmnElement="T_P_KP">
+        <dc:Bounds x="910" y="385" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_P_CP_di" bpmnElement="T_P_CP">
+        <dc:Bounds x="1060" y="385" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_P_SP_di" bpmnElement="T_P_SP">
+        <dc:Bounds x="1210" y="385" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_P_TA_di" bpmnElement="T_P_TA">
+        <dc:Bounds x="1560" y="385" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_P_L_di" bpmnElement="GW_P_L" isMarkerVisible="true">
+        <dc:Bounds x="1705" y="400" width="50" height="50"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="1688" y="376" width="84" height="40"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EE_P_K_di" bpmnElement="EE_P_K">
+        <dc:Bounds x="1812" y="407" width="36" height="36"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="1788" y="450" width="84" height="27"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Edges -->
+      <bpmndi:BPMNEdge id="FP1_di"  bpmnElement="FP1"><di:waypoint x="258" y="195"/><di:waypoint x="310" y="195"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FP2_di"  bpmnElement="FP2"><di:waypoint x="410" y="195"/><di:waypoint x="460" y="195"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FP3_di"  bpmnElement="FP3"><di:waypoint x="560" y="195"/><di:waypoint x="610" y="195"/></bpmndi:BPMNEdge>
+      <!-- cross-lane down: SerahJaminan → VerifDokumen -->
+      <bpmndi:BPMNEdge id="FP4_di"  bpmnElement="FP4">
+        <di:waypoint x="660" y="235"/><di:waypoint x="660" y="385"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FP5_di"  bpmnElement="FP5"><di:waypoint x="710" y="425"/><di:waypoint x="760" y="425"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FP6_di"  bpmnElement="FP6"><di:waypoint x="860" y="425"/><di:waypoint x="910" y="425"/></bpmndi:BPMNEdge>
+      <!-- cross-lane up: KeputusanKomite → TungguKeputusan -->
+      <bpmndi:BPMNEdge id="FP7_di"  bpmnElement="FP7">
+        <di:waypoint x="960" y="385"/><di:waypoint x="960" y="235"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FP8_di"  bpmnElement="FP8"><di:waypoint x="1000" y="195"/><di:waypoint x="1055" y="195"/></bpmndi:BPMNEdge>
+      <!-- Ya: cross-lane down to CatatPinjaman -->
+      <bpmndi:BPMNEdge id="FP9_di"  bpmnElement="FP9">
+        <di:waypoint x="1080" y="220"/><di:waypoint x="1080" y="312"/><di:waypoint x="1110" y="312"/><di:waypoint x="1110" y="385"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="1086" y="295" width="16" height="14"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <!-- Tidak: Ditolak -->
+      <bpmndi:BPMNEdge id="FP10_di" bpmnElement="FP10">
+        <di:waypoint x="1105" y="195"/><di:waypoint x="1157" y="195"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="1113" y="178" width="30" height="14"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FP11a_di" bpmnElement="FP11a"><di:waypoint x="1160" y="425"/><di:waypoint x="1210" y="425"/></bpmndi:BPMNEdge>
+      <!-- cross-lane up: SiapkanDana → TandaTangan -->
+      <bpmndi:BPMNEdge id="FP11_di" bpmnElement="FP11">
+        <di:waypoint x="1310" y="385"/><di:waypoint x="1310" y="235"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FP12_di" bpmnElement="FP12"><di:waypoint x="1360" y="195"/><di:waypoint x="1410" y="195"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FP13_di" bpmnElement="FP13"><di:waypoint x="1510" y="195"/><di:waypoint x="1560" y="195"/></bpmndi:BPMNEdge>
+      <!-- cross-lane down: BayarAngsuran → TerimaAngsuran -->
+      <bpmndi:BPMNEdge id="FP14_di" bpmnElement="FP14">
+        <di:waypoint x="1610" y="235"/><di:waypoint x="1610" y="385"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FP15_di" bpmnElement="FP15"><di:waypoint x="1660" y="425"/><di:waypoint x="1705" y="425"/></bpmndi:BPMNEdge>
+      <!-- Belum Lunas: loop back up to BayarAngsuran -->
+      <bpmndi:BPMNEdge id="FP16_di" bpmnElement="FP16">
+        <di:waypoint x="1730" y="400"/><di:waypoint x="1730" y="195"/><di:waypoint x="1660" y="195"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="1736" y="295" width="56" height="27"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <!-- Lunas: cross-lane up -->
+      <bpmndi:BPMNEdge id="FP17_di" bpmnElement="FP17">
+        <di:waypoint x="1730" y="400"/><di:waypoint x="1730" y="195"/><di:waypoint x="1702" y="195"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="1736" y="378" width="30" height="14"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FP18_di" bpmnElement="FP18">
+        <di:waypoint x="1755" y="425"/><di:waypoint x="1812" y="425"/>
+      </bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

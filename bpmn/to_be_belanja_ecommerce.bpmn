@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions
+  xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+  targetNamespace="http://bpmn.io/schema/bpmn"
+  id="Defs_TBEC">
+
+  <bpmn:collaboration id="Collab_TBEC">
+    <bpmn:participant id="Part_TBEC" name="To-Be: Belanja di Marketplace KopHub E-Commerce" processRef="Proc_TBEC"/>
+  </bpmn:collaboration>
+
+  <bpmn:process id="Proc_TBEC" name="To-Be: Belanja di Marketplace KopHub E-Commerce" isExecutable="false">
+    <bpmn:laneSet id="LS_TBEC">
+      <bpmn:lane id="EC_Lane_Buyer" name="Buyer (Anggota / Umum)">
+        <bpmn:flowNodeRef>EC_SE</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EC_T_Browse</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EC_T_Keranjang</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EC_T_Checkout</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EC_T_PilihBayar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EC_T_KonfirmBayar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EC_T_TerimaNotifDikirim</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EC_T_TerimaBarang</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EC_T_KonfirmTerima</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EC_T_TulisReview</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EC_EE_Selesai</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="EC_Lane_Sys" name="Sistem KopHub (Otomatis)">
+        <bpmn:flowNodeRef>EC_T_ProsesBayar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EC_T_UpdateStok</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EC_T_GenInvoice</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EC_T_NotifSeller</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EC_T_TrackPengiriman</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EC_T_HitungPoin</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EC_T_PotongKomisi</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="EC_Lane_Seller" name="Seller (Anggota Aktif)">
+        <bpmn:flowNodeRef>EC_T_TerimaOrder</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EC_T_ProsesPesanan</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EC_T_InputResi</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EC_T_MarkDikirim</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <!-- Buyer -->
+    <bpmn:startEvent id="EC_SE" name="Akses Marketplace KopHub">
+      <bpmn:outgoing>ECF1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="EC_T_Browse" name="Browse &amp; Cari Produk / Kategori">
+      <bpmn:incoming>ECF1</bpmn:incoming>
+      <bpmn:outgoing>ECF2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="EC_T_Keranjang" name="Tambah Produk ke Keranjang">
+      <bpmn:incoming>ECF2</bpmn:incoming>
+      <bpmn:outgoing>ECF3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="EC_T_Checkout" name="Checkout (Pilih Alamat &amp; Ekspedisi, Input Voucher / Poin)">
+      <bpmn:incoming>ECF3</bpmn:incoming>
+      <bpmn:outgoing>ECF4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="EC_T_PilihBayar" name="Pilih Metode Pembayaran (Transfer / QRIS / Saldo Anggota)">
+      <bpmn:incoming>ECF4</bpmn:incoming>
+      <bpmn:outgoing>ECF5</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="EC_T_KonfirmBayar" name="Konfirmasi &amp; Bayar">
+      <bpmn:incoming>ECF5</bpmn:incoming>
+      <bpmn:outgoing>ECF6</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="EC_T_TerimaNotifDikirim" name="Terima Notifikasi Pesanan Dikirim (Lacak Resi)">
+      <bpmn:incoming>ECF12</bpmn:incoming>
+      <bpmn:outgoing>ECF13</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="EC_T_TerimaBarang" name="Terima Barang dari Ekspedisi">
+      <bpmn:incoming>ECF13</bpmn:incoming>
+      <bpmn:outgoing>ECF14</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="EC_T_KonfirmTerima" name="Konfirmasi Pesanan Diterima di Platform">
+      <bpmn:incoming>ECF14</bpmn:incoming>
+      <bpmn:outgoing>ECF15</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="EC_T_TulisReview" name="Tulis Review &amp; Rating Produk">
+      <bpmn:incoming>ECF15</bpmn:incoming>
+      <bpmn:outgoing>ECF16</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="EC_EE_Selesai" name="Transaksi Selesai — Poin Loyalty Ditambahkan (1%)">
+      <bpmn:incoming>ECF20</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Sistem KopHub -->
+    <bpmn:serviceTask id="EC_T_ProsesBayar" name="Proses Pembayaran Otomatis &amp; Validasi" camunda:type="external" camunda:topic="prosesBayar">
+      <bpmn:incoming>ECF6</bpmn:incoming>
+      <bpmn:outgoing>ECF7</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="EC_T_GenInvoice" name="Generate Invoice &amp; Konfirmasi Pembayaran" camunda:type="external" camunda:topic="genInvoice">
+      <bpmn:incoming>ECF7</bpmn:incoming>
+      <bpmn:outgoing>ECF8</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="EC_T_UpdateStok" name="Update Stok Produk Otomatis" camunda:type="external" camunda:topic="updateStok">
+      <bpmn:incoming>ECF8</bpmn:incoming>
+      <bpmn:outgoing>ECF9</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="EC_T_NotifSeller" name="Kirim Notifikasi Pesanan Baru ke Seller" camunda:type="external" camunda:topic="notifSeller">
+      <bpmn:incoming>ECF9</bpmn:incoming>
+      <bpmn:outgoing>ECF10</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="EC_T_TrackPengiriman" name="Update Status Pengiriman Real-Time" camunda:type="external" camunda:topic="trackPengiriman">
+      <bpmn:incoming>ECF_track</bpmn:incoming>
+      <bpmn:outgoing>ECF12</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="EC_T_HitungPoin" name="Hitung &amp; Tambah Poin Loyalty Otomatis (1% dari Total)" camunda:type="external" camunda:topic="hitungPoin">
+      <bpmn:incoming>ECF16</bpmn:incoming>
+      <bpmn:outgoing>ECF17</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="EC_T_PotongKomisi" name="Potong Komisi Koperasi 3% &amp; Update Pendapatan Seller" camunda:type="external" camunda:topic="komisi">
+      <bpmn:incoming>ECF17</bpmn:incoming>
+      <bpmn:outgoing>ECF20</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- Seller -->
+    <bpmn:userTask id="EC_T_TerimaOrder" name="Terima Notifikasi Pesanan Baru di Dashboard Seller">
+      <bpmn:incoming>ECF10</bpmn:incoming>
+      <bpmn:outgoing>ECF11</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="EC_T_ProsesPesanan" name="Proses &amp; Kemas Pesanan">
+      <bpmn:incoming>ECF11</bpmn:incoming>
+      <bpmn:outgoing>ECF11b</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="EC_T_InputResi" name="Input Nomor Resi Ekspedisi">
+      <bpmn:incoming>ECF11b</bpmn:incoming>
+      <bpmn:outgoing>ECF11c</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="EC_T_MarkDikirim" name="Tandai Pesanan DIKIRIM di Platform">
+      <bpmn:incoming>ECF11c</bpmn:incoming>
+      <bpmn:outgoing>ECF_track</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:sequenceFlow id="ECF1"  sourceRef="EC_SE"             targetRef="EC_T_Browse"/>
+    <bpmn:sequenceFlow id="ECF2"  sourceRef="EC_T_Browse"       targetRef="EC_T_Keranjang"/>
+    <bpmn:sequenceFlow id="ECF3"  sourceRef="EC_T_Keranjang"    targetRef="EC_T_Checkout"/>
+    <bpmn:sequenceFlow id="ECF4"  sourceRef="EC_T_Checkout"     targetRef="EC_T_PilihBayar"/>
+    <bpmn:sequenceFlow id="ECF5"  sourceRef="EC_T_PilihBayar"   targetRef="EC_T_KonfirmBayar"/>
+    <bpmn:sequenceFlow id="ECF6"  sourceRef="EC_T_KonfirmBayar" targetRef="EC_T_ProsesBayar"/>
+    <bpmn:sequenceFlow id="ECF7"  sourceRef="EC_T_ProsesBayar"  targetRef="EC_T_GenInvoice"/>
+    <bpmn:sequenceFlow id="ECF8"  sourceRef="EC_T_GenInvoice"   targetRef="EC_T_UpdateStok"/>
+    <bpmn:sequenceFlow id="ECF9"  sourceRef="EC_T_UpdateStok"   targetRef="EC_T_NotifSeller"/>
+    <bpmn:sequenceFlow id="ECF10" sourceRef="EC_T_NotifSeller"  targetRef="EC_T_TerimaOrder"/>
+    <bpmn:sequenceFlow id="ECF11" sourceRef="EC_T_TerimaOrder"  targetRef="EC_T_ProsesPesanan"/>
+    <bpmn:sequenceFlow id="ECF11b" sourceRef="EC_T_ProsesPesanan" targetRef="EC_T_InputResi"/>
+    <bpmn:sequenceFlow id="ECF11c" sourceRef="EC_T_InputResi"   targetRef="EC_T_MarkDikirim"/>
+    <bpmn:sequenceFlow id="ECF_track" sourceRef="EC_T_MarkDikirim" targetRef="EC_T_TrackPengiriman"/>
+    <bpmn:sequenceFlow id="ECF12" sourceRef="EC_T_TrackPengiriman" targetRef="EC_T_TerimaNotifDikirim"/>
+    <bpmn:sequenceFlow id="ECF13" sourceRef="EC_T_TerimaNotifDikirim" targetRef="EC_T_TerimaBarang"/>
+    <bpmn:sequenceFlow id="ECF14" sourceRef="EC_T_TerimaBarang" targetRef="EC_T_KonfirmTerima"/>
+    <bpmn:sequenceFlow id="ECF15" sourceRef="EC_T_KonfirmTerima" targetRef="EC_T_TulisReview"/>
+    <bpmn:sequenceFlow id="ECF16" sourceRef="EC_T_TulisReview"  targetRef="EC_T_HitungPoin"/>
+    <bpmn:sequenceFlow id="ECF17" sourceRef="EC_T_HitungPoin"   targetRef="EC_T_PotongKomisi"/>
+    <bpmn:sequenceFlow id="ECF20" sourceRef="EC_T_PotongKomisi" targetRef="EC_EE_Selesai"/>
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="Diagram_TBEC">
+    <bpmndi:BPMNPlane id="Plane_TBEC" bpmnElement="Collab_TBEC">
+
+      <bpmndi:BPMNShape id="Part_TBEC_di" bpmnElement="Part_TBEC" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="1780" height="630"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EC_Lane_Buyer_di" bpmnElement="EC_Lane_Buyer" isHorizontal="true">
+        <dc:Bounds x="190" y="80" width="1750" height="210"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EC_Lane_Sys_di" bpmnElement="EC_Lane_Sys" isHorizontal="true">
+        <dc:Bounds x="190" y="290" width="1750" height="210"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EC_Lane_Seller_di" bpmnElement="EC_Lane_Seller" isHorizontal="true">
+        <dc:Bounds x="190" y="500" width="1750" height="210"/>
+      </bpmndi:BPMNShape>
+
+      <!-- Buyer (y-center=185) -->
+      <bpmndi:BPMNShape id="EC_SE_di" bpmnElement="EC_SE">
+        <dc:Bounds x="222" y="167" width="36" height="36"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="196" y="210" width="88" height="27"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EC_T_Browse_di" bpmnElement="EC_T_Browse">
+        <dc:Bounds x="310" y="145" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EC_T_Keranjang_di" bpmnElement="EC_T_Keranjang">
+        <dc:Bounds x="460" y="145" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EC_T_Checkout_di" bpmnElement="EC_T_Checkout">
+        <dc:Bounds x="610" y="145" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EC_T_PilihBayar_di" bpmnElement="EC_T_PilihBayar">
+        <dc:Bounds x="760" y="145" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EC_T_KonfirmBayar_di" bpmnElement="EC_T_KonfirmBayar">
+        <dc:Bounds x="910" y="145" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EC_T_TerimaNotifDikirim_di" bpmnElement="EC_T_TerimaNotifDikirim">
+        <dc:Bounds x="1210" y="145" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EC_T_TerimaBarang_di" bpmnElement="EC_T_TerimaBarang">
+        <dc:Bounds x="1360" y="145" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EC_T_KonfirmTerima_di" bpmnElement="EC_T_KonfirmTerima">
+        <dc:Bounds x="1510" y="145" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EC_T_TulisReview_di" bpmnElement="EC_T_TulisReview">
+        <dc:Bounds x="1660" y="145" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EC_EE_Selesai_di" bpmnElement="EC_EE_Selesai">
+        <dc:Bounds x="1812" y="167" width="36" height="36"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="1784" y="210" width="92" height="53"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Sistem KopHub (y-center=395) -->
+      <bpmndi:BPMNShape id="EC_T_ProsesBayar_di" bpmnElement="EC_T_ProsesBayar">
+        <dc:Bounds x="910" y="355" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EC_T_GenInvoice_di" bpmnElement="EC_T_GenInvoice">
+        <dc:Bounds x="1060" y="355" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EC_T_UpdateStok_di" bpmnElement="EC_T_UpdateStok">
+        <dc:Bounds x="1060" y="460" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EC_T_NotifSeller_di" bpmnElement="EC_T_NotifSeller">
+        <dc:Bounds x="1060" y="560" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EC_T_TrackPengiriman_di" bpmnElement="EC_T_TrackPengiriman">
+        <dc:Bounds x="1210" y="355" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EC_T_HitungPoin_di" bpmnElement="EC_T_HitungPoin">
+        <dc:Bounds x="1660" y="355" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EC_T_PotongKomisi_di" bpmnElement="EC_T_PotongKomisi">
+        <dc:Bounds x="1810" y="355" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <!-- Seller (y-center=605) -->
+      <bpmndi:BPMNShape id="EC_T_TerimaOrder_di" bpmnElement="EC_T_TerimaOrder">
+        <dc:Bounds x="1060" y="565" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EC_T_ProsesPesanan_di" bpmnElement="EC_T_ProsesPesanan">
+        <dc:Bounds x="1210" y="565" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EC_T_InputResi_di" bpmnElement="EC_T_InputResi">
+        <dc:Bounds x="1360" y="565" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EC_T_MarkDikirim_di" bpmnElement="EC_T_MarkDikirim">
+        <dc:Bounds x="1510" y="565" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <!-- Edges -->
+      <bpmndi:BPMNEdge id="ECF1_di"  bpmnElement="ECF1"><di:waypoint x="258" y="185"/><di:waypoint x="310" y="185"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ECF2_di"  bpmnElement="ECF2"><di:waypoint x="410" y="185"/><di:waypoint x="460" y="185"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ECF3_di"  bpmnElement="ECF3"><di:waypoint x="560" y="185"/><di:waypoint x="610" y="185"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ECF4_di"  bpmnElement="ECF4"><di:waypoint x="710" y="185"/><di:waypoint x="760" y="185"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ECF5_di"  bpmnElement="ECF5"><di:waypoint x="860" y="185"/><di:waypoint x="910" y="185"/></bpmndi:BPMNEdge>
+      <!-- KonfirmBayar → ProsesBayar (cross-lane down) -->
+      <bpmndi:BPMNEdge id="ECF6_di"  bpmnElement="ECF6">
+        <di:waypoint x="960" y="225"/><di:waypoint x="960" y="355"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ECF7_di"  bpmnElement="ECF7"><di:waypoint x="1010" y="395"/><di:waypoint x="1060" y="395"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ECF8_di"  bpmnElement="ECF8"><di:waypoint x="1110" y="435"/><di:waypoint x="1110" y="460"/></bpmndi:BPMNEdge>
+      <!-- UpdateStok → NotifSeller (down within Sys lane) -->
+      <bpmndi:BPMNEdge id="ECF9_di"  bpmnElement="ECF9">
+        <di:waypoint x="1110" y="460"/><di:waypoint x="1110" y="500"/>
+        <di:waypoint x="1110" y="500"/><di:waypoint x="1110" y="565"/>
+      </bpmndi:BPMNEdge>
+      <!-- NotifSeller → TerimaOrder (within Seller lane) -->
+      <bpmndi:BPMNEdge id="ECF10_di" bpmnElement="ECF10">
+        <di:waypoint x="1110" y="640"/><di:waypoint x="1110" y="700"/>
+        <di:waypoint x="1110" y="700"/><di:waypoint x="1110" y="645"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ECF11_di" bpmnElement="ECF11"><di:waypoint x="1160" y="605"/><di:waypoint x="1210" y="605"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ECF11b_di" bpmnElement="ECF11b"><di:waypoint x="1310" y="605"/><di:waypoint x="1360" y="605"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ECF11c_di" bpmnElement="ECF11c"><di:waypoint x="1460" y="605"/><di:waypoint x="1510" y="605"/></bpmndi:BPMNEdge>
+      <!-- MarkDikirim → TrackPengiriman (cross-lane up to Sys) -->
+      <bpmndi:BPMNEdge id="ECF_track_di" bpmnElement="ECF_track">
+        <di:waypoint x="1560" y="565"/><di:waypoint x="1560" y="500"/><di:waypoint x="1260" y="500"/><di:waypoint x="1260" y="435"/>
+      </bpmndi:BPMNEdge>
+      <!-- TrackPengiriman → TerimaNotifDikirim (cross-lane up to Buyer) -->
+      <bpmndi:BPMNEdge id="ECF12_di" bpmnElement="ECF12">
+        <di:waypoint x="1260" y="355"/><di:waypoint x="1260" y="225"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ECF13_di" bpmnElement="ECF13"><di:waypoint x="1310" y="185"/><di:waypoint x="1360" y="185"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ECF14_di" bpmnElement="ECF14"><di:waypoint x="1460" y="185"/><di:waypoint x="1510" y="185"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ECF15_di" bpmnElement="ECF15"><di:waypoint x="1610" y="185"/><di:waypoint x="1660" y="185"/></bpmndi:BPMNEdge>
+      <!-- TulisReview → HitungPoin (cross-lane down to Sys) -->
+      <bpmndi:BPMNEdge id="ECF16_di" bpmnElement="ECF16">
+        <di:waypoint x="1710" y="225"/><di:waypoint x="1710" y="355"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ECF17_di" bpmnElement="ECF17"><di:waypoint x="1760" y="395"/><di:waypoint x="1810" y="395"/></bpmndi:BPMNEdge>
+      <!-- PotongKomisi → EE_Selesai (cross-lane up) -->
+      <bpmndi:BPMNEdge id="ECF20_di" bpmnElement="ECF20">
+        <di:waypoint x="1860" y="355"/><di:waypoint x="1860" y="290"/><di:waypoint x="1830" y="290"/><di:waypoint x="1830" y="203"/>
+      </bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

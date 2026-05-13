@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions
+  xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+  targetNamespace="http://bpmn.io/schema/bpmn"
+  id="Defs_AIPA">
+
+  <bpmn:collaboration id="Collab_AIPA">
+    <bpmn:participant id="Part_AIPA" name="As-Is: Pendaftaran Anggota Koperasi" processRef="Proc_AIPA"/>
+  </bpmn:collaboration>
+
+  <bpmn:process id="Proc_AIPA" name="As-Is: Pendaftaran Anggota Koperasi" isExecutable="false">
+    <bpmn:laneSet id="LS_AIPA">
+      <bpmn:lane id="Lane_CA" name="Calon Anggota">
+        <bpmn:flowNodeRef>SE_1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_DK</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_IF</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_SD</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_TK</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GW_D</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EE_D</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_TKartu</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EE_A</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_PG" name="Pengurus Koperasi">
+        <bpmn:flowNodeRef>T_TV</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_RM</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_IH</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_CB</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <bpmn:startEvent id="SE_1" name="Ingin Mendaftar sebagai Anggota">
+      <bpmn:outgoing>F1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="T_DK" name="Datang ke Kantor Koperasi">
+      <bpmn:incoming>F1</bpmn:incoming>
+      <bpmn:outgoing>F2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="T_IF" name="Mengisi Formulir Pendaftaran (Kertas)">
+      <bpmn:incoming>F2</bpmn:incoming>
+      <bpmn:outgoing>F3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="T_SD" name="Menyerahkan Dokumen (KTP &amp; Formulir)">
+      <bpmn:incoming>F3</bpmn:incoming>
+      <bpmn:outgoing>F4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="T_TV" name="Menerima &amp; Verifikasi Dokumen Manual">
+      <bpmn:incoming>F4</bpmn:incoming>
+      <bpmn:outgoing>F5</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="T_RM" name="Review &amp; Keputusan Pengurus">
+      <bpmn:incoming>F5</bpmn:incoming>
+      <bpmn:outgoing>F6</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="T_IH" name="Beritahu Calon Anggota (Telepon / SMS)">
+      <bpmn:incoming>F6</bpmn:incoming>
+      <bpmn:outgoing>F7</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="T_TK" name="Menunggu Keputusan Pengurus">
+      <bpmn:incoming>F7</bpmn:incoming>
+      <bpmn:outgoing>F8</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="GW_D" name="Disetujui?">
+      <bpmn:incoming>F8</bpmn:incoming>
+      <bpmn:outgoing>F9</bpmn:outgoing>
+      <bpmn:outgoing>F10</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="T_CB" name="Catat Data di Buku Anggota Manual">
+      <bpmn:incoming>F9</bpmn:incoming>
+      <bpmn:outgoing>F11</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="T_TKartu" name="Menerima Kartu / Buku Anggota">
+      <bpmn:incoming>F11</bpmn:incoming>
+      <bpmn:outgoing>F12</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="EE_A" name="Resmi Menjadi Anggota Koperasi">
+      <bpmn:incoming>F12</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="EE_D" name="Pendaftaran Ditolak">
+      <bpmn:incoming>F10</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="F1"  sourceRef="SE_1"  targetRef="T_DK"/>
+    <bpmn:sequenceFlow id="F2"  sourceRef="T_DK"  targetRef="T_IF"/>
+    <bpmn:sequenceFlow id="F3"  sourceRef="T_IF"  targetRef="T_SD"/>
+    <bpmn:sequenceFlow id="F4"  sourceRef="T_SD"  targetRef="T_TV"/>
+    <bpmn:sequenceFlow id="F5"  sourceRef="T_TV"  targetRef="T_RM"/>
+    <bpmn:sequenceFlow id="F6"  sourceRef="T_RM"  targetRef="T_IH"/>
+    <bpmn:sequenceFlow id="F7"  sourceRef="T_IH"  targetRef="T_TK"/>
+    <bpmn:sequenceFlow id="F8"  sourceRef="T_TK"  targetRef="GW_D"/>
+    <bpmn:sequenceFlow id="F9"  name="Ya"    sourceRef="GW_D" targetRef="T_CB"/>
+    <bpmn:sequenceFlow id="F10" name="Tidak" sourceRef="GW_D" targetRef="EE_D"/>
+    <bpmn:sequenceFlow id="F11" sourceRef="T_CB"    targetRef="T_TKartu"/>
+    <bpmn:sequenceFlow id="F12" sourceRef="T_TKartu" targetRef="EE_A"/>
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="Diagram_AIPA">
+    <bpmndi:BPMNPlane id="Plane_AIPA" bpmnElement="Collab_AIPA">
+
+      <bpmndi:BPMNShape id="Part_AIPA_di" bpmnElement="Part_AIPA" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="1310" height="460"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_CA_di" bpmnElement="Lane_CA" isHorizontal="true">
+        <dc:Bounds x="190" y="80" width="1280" height="230"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_PG_di" bpmnElement="Lane_PG" isHorizontal="true">
+        <dc:Bounds x="190" y="310" width="1280" height="230"/>
+      </bpmndi:BPMNShape>
+
+      <!-- Calon Anggota lane (y-center 195) -->
+      <bpmndi:BPMNShape id="SE_1_di" bpmnElement="SE_1">
+        <dc:Bounds x="222" y="177" width="36" height="36"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="196" y="220" width="88" height="40"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_DK_di" bpmnElement="T_DK">
+        <dc:Bounds x="310" y="155" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_IF_di" bpmnElement="T_IF">
+        <dc:Bounds x="460" y="155" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_SD_di" bpmnElement="T_SD">
+        <dc:Bounds x="610" y="155" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_TK_di" bpmnElement="T_TK">
+        <dc:Bounds x="850" y="155" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_D_di" bpmnElement="GW_D" isMarkerVisible="true">
+        <dc:Bounds x="1005" y="170" width="50" height="50"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="998" y="146" width="64" height="14"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EE_D_di" bpmnElement="EE_D">
+        <dc:Bounds x="1107" y="177" width="36" height="36"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="1083" y="220" width="84" height="27"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_TKartu_di" bpmnElement="T_TKartu">
+        <dc:Bounds x="1210" y="155" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EE_A_di" bpmnElement="EE_A">
+        <dc:Bounds x="1372" y="177" width="36" height="36"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="1346" y="220" width="88" height="40"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Pengurus lane (y-center 425) -->
+      <bpmndi:BPMNShape id="T_TV_di" bpmnElement="T_TV">
+        <dc:Bounds x="610" y="385" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_RM_di" bpmnElement="T_RM">
+        <dc:Bounds x="760" y="385" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_IH_di" bpmnElement="T_IH">
+        <dc:Bounds x="880" y="385" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_CB_di" bpmnElement="T_CB">
+        <dc:Bounds x="1110" y="385" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <!-- Edges -->
+      <bpmndi:BPMNEdge id="F1_di"  bpmnElement="F1">
+        <di:waypoint x="258" y="195"/><di:waypoint x="310" y="195"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F2_di"  bpmnElement="F2">
+        <di:waypoint x="410" y="195"/><di:waypoint x="460" y="195"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F3_di"  bpmnElement="F3">
+        <di:waypoint x="560" y="195"/><di:waypoint x="610" y="195"/>
+      </bpmndi:BPMNEdge>
+      <!-- cross-lane down: SerahDokumen → TerimaVerif -->
+      <bpmndi:BPMNEdge id="F4_di"  bpmnElement="F4">
+        <di:waypoint x="660" y="235"/><di:waypoint x="660" y="385"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F5_di"  bpmnElement="F5">
+        <di:waypoint x="710" y="425"/><di:waypoint x="760" y="425"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F6_di"  bpmnElement="F6">
+        <di:waypoint x="860" y="425"/><di:waypoint x="880" y="425"/>
+      </bpmndi:BPMNEdge>
+      <!-- cross-lane up: InfokanHasil → TungguKeputusan -->
+      <bpmndi:BPMNEdge id="F7_di"  bpmnElement="F7">
+        <di:waypoint x="930" y="385"/><di:waypoint x="930" y="235"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F8_di"  bpmnElement="F8">
+        <di:waypoint x="950" y="195"/><di:waypoint x="1005" y="195"/>
+      </bpmndi:BPMNEdge>
+      <!-- Ya: cross-lane down to CatatBuku -->
+      <bpmndi:BPMNEdge id="F9_di"  bpmnElement="F9">
+        <di:waypoint x="1030" y="220"/>
+        <di:waypoint x="1030" y="312"/>
+        <di:waypoint x="1160" y="312"/>
+        <di:waypoint x="1160" y="385"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="1036" y="295" width="16" height="14"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <!-- Tidak -->
+      <bpmndi:BPMNEdge id="F10_di" bpmnElement="F10">
+        <di:waypoint x="1055" y="195"/><di:waypoint x="1107" y="195"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="1063" y="178" width="30" height="14"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <!-- cross-lane up: CatatBuku → TerimaKartu -->
+      <bpmndi:BPMNEdge id="F11_di" bpmnElement="F11">
+        <di:waypoint x="1210" y="425"/>
+        <di:waypoint x="1185" y="425"/>
+        <di:waypoint x="1185" y="312"/>
+        <di:waypoint x="1260" y="312"/>
+        <di:waypoint x="1260" y="235"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F12_di" bpmnElement="F12">
+        <di:waypoint x="1310" y="195"/><di:waypoint x="1372" y="195"/>
+      </bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
