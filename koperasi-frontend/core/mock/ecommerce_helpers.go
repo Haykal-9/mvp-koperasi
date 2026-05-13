@@ -21,6 +21,15 @@ func FindECommerceUserByUsername(username string) *model.ECommerceUser {
 	return nil
 }
 
+func FindECommerceUserByEmail(email string) *model.ECommerceUser {
+	for i := range ECommerceUsers {
+		if ECommerceUsers[i].Email == email {
+			return &ECommerceUsers[i]
+		}
+	}
+	return nil
+}
+
 func FindECommerceUserByID(id int) *model.ECommerceUser {
 	for i := range ECommerceUsers {
 		if ECommerceUsers[i].ID == id {
@@ -30,12 +39,17 @@ func FindECommerceUserByID(id int) *model.ECommerceUser {
 	return nil
 }
 
-func AuthenticateECommerceUser(username, password string) (*model.ECommerceUser, bool) {
-	u := FindECommerceUserByUsername(username)
-	if u == nil || u.Password != password {
+// AuthenticateECommerceUser validates credentials against koperasi Users (single source of truth).
+// Email and password are the same as koperasi management login.
+func AuthenticateECommerceUser(email, password string) (*model.ECommerceUser, bool) {
+	// Validate against koperasi user credentials
+	kUser := FindUserByEmail(email)
+	if kUser == nil || kUser.Password != password {
 		return nil, false
 	}
-	return u, true
+	// Find the corresponding EC user
+	u := FindECommerceUserByEmail(email)
+	return u, u != nil
 }
 
 func CreateECommerceUser(username, email, password string) *model.ECommerceUser {
@@ -723,5 +737,21 @@ func GetLinkedKoperasiMember(ecUserID int) *model.Member {
 		return nil
 	}
 	return FindMemberByID(u.LinkedKoperasiMemberID)
+}
+
+// FindECommerceUserByMemberName finds the EC user whose linked koperasi member has the given name.
+// Used for SSO: auto-login to e-commerce when already logged into koperasi management.
+func FindECommerceUserByMemberName(nama string) *model.ECommerceUser {
+	for i := range Members {
+		if Members[i].Nama == nama {
+			memberID := Members[i].ID
+			for j := range ECommerceUsers {
+				if ECommerceUsers[j].LinkedKoperasiMemberID == memberID {
+					return &ECommerceUsers[j]
+				}
+			}
+		}
+	}
+	return nil
 }
 

@@ -70,6 +70,16 @@ func (h *AuthHandler) DoLogin(c *gin.Context) {
 	sess.Set("user_email", user.Email)
 	sess.Set("user_nama", user.Nama)
 	sess.Set("user_role", user.Role)
+
+	// SSO: also set EC session so all roles can access e-commerce without re-login
+	if ecUser := mock.FindECommerceUserByEmail(user.Email); ecUser != nil {
+		sess.Set("ec_user_id", ecUser.ID)
+		sess.Set("ec_username", ecUser.Username)
+		sess.Set("ec_email", ecUser.Email)
+		sess.Set("ec_role", ecUser.Role)
+		sess.Set("ec_is_seller", ecUser.IsSellerActive)
+	}
+
 	if err := sess.Save(); err != nil {
 		SetFlash(c, "error", "Gagal menyimpan sesi. Coba lagi.")
 		c.Redirect(http.StatusFound, "/login")
@@ -147,7 +157,7 @@ func (h *AuthHandler) DoRegister(c *gin.Context) {
 // ===== GET /logout =====
 func (h *AuthHandler) DoLogout(c *gin.Context) {
 	sess := sessions.Default(c)
-	sess.Clear()
+	sess.Clear() // clears both koperasi and EC sessions
 	_ = sess.Save()
 	SetFlash(c, "success", "Anda telah keluar.")
 	c.Redirect(http.StatusFound, "/login")

@@ -7,34 +7,29 @@ import "koperasi-frontend/core/model"
 // ============================================================
 
 // ECommerceUsers holds all e-commerce user accounts.
+// Credentials (email + password) are identical to koperasi Users — single login for both systems.
 var ECommerceUsers = []model.ECommerceUser{
 	{
-		ID: 1, Username: "andi", Email: "andi@ec.com", Password: "andi123",
+		ID: 1, Username: "andi_wijaya", Email: "anggota@koperasi.id", Password: "anggota123",
 		Role: "BUYER", IsSellerActive: true, SellerRating: 4.7,
-		LinkedKoperasiMemberID: 1, // Linked to koperasi member Andi Wijaya
+		LinkedKoperasiMemberID: 1, // Andi Wijaya — KOP-0001
 		CreatedAt: "2026-01-10",
 	},
 	{
-		ID: 2, Username: "rina", Email: "rina@ec.com", Password: "rina123",
+		ID: 2, Username: "rina_pertiwi", Email: "rina@koperasi.id", Password: "rina123",
 		Role: "BUYER", IsSellerActive: true, SellerRating: 4.5,
-		LinkedKoperasiMemberID: 2, // Linked to koperasi member Rina Pertiwi
+		LinkedKoperasiMemberID: 2, // Rina Pertiwi — KOP-0002
 		CreatedAt: "2026-01-15",
 	},
 	{
-		ID: 3, Username: "budi", Email: "budi@ec.com", Password: "budi123",
-		Role: "BUYER", IsSellerActive: false, SellerRating: 0,
-		LinkedKoperasiMemberID: 0, // Not linked to koperasi
-		CreatedAt: "2026-02-01",
-	},
-	{
-		ID: 4, Username: "admin", Email: "admin@ec.com", Password: "admin123",
+		ID: 3, Username: "budi_santoso", Email: "owner@koperasi.id", Password: "owner123",
 		Role: "ADMIN", IsSellerActive: false, SellerRating: 0,
 		LinkedKoperasiMemberID: 0,
 		CreatedAt: "2026-01-01",
 	},
 	{
-		ID: 5, Username: "kasir", Email: "kasir@ec.com", Password: "kasir123",
-		Role: "KASIR", IsSellerActive: false, SellerRating: 0,
+		ID: 4, Username: "siti_aminah", Email: "kasir@koperasi.id", Password: "kasir123",
+		Role: "BUYER", IsSellerActive: false, SellerRating: 0,
 		LinkedKoperasiMemberID: 0,
 		CreatedAt: "2026-01-05",
 	},
@@ -136,12 +131,12 @@ var ECProducts = []model.ECProduct{
 // ECAddresses holds shipping addresses.
 var ECAddresses = []model.ECAddress{
 	{
-		ID: 1, UserID: 3, Label: "Rumah", Penerima: "Budi Prasetyo",
+		ID: 1, UserID: 3, Label: "Rumah", Penerima: "Budi Santoso",
 		NoHP: "081345678901", Alamat: "Jl. Cihampelas No. 55, Rt 03/Rw 05",
 		Kota: "Bandung", Provinsi: "Jawa Barat", KodePos: "40131", IsDefault: true,
 	},
 	{
-		ID: 2, UserID: 3, Label: "Kantor", Penerima: "Budi Prasetyo",
+		ID: 2, UserID: 3, Label: "Kantor", Penerima: "Budi Santoso",
 		NoHP: "081345678901", Alamat: "Jl. Sudirman No. 100, Gedung A Lt. 3",
 		Kota: "Bandung", Provinsi: "Jawa Barat", KodePos: "40261", IsDefault: false,
 	},
@@ -160,7 +155,7 @@ var ECProductReviews = []model.ProductReview{
 		CreatedAt: "2026-03-15",
 	},
 	{
-		ID: 2, ProductID: 6, UserID: 3, Username: "budi",
+		ID: 2, ProductID: 6, UserID: 3, Username: "budi_santoso",
 		Rating: 4, Komentar: "Keripiknya enak dan renyah. Pedasnya pas!",
 		CreatedAt: "2026-03-20",
 	},
@@ -205,7 +200,7 @@ var ECShippingOptions = []model.ShippingOption{
 // ECOrders holds e-commerce orders.
 var ECOrders = []model.ECOrder{
 	{
-		ID: 1, NomorOrder: "EC-20260401-001", BuyerID: 3, BuyerName: "budi",
+		ID: 1, NomorOrder: "EC-20260401-001", BuyerID: 3, BuyerName: "budi_santoso",
 		SellerID: 1, SellerName: "Toko Andi Jaya",
 		Items: []model.ECOrderItem{
 			{ProductID: 1, ProductNama: "Beras Organik Premium 5kg", SellerID: 1, Jumlah: 1, HargaSatuan: 85000, Subtotal: 85000},
@@ -219,7 +214,7 @@ var ECOrders = []model.ECOrder{
 		CreatedAt: "2026-04-01 10:30", UpdatedAt: "2026-04-04 14:00",
 	},
 	{
-		ID: 2, NomorOrder: "EC-20260410-001", BuyerID: 3, BuyerName: "budi",
+		ID: 2, NomorOrder: "EC-20260410-001", BuyerID: 3, BuyerName: "budi_santoso",
 		SellerID: 2, SellerName: "Rina Craft & Food",
 		Items: []model.ECOrderItem{
 			{ProductID: 6, ProductNama: "Keripik Singkong Pedas 200g", SellerID: 2, Jumlah: 3, HargaSatuan: 18000, Subtotal: 54000},
@@ -275,7 +270,7 @@ var ECShipmentEvents = []model.ShipmentEvent{
 
 // ECAuditLogs records admin/system actions.
 var ECAuditLogs = []model.AuditLog{
-	{ID: 1, Action: "APPROVE_PRODUCT", UserID: 4, Username: "admin", Resource: "product:1", Details: "Approved: Beras Organik Premium 5kg", CreatedAt: "2026-01-21"},
-	{ID: 2, Action: "APPROVE_PRODUCT", UserID: 4, Username: "admin", Resource: "product:6", Details: "Approved: Keripik Singkong Pedas 200g", CreatedAt: "2026-01-26"},
-	{ID: 3, Action: "LINK_KOPERASI", UserID: 1, Username: "andi", Resource: "member:1", Details: "Linked e-commerce account to koperasi member Andi Wijaya (KOP-0001)", CreatedAt: "2026-01-10"},
+	{ID: 1, Action: "APPROVE_PRODUCT", UserID: 3, Username: "budi_santoso", Resource: "product:1", Details: "Approved: Beras Organik Premium 5kg", CreatedAt: "2026-01-21"},
+	{ID: 2, Action: "APPROVE_PRODUCT", UserID: 3, Username: "budi_santoso", Resource: "product:6", Details: "Approved: Keripik Singkong Pedas 200g", CreatedAt: "2026-01-26"},
+	{ID: 3, Action: "LINK_KOPERASI", UserID: 1, Username: "andi_wijaya", Resource: "member:1", Details: "Linked e-commerce account to koperasi member Andi Wijaya (KOP-0001)", CreatedAt: "2026-01-10"},
 }

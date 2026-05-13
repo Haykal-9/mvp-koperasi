@@ -13,6 +13,7 @@ import (
 	"koperasi-frontend/core/mock"
 )
 
+
 // ECRenderer is the function the e-commerce handlers use to render templates.
 type ECRenderer func(c *gin.Context, layout, page string, data gin.H)
 
@@ -31,41 +32,56 @@ func NewAuthHandler(render ECRenderer) *AuthHandler {
 func (h *AuthHandler) Login(c *gin.Context) {
 	sess := sessions.Default(c)
 
-	// Already logged in → redirect to buyer dashboard
+	// Already logged into e-commerce → redirect to buyer dashboard
 	if sess.Get("ec_user_id") != nil {
 		c.Redirect(http.StatusFound, "/ecommerce/buyer")
 		return
 	}
 
+	// SSO: auto-login for any koperasi role if a matching EC account exists
+	if sess.Get("user_id") != nil {
+		userEmail, _ := sess.Get("user_email").(string)
+		if userEmail != "" {
+			ecUser := mock.FindECommerceUserByEmail(userEmail)
+			if ecUser != nil {
+				if err := SetECSession(c, ecUser.ID, ecUser.Username, ecUser.Email, ecUser.Role, ecUser.IsSellerActive); err == nil {
+					handler.SetFlash(c, "ec_success", fmt.Sprintf("Selamat datang, %s! Anda login otomatis melalui akun Koperasi.", ecUser.Username))
+					c.Redirect(http.StatusFound, "/ecommerce/buyer")
+					return
+				}
+			}
+		}
+	}
+
 	flashErr, _ := handler.PopFlash(c, "ec_error")
 	flashOk, _ := handler.PopFlash(c, "ec_success")
-	prefillUsername, _ := handler.PopFlash(c, "ec_form_username")
+	prefillEmail, _ := handler.PopFlash(c, "ec_form_email")
 
 	h.Render(c, "ec_auth", "ecommerce/auth/login", gin.H{
 		"Title":        "E-Commerce Login",
 		"FlashError":   flashErr,
 		"FlashSuccess": flashOk,
-		"FormUsername":  prefillUsername,
+		"FormEmail":    prefillEmail,
 	})
 }
 
 // DoLogin processes the e-commerce login form.
 // POST /ecommerce/login
 func (h *AuthHandler) DoLogin(c *gin.Context) {
-	username := strings.TrimSpace(c.PostForm("username"))
+	email := strings.TrimSpace(c.PostForm("email"))
 	password := c.PostForm("password")
 
-	if username == "" || password == "" {
-		handler.SetFlash(c, "ec_error", "Username dan password wajib diisi.")
-		handler.SetFlash(c, "ec_form_username", username)
+	if email == "" || password == "" {
+		handler.SetFlash(c, "ec_error", "Email dan password wajib diisi.")
+		handler.SetFlash(c, "ec_form_email", email)
 		c.Redirect(http.StatusFound, "/ecommerce/login")
 		return
 	}
 
-	user, ok := mock.AuthenticateECommerceUser(username, password)
+	user, ok := mock.AuthenticateECommerceUser(email, password)
 	if !ok {
-		handler.SetFlash(c, "ec_error", "Username atau password salah.")
-		handler.SetFlash(c, "ec_form_username", username)
+		handler.SetFlash(c, "ec_error", "Email atau password salah.")
+		handler.SetFlash(c, "ec_form_email", email)
 		c.Redirect(http.StatusFound, "/ecommerce/login")
 		return
 	}
