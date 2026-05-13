@@ -1,0 +1,157 @@
+{{define "content"}}
+<!-- KPI Metrics -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="ec-card p-3 text-center">
+            <i class="bi bi-hourglass-split" style="font-size:1.5rem;color:#f59e0b;"></i>
+            <h4 class="mt-2 mb-0 text-warning">{{.PendingProducts}}</h4>
+            <small class="text-muted">Produk Pending</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="ec-card p-3 text-center">
+            <i class="bi bi-receipt" style="font-size:1.5rem;color:#3b82f6;"></i>
+            <h4 class="mt-2 mb-0">{{.TotalOrders}}</h4>
+            <small class="text-muted">Total Order</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="ec-card p-3 text-center">
+            <i class="bi bi-people" style="font-size:1.5rem;color:#a78bfa;"></i>
+            <h4 class="mt-2 mb-0">{{.TotalUsers}}</h4>
+            <small class="text-muted">Total User</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="ec-card p-3 text-center">
+            <i class="bi bi-cash-stack" style="font-size:1.5rem;color:#22c55e;"></i>
+            <h4 class="mt-2 mb-0" style="font-size:1rem;">{{rupiah .TotalRevenue}}</h4>
+            <small class="text-muted">Total Revenue</small>
+        </div>
+    </div>
+</div>
+
+<!-- Secondary Metrics -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="ec-card p-3 text-center">
+            <i class="bi bi-shop" style="font-size:1.4rem;color:#06b6d4;"></i>
+            <h5 class="mt-2 mb-0">{{.ActiveSellers}}</h5>
+            <small class="text-muted">Seller Aktif</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="ec-card p-3 text-center">
+            <i class="bi bi-check-circle" style="font-size:1.4rem;color:#22c55e;"></i>
+            <h5 class="mt-2 mb-0">{{.CompletedOrders}}</h5>
+            <small class="text-muted">Order Selesai</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="ec-card p-3 text-center">
+            <i class="bi bi-tag" style="font-size:1.4rem;color:#f97316;"></i>
+            <h5 class="mt-2 mb-0">{{.ActiveVouchers}}</h5>
+            <small class="text-muted">Voucher Aktif</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <a href="/ecommerce/admin/analytics" class="text-decoration-none">
+            <div class="ec-card p-3 text-center h-100 d-flex flex-column justify-content-center">
+                <i class="bi bi-bar-chart" style="font-size:1.4rem;color:#a78bfa;"></i>
+                <small class="text-muted mt-1">Lihat Analytics</small>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <h6 class="text-muted text-uppercase" style="font-size:.75rem;letter-spacing:.08rem;">Aksi Cepat</h6>
+    </div>
+    <div class="col-md-3">
+        <a href="/ecommerce/admin/products" class="text-decoration-none">
+            <div class="ec-card p-3 d-flex align-items-center gap-3">
+                <i class="bi bi-box-seam" style="font-size:1.2rem;color:#f59e0b;"></i>
+                <div>
+                    <div class="text-white" style="font-size:.9rem;">Review Produk</div>
+                    {{if gt .PendingProducts 0}}
+                    <small class="text-warning">{{.PendingProducts}} menunggu</small>
+                    {{else}}
+                    <small class="text-muted">Tidak ada pending</small>
+                    {{end}}
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="/ecommerce/admin/sellers" class="text-decoration-none">
+            <div class="ec-card p-3 d-flex align-items-center gap-3">
+                <i class="bi bi-person-badge" style="font-size:1.2rem;color:#3b82f6;"></i>
+                <div>
+                    <div class="text-white" style="font-size:.9rem;">Kelola Seller</div>
+                    <small class="text-muted">{{.ActiveSellers}} aktif</small>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="/ecommerce/admin/vouchers" class="text-decoration-none">
+            <div class="ec-card p-3 d-flex align-items-center gap-3">
+                <i class="bi bi-ticket-perforated" style="font-size:1.2rem;color:#22c55e;"></i>
+                <div>
+                    <div class="text-white" style="font-size:.9rem;">Voucher</div>
+                    <small class="text-muted">{{.ActiveVouchers}} aktif</small>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="/ecommerce/admin/audit" class="text-decoration-none">
+            <div class="ec-card p-3 d-flex align-items-center gap-3">
+                <i class="bi bi-journal-text" style="font-size:1.2rem;color:#a78bfa;"></i>
+                <div>
+                    <div class="text-white" style="font-size:.9rem;">Audit Log</div>
+                    <small class="text-muted">Lihat semua aksi</small>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="ec-card p-4">
+    <h6 class="mb-3" style="color:#a78bfa;">
+        <i class="bi bi-activity me-2"></i>Aktivitas Terbaru
+    </h6>
+    {{if .RecentActivity}}
+    <div class="list-group list-group-flush">
+        {{range .RecentActivity}}
+        <div class="list-group-item bg-transparent border-0 px-0 py-2 border-bottom" style="border-color:rgba(255,255,255,.06)!important;">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center"
+                     style="width:36px;height:36px;background:rgba(124,58,237,.15);flex-shrink:0;">
+                    <i class="bi bi-shield-check" style="color:#a78bfa;font-size:.85rem;"></i>
+                </div>
+                <div class="flex-grow-1 min-width-0">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <span class="badge bg-secondary" style="font-size:.7rem;">{{.Action}}</span>
+                        <small class="text-muted ms-2" style="white-space:nowrap;">{{.CreatedAt}}</small>
+                    </div>
+                    <div class="text-white" style="font-size:.85rem;margin-top:.25rem;">{{.Details}}</div>
+                    <small class="text-muted">oleh {{.Username}} · {{.Resource}}</small>
+                </div>
+            </div>
+        </div>
+        {{end}}
+    </div>
+    <div class="mt-3">
+        <a href="/ecommerce/admin/audit" class="btn btn-sm btn-outline-secondary">
+            Lihat Semua <i class="bi bi-arrow-right ms-1"></i>
+        </a>
+    </div>
+    {{else}}
+    <p class="text-muted mb-0">Belum ada aktivitas.</p>
+    {{end}}
+</div>
+{{end}}

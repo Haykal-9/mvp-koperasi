@@ -1,0 +1,73 @@
+{{define "ec_auth_base"}}
+<!DOCTYPE html>
+<html lang="id" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}} — KopHub E-Commerce</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        .auth-card {
+            width: 100%;
+            max-width: 460px;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 1rem;
+            background: rgba(30,30,50,0.85);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+        .auth-card .card-header {
+            background: transparent;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            text-align: center;
+            padding: 1.5rem;
+        }
+        .brand-icon { font-size: 2.5rem; color: #7c3aed; }
+        .btn-ec-primary {
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+            border: none;
+            color: #fff;
+        }
+        .btn-ec-primary:hover {
+            background: linear-gradient(135deg, #6d28d9, #5b21b6);
+            color: #fff;
+        }
+        a.ec-link { color: #a78bfa; text-decoration: none; }
+        a.ec-link:hover { color: #c4b5fd; text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="auth-card card">
+        <div class="card-header">
+            <i class="bi bi-shop brand-icon"></i>
+            <h4 class="mt-2 mb-0">KopHub E-Commerce</h4>
+        </div>
+        <div class="card-body p-4">
+            {{if .FlashError}}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-circle me-1"></i>{{.FlashError}}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {{end}}
+            {{if .FlashSuccess}}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle me-1"></i>{{.FlashSuccess}}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {{end}}
+            {{template "content" .}}
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+{{end}}

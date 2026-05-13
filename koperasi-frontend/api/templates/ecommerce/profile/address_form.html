@@ -1,0 +1,68 @@
+{{define "content"}}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a href="/ecommerce/profile/addresses" class="text-decoration-none" style="color:#a78bfa;">Alamat</a></li>
+        <li class="breadcrumb-item active">{{if .IsEdit}}Edit Alamat{{else}}Tambah Alamat{{end}}</li>
+    </ol>
+</nav>
+
+<div class="ec-card p-4" style="max-width:600px;">
+    <h5 class="mb-4">
+        <i class="bi bi-geo-alt me-2"></i>
+        {{if .IsEdit}}Edit Alamat{{else}}Tambah Alamat Baru{{end}}
+    </h5>
+    <form method="POST" action="/ecommerce/profile/addresses">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label text-muted small">Label * <span class="text-muted">(cth: Rumah, Kantor)</span></label>
+                <input type="text" name="label" class="form-control"
+                       style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);color:#fff;"
+                       placeholder="Rumah" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label text-muted small">Nama Penerima *</label>
+                <input type="text" name="penerima" class="form-control"
+                       style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);color:#fff;"
+                       placeholder="Nama lengkap penerima" required>
+            </div>
+            <div class="col-12">
+                <label class="form-label text-muted small">No. HP</label>
+                <input type="tel" name="no_hp" class="form-control"
+                       style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);color:#fff;"
+                       placeholder="08xxxxxxxxxx">
+            </div>
+            <div class="col-12">
+                <label class="form-label text-muted small">Alamat Lengkap *</label>
+                <textarea name="alamat" class="form-control" rows="3"
+                          style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);color:#fff;resize:none;"
+                          placeholder="Jl. Contoh No. 123, RT/RW" required></textarea>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label text-muted small">Kota *</label>
+                <input type="text" name="kota" class="form-control"
+                       style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);color:#fff;"
+                       placeholder="Bandung" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label text-muted small">Provinsi</label>
+                <input type="text" name="provinsi" class="form-control"
+                       style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);color:#fff;"
+                       placeholder="Jawa Barat">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label text-muted small">Kode Pos</label>
+                <input type="text" name="kode_pos" class="form-control"
+                       style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);color:#fff;"
+                       placeholder="40xxx" maxlength="5">
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-ec-primary px-4">
+                <i class="bi bi-check me-1"></i>Simpan Alamat
+            </button>
+            <a href="/ecommerce/profile/addresses" class="btn btn-outline-secondary">Batal</a>
+        </div>
+    </form>
+</div>
+{{end}}

@@ -24,3 +24,15 @@ func PopFlash(c *gin.Context, key string) (string, bool) {
 	s, ok := v.(string)
 	return s, ok
 }
+
+// PopFlashCheck peeks at a flash value without removing it.
+func PopFlashCheck(c *gin.Context, key string) string {
+	sess := sessions.Default(c)
+	v := sess.Get("flash_" + key)
+	if v == nil {
+		return ""
+	}
+	s, _ := v.(string)
+	return s
+}
+

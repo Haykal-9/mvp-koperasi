@@ -1,0 +1,129 @@
+{{define "content"}}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a href="/ecommerce/orders" class="text-decoration-none" style="color:#a78bfa;">Pesanan</a></li>
+        <li class="breadcrumb-item"><a href="/ecommerce/orders/{{.Order.ID}}/track" class="text-decoration-none" style="color:#a78bfa;">{{.Order.NomorOrder}}</a></li>
+        <li class="breadcrumb-item active">Beri Ulasan</li>
+    </ol>
+</nav>
+
+<!-- Order Summary -->
+<div class="ec-card p-3 mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <i class="bi bi-bag-check" style="font-size:1.4rem;color:#22c55e;"></i>
+        <div>
+            <div class="text-white fw-semibold">{{.Order.NomorOrder}}</div>
+            <small class="text-muted">{{.Order.SellerName}} · Selesai {{.Order.UpdatedAt}}</small>
+        </div>
+        <span class="badge bg-success ms-auto">SELESAI</span>
+    </div>
+</div>
+
+<!-- Review Form -->
+<form method="POST" action="/ecommerce/order/{{.Order.ID}}/review">
+    <div class="d-flex flex-column gap-4">
+        {{range .Items}}
+        {{$pid := .ProductID}}
+        <div class="ec-card p-4">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="rounded-2 d-flex align-items-center justify-content-center"
+                     style="width:48px;height:48px;background:rgba(124,58,237,.15);flex-shrink:0;">
+                    <i class="bi bi-box-seam" style="color:#a78bfa;font-size:1.2rem;"></i>
+                </div>
+                <div>
+                    <div class="text-white fw-semibold">{{.ProductNama}}</div>
+                    {{if .HasReview}}
+                    <span class="badge" style="background:rgba(34,197,94,.15);color:#22c55e;font-size:.7rem;">
+                        <i class="bi bi-check me-1"></i>Sudah diulas
+                    </span>
+                    {{else}}
+                    <small class="text-muted">Belum diulas</small>
+                    {{end}}
+                </div>
+            </div>
+
+            {{if .HasReview}}
+            <p class="text-muted small mb-0"><i class="bi bi-info-circle me-1"></i>Anda sudah memberikan ulasan untuk produk ini.</p>
+            {{else}}
+            <!-- Star Rating (hardcoded 5 stars per product) -->
+            <div class="mb-3">
+                <label class="form-label text-muted small">Rating *</label>
+                <div class="d-flex gap-2 star-group" id="stars_{{$pid}}">
+                    <label class="star-label" style="cursor:pointer;" title="Sangat Buruk">
+                        <input type="radio" name="rating_{{$pid}}" value="1" class="d-none star-radio" data-group="{{$pid}}">
+                        <i class="bi bi-star" style="font-size:1.5rem;color:#6b7280;transition:color .15s;" data-val="1" data-group="{{$pid}}"></i>
+                    </label>
+                    <label class="star-label" style="cursor:pointer;" title="Buruk">
+                        <input type="radio" name="rating_{{$pid}}" value="2" class="d-none star-radio" data-group="{{$pid}}">
+                        <i class="bi bi-star" style="font-size:1.5rem;color:#6b7280;transition:color .15s;" data-val="2" data-group="{{$pid}}"></i>
+                    </label>
+                    <label class="star-label" style="cursor:pointer;" title="Cukup">
+                        <input type="radio" name="rating_{{$pid}}" value="3" class="d-none star-radio" data-group="{{$pid}}">
+                        <i class="bi bi-star" style="font-size:1.5rem;color:#6b7280;transition:color .15s;" data-val="3" data-group="{{$pid}}"></i>
+                    </label>
+                    <label class="star-label" style="cursor:pointer;" title="Bagus">
+                        <input type="radio" name="rating_{{$pid}}" value="4" class="d-none star-radio" data-group="{{$pid}}">
+                        <i class="bi bi-star" style="font-size:1.5rem;color:#6b7280;transition:color .15s;" data-val="4" data-group="{{$pid}}"></i>
+                    </label>
+                    <label class="star-label" style="cursor:pointer;" title="Sangat Bagus">
+                        <input type="radio" name="rating_{{$pid}}" value="5" class="d-none star-radio" data-group="{{$pid}}">
+                        <i class="bi bi-star" style="font-size:1.5rem;color:#6b7280;transition:color .15s;" data-val="5" data-group="{{$pid}}"></i>
+                    </label>
+                </div>
+                <div class="mt-1 rating-label" id="ratingLabel_{{$pid}}" style="font-size:.8rem;color:rgba(255,255,255,.4);">Pilih rating</div>
+            </div>
+            <!-- Comment -->
+            <div>
+                <label class="form-label text-muted small">Komentar (opsional)</label>
+                <textarea name="komentar_{{$pid}}" class="form-control" rows="3"
+                          style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);color:#fff;resize:none;"
+                          placeholder="Ceritakan pengalaman Anda dengan produk ini..."></textarea>
+            </div>
+            {{end}}
+        </div>
+        {{end}}
+    </div>
+
+    <div class="mt-4 d-flex gap-2">
+        <button type="submit" class="btn btn-ec-primary px-4">
+            <i class="bi bi-send me-2"></i>Kirim Ulasan
+        </button>
+        <a href="/ecommerce/orders" class="btn btn-outline-secondary">Batal</a>
+    </div>
+</form>
+
+<script>
+(function () {
+    var labels = ['', 'Sangat Buruk', 'Buruk', 'Cukup', 'Bagus', 'Sangat Bagus'];
+
+    function updateStars(group, val) {
+        document.querySelectorAll('i[data-group="' + group + '"]').forEach(function(s) {
+            var sv = parseInt(s.dataset.val);
+            s.className = sv <= val ? 'bi bi-star-fill' : 'bi bi-star';
+            s.style.color = sv <= val ? '#fbbf24' : '#6b7280';
+        });
+    }
+
+    document.querySelectorAll('.star-radio').forEach(function(input) {
+        input.addEventListener('change', function() {
+            var group = this.dataset.group;
+            var val = parseInt(this.value);
+            updateStars(group, val);
+            var lbl = document.getElementById('ratingLabel_' + group);
+            if (lbl) lbl.textContent = labels[val] || '';
+        });
+    });
+
+    document.querySelectorAll('i[data-group]').forEach(function(star) {
+        star.addEventListener('mouseenter', function() {
+            updateStars(this.dataset.group, parseInt(this.dataset.val));
+        });
+        star.addEventListener('mouseleave', function() {
+            var group = this.dataset.group;
+            var checked = document.querySelector('input[name="rating_' + group + '"]:checked');
+            updateStars(group, checked ? parseInt(checked.value) : 0);
+        });
+    });
+})();
+</script>
+{{end}}

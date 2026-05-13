@@ -1,0 +1,185 @@
+{{define "content"}}
+<h5 class="mb-3"><i class="bi bi-cart-check me-1"></i>Checkout</h5>
+
+<form method="POST" action="/ecommerce/checkout" id="checkoutForm" data-subtotal="{{printf "%.0f" .Subtotal}}" data-weight="{{.TotalWeight}}">
+<input type="hidden" name="product_id" value="{{.Product.ID}}">
+<input type="hidden" name="qty" value="{{.Qty}}">
+
+<div class="row g-4">
+    <!-- Left: Order Summary -->
+    <div class="col-md-7">
+        <!-- Items -->
+        <div class="ec-card p-3 mb-3">
+            <h6 class="mb-3"><i class="bi bi-bag me-1"></i>Ringkasan Pesanan</h6>
+            {{range .Items}}
+            <div class="d-flex gap-3 align-items-center">
+                <img src="{{$.Product.FotoURL}}" alt="{{.ProductNama}}" class="rounded" style="width:60px;height:60px;object-fit:cover;">
+                <div class="flex-grow-1">
+                    <div class="fw-bold small">{{.ProductNama}}</div>
+                    <div class="text-muted small">{{.Jumlah}} × Rp {{printf "%.0f" .HargaSatuan}}</div>
+                </div>
+                <strong style="color:#a78bfa;">Rp {{printf "%.0f" .Subtotal}}</strong>
+            </div>
+            {{end}}
+        </div>
+
+        <!-- Address -->
+        <div class="ec-card p-3 mb-3">
+            <h6 class="mb-3"><i class="bi bi-geo-alt me-1"></i>Alamat Pengiriman</h6>
+            {{if .Addresses}}
+            <select class="form-select mb-2" name="alamat" id="alamatSelect">
+                {{range .Addresses}}
+                <option value="{{.Alamat}}, {{.Kota}}, {{.Provinsi}} {{.KodePos}}" {{if .IsDefault}}selected{{end}}>
+                    {{.Label}} — {{.Penerima}}, {{.Alamat}}, {{.Kota}} {{.KodePos}}
+                </option>
+                {{end}}
+                <option value="__custom__">Alamat Lain...</option>
+            </select>
+            <input type="text" class="form-control" id="customAlamat" name="alamat_custom" placeholder="Masukkan alamat lengkap..." style="display:none;">
+            {{else}}
+            <input type="text" class="form-control" name="alamat" placeholder="Masukkan alamat lengkap..." required>
+            <small class="text-muted">Belum ada alamat tersimpan. <a href="/ecommerce/buyer" style="color:#a78bfa;">Tambah alamat</a></small>
+            {{end}}
+        </div>
+
+        <!-- Shipping -->
+        <div class="ec-card p-3 mb-3">
+            <h6 class="mb-3"><i class="bi bi-truck me-1"></i>Pengiriman</h6>
+            <div class="small text-muted mb-2">Berat: {{.TotalWeight}}g</div>
+            {{range .ShippingOpts}}
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" name="shipping_option" value="{{.ID}}" id="ship{{.ID}}" data-price="{{printf "%.0f" .Harga}}" {{if eq .ID 1}}checked{{end}}>
+                <label class="form-check-label d-flex justify-content-between w-100" for="ship{{.ID}}">
+                    <span><strong>{{.Nama}}</strong> <small class="text-muted">({{.Provider}})</small></span>
+                    <span><small class="text-muted">{{.Estimasi}}</small> · <strong>Rp {{printf "%.0f" .Harga}}</strong></span>
+                </label>
+            </div>
+            {{end}}
+        </div>
+    </div>
+
+    <!-- Right: Payment Summary -->
+    <div class="col-md-5">
+        <div class="ec-card p-3 mb-3">
+            <h6 class="mb-3"><i class="bi bi-ticket-perforated me-1"></i>Voucher</h6>
+            <div class="input-group input-group-sm">
+                <input type="text" class="form-control" name="voucher_code" placeholder="Kode voucher (opsional)">
+                <span class="input-group-text"><i class="bi bi-check"></i></span>
+            </div>
+            <small class="text-muted">Coba: HEMAT10 atau GRATIS15K</small>
+        </div>
+
+        {{if gt .PointsBalance 0.0}}
+        <div class="ec-card p-3 mb-3">
+            <h6 class="mb-3"><i class="bi bi-star me-1"></i>Pakai Poin</h6>
+            <div class="d-flex justify-content-between small mb-2">
+                <span>Saldo poin:</span>
+                <strong class="text-warning">{{printf "%.0f" .PointsBalance}} poin</strong>
+            </div>
+            <div class="input-group input-group-sm">
+                <input type="number" class="form-control" name="points_used" value="0" min="0" max="{{printf "%.0f" .PointsBalance}}" placeholder="Poin yang digunakan">
+                <span class="input-group-text">poin</span>
+            </div>
+            <small class="text-muted">1 poin = Rp 1 diskon</small>
+        </div>
+        {{end}}
+
+        <div class="ec-card p-3 mb-3">
+            <h6 class="mb-3"><i class="bi bi-credit-card me-1"></i>Metode Pembayaran</h6>
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" name="metode_bayar" value="Transfer Bank" id="payBank" checked>
+                <label class="form-check-label" for="payBank">Transfer Bank</label>
+            </div>
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" name="metode_bayar" value="QRIS" id="payQRIS">
+                <label class="form-check-label" for="payQRIS">QRIS</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="metode_bayar" value="COD" id="payCOD">
+                <label class="form-check-label" for="payCOD">COD (Bayar di Tempat)</label>
+            </div>
+        </div>
+
+        <div class="ec-card p-3">
+            <h6 class="mb-3">Ringkasan</h6>
+            <div class="d-flex justify-content-between small mb-1">
+                <span>Subtotal</span><span>Rp {{printf "%.0f" .Subtotal}}</span>
+            </div>
+            <div class="d-flex justify-content-between small mb-1 text-muted">
+                <span>Ongkir</span><span id="summOngkir">—</span>
+            </div>
+            <div class="d-flex justify-content-between small mb-1 text-success" id="summVoucherRow" style="display:none!important;">
+                <span>Diskon Voucher</span><span id="summVoucher">-Rp 0</span>
+            </div>
+            <div class="d-flex justify-content-between small mb-1 text-warning" id="summPointsRow" style="display:none!important;">
+                <span>Redeem Poin</span><span id="summPoints">-Rp 0</span>
+            </div>
+            <hr style="border-color:rgba(255,255,255,.1);">
+            <div class="d-flex justify-content-between">
+                <strong>Total</strong>
+                <strong style="color:#a78bfa;" id="summTotal">Rp {{printf "%.0f" .Subtotal}}</strong>
+            </div>
+            <button type="submit" class="btn btn-ec-primary w-100 mt-3 py-2">
+                <i class="bi bi-bag-check me-1"></i>Bayar Sekarang
+            </button>
+        </div>
+
+        {{if .IsLinked}}
+        <div class="small text-muted mt-2 text-center">
+            <i class="bi bi-info-circle me-1"></i>Poin dari pembelian ini bisa dikonversi ke Simpanan Koperasi.
+        </div>
+        {{end}}
+    </div>
+</div>
+</form>
+
+<script>
+// Address custom input toggle
+const sel = document.getElementById('alamatSelect');
+const custom = document.getElementById('customAlamat');
+if (sel) {
+    sel.addEventListener('change', function() {
+        if (this.value === '__custom__') {
+            custom.style.display = 'block';
+            custom.setAttribute('name', 'alamat');
+            sel.removeAttribute('name');
+        } else {
+            custom.style.display = 'none';
+            custom.removeAttribute('name');
+            sel.setAttribute('name', 'alamat');
+        }
+    });
+}
+
+const _form = document.getElementById('checkoutForm');
+const subtotal = parseFloat(_form.dataset.subtotal);
+const totalWeight = parseInt(_form.dataset.weight);
+
+function calcTotal() {
+    const selectedShip = document.querySelector('input[name="shipping_option"]:checked');
+    const baseShipCost = selectedShip ? parseFloat(selectedShip.dataset.price || 0) : 0;
+    const kg = Math.max(1, Math.ceil(totalWeight / 1000));
+    const shipCost = baseShipCost * kg;
+    const pointsUsed = parseFloat(document.querySelector('input[name="points_used"]')?.value || 0);
+
+    document.getElementById('summOngkir').textContent = 'Rp ' + shipCost.toLocaleString('id');
+
+    const pointsRow = document.getElementById('summPointsRow');
+    const pointsEl = document.getElementById('summPoints');
+    if (pointsUsed > 0) {
+        pointsRow.style.removeProperty('display');
+        pointsEl.textContent = '-Rp ' + pointsUsed.toLocaleString('id');
+    } else {
+        pointsRow.style.display = 'none';
+    }
+
+    const total = Math.max(0, subtotal + shipCost - pointsUsed);
+    document.getElementById('summTotal').textContent = 'Rp ' + Math.round(total).toLocaleString('id');
+}
+
+document.querySelectorAll('input[name="shipping_option"]').forEach(r => r.addEventListener('change', calcTotal));
+const pointsInput = document.querySelector('input[name="points_used"]');
+if (pointsInput) pointsInput.addEventListener('input', calcTotal);
+calcTotal();
+</script>
+{{end}}

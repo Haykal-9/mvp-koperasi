@@ -1,0 +1,113 @@
+{{define "content"}}
+<div class="row g-4">
+    <!-- Create Voucher Form -->
+    <div class="col-md-4">
+        <div class="ec-card p-4">
+            <h6 class="mb-3" style="color:#22c55e;"><i class="bi bi-plus-circle me-2"></i>Buat Voucher Baru</h6>
+            <form method="POST" action="/ecommerce/admin/vouchers/create">
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Kode Voucher *</label>
+                    <input type="text" name="code" class="form-control"
+                           style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);color:#fff;"
+                           placeholder="cth: DISKON20" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Deskripsi *</label>
+                    <input type="text" name="deskripsi" class="form-control"
+                           style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);color:#fff;"
+                           placeholder="Keterangan voucher" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Tipe Diskon</label>
+                    <select name="tipe_diskon" class="form-select"
+                            style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);color:#fff;">
+                        <option value="PERCENT">Persentase (%)</option>
+                        <option value="FIXED">Nominal Tetap (Rp)</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Nilai Diskon *</label>
+                    <input type="number" name="nilai_diskon" class="form-control"
+                           style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);color:#fff;"
+                           placeholder="cth: 10 (%) atau 15000 (Rp)" required min="1">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Min. Pembelian (Rp)</label>
+                    <input type="number" name="min_pembelian" class="form-control"
+                           style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);color:#fff;"
+                           placeholder="0 = tanpa minimum" min="0">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Maks. Diskon (Rp)</label>
+                    <input type="number" name="maks_diskon" class="form-control"
+                           style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);color:#fff;"
+                           placeholder="0 = tidak dibatasi" min="0">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Kuota</label>
+                    <input type="number" name="kuota" class="form-control"
+                           style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);color:#fff;"
+                           placeholder="100" min="1" value="100">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Berlaku Sampai</label>
+                    <input type="date" name="berlaku_sampai" class="form-control"
+                           style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);color:#fff;">
+                </div>
+                <button type="submit" class="btn w-100" style="background:#22c55e;color:#000;">
+                    <i class="bi bi-plus me-1"></i>Buat Voucher
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Voucher List -->
+    <div class="col-md-8">
+        <div class="ec-card p-4">
+            <h6 class="mb-3" style="color:#a78bfa;"><i class="bi bi-ticket-perforated me-2"></i>Daftar Voucher ({{len .Vouchers}})</h6>
+            {{if .Vouchers}}
+            <div class="d-flex flex-column gap-3">
+                {{range .Vouchers}}
+                <div class="p-3 rounded-3 d-flex align-items-start justify-content-between gap-3"
+                     style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="fw-bold text-white font-monospace">{{.Code}}</span>
+                            {{if eq .Status "ACTIVE"}}
+                            <span class="badge" style="background:rgba(34,197,94,.15);color:#22c55e;font-size:.7rem;">AKTIF</span>
+                            {{else}}
+                            <span class="badge" style="background:rgba(239,68,68,.15);color:#ef4444;font-size:.7rem;">{{.Status}}</span>
+                            {{end}}
+                        </div>
+                        <div class="text-muted" style="font-size:.85rem;">{{.Deskripsi}}</div>
+                        <div class="d-flex flex-wrap gap-3 mt-2" style="font-size:.8rem;color:rgba(255,255,255,.5);">
+                            <span>
+                                <i class="bi bi-tag me-1"></i>
+                                {{if eq .TipeDiskon "PERCENT"}}{{printf "%.0f" .NilaiDiskon}}%{{else}}{{rupiah .NilaiDiskon}}{{end}}
+                            </span>
+                            {{if gt .MinPembelian 0.0}}
+                            <span><i class="bi bi-cart me-1"></i>Min {{rupiah .MinPembelian}}</span>
+                            {{end}}
+                            <span><i class="bi bi-people me-1"></i>Sisa {{.Kuota}} kuota</span>
+                            <span><i class="bi bi-calendar me-1"></i>s/d {{.BerlakuSampai}}</span>
+                        </div>
+                    </div>
+                    <form method="POST" action="/ecommerce/admin/vouchers/{{.ID}}/toggle">
+                        <button type="submit" class="btn btn-sm {{if eq .Status `ACTIVE`}}btn-outline-warning{{else}}btn-outline-success{{end}}">
+                            {{if eq .Status "ACTIVE"}}
+                            <i class="bi bi-pause-circle me-1"></i>Nonaktifkan
+                            {{else}}
+                            <i class="bi bi-play-circle me-1"></i>Aktifkan
+                            {{end}}
+                        </button>
+                    </form>
+                </div>
+                {{end}}
+            </div>
+            {{else}}
+            <p class="text-muted mb-0">Belum ada voucher. Buat voucher pertama di panel kiri.</p>
+            {{end}}
+        </div>
+    </div>
+</div>
+{{end}}

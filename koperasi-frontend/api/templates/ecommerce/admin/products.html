@@ -1,0 +1,145 @@
+{{define "content"}}
+<!-- Pending Approval -->
+<div class="ec-card p-4 mb-4">
+    <h6 class="mb-3" style="color:#f59e0b;">
+        <i class="bi bi-hourglass-split me-2"></i>Menunggu Approval ({{len .Pending}})
+    </h6>
+    {{if .Pending}}
+    <div class="table-responsive">
+        <table class="table table-dark table-borderless mb-0" style="font-size:.875rem;">
+            <thead>
+                <tr style="color:rgba(255,255,255,.45);font-size:.78rem;text-transform:uppercase;">
+                    <th>Produk</th>
+                    <th>Seller</th>
+                    <th>Harga</th>
+                    <th>Stok</th>
+                    <th>Diajukan</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Pending}}
+                <tr class="border-top" style="border-color:rgba(255,255,255,.06)!important;">
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <img src="{{.FotoURL}}" alt="{{.Nama}}" class="rounded-2"
+                                 style="width:40px;height:40px;object-fit:cover;">
+                            <div>
+                                <div class="text-white">{{.Nama}}</div>
+                                <small class="text-muted">{{.Kategori}}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-muted">{{.SellerName}}</td>
+                    <td class="text-success">{{rupiah .Harga}}</td>
+                    <td>{{.Stok}}</td>
+                    <td class="text-muted">{{.CreatedAt}}</td>
+                    <td>
+                        <div class="d-flex gap-2">
+                            <form method="POST" action="/ecommerce/admin/products/{{.ID}}/approve">
+                                <button type="submit" class="btn btn-sm btn-success"
+                                        onclick="return confirm('Approve produk ini?')">
+                                    <i class="bi bi-check-lg"></i> Approve
+                                </button>
+                            </form>
+                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                    data-bs-toggle="modal" data-bs-target="#rejectProdModal{{.ID}}">
+                                <i class="bi bi-x-lg"></i> Tolak
+                            </button>
+                        </div>
+                        <!-- Reject Modal -->
+                        <div class="modal fade" id="rejectProdModal{{.ID}}" tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content" style="background:#1e1b3a;border:1px solid rgba(255,255,255,.1);">
+                                    <div class="modal-header border-0">
+                                        <h6 class="modal-title">Tolak Produk</h6>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p class="text-muted small">Produk: <strong class="text-white">{{.Nama}}</strong></p>
+                                        <form method="POST" action="/ecommerce/admin/products/{{.ID}}/reject">
+                                            <label class="form-label text-muted small">Alasan penolakan</label>
+                                            <textarea name="alasan" class="form-control mb-3" rows="3"
+                                                      style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);color:#fff;"
+                                                      placeholder="Tuliskan alasan..."></textarea>
+                                            <div class="d-flex gap-2 justify-content-end">
+                                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                                <button type="submit" class="btn btn-sm btn-danger">Tolak Produk</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    {{else}}
+    <p class="text-muted mb-0"><i class="bi bi-check-circle text-success me-2"></i>Tidak ada produk yang menunggu approval.</p>
+    {{end}}
+</div>
+
+<!-- All Products -->
+<div class="ec-card p-4">
+    <h6 class="mb-3" style="color:#a78bfa;">
+        <i class="bi bi-grid me-2"></i>Semua Produk ({{len .AllProducts}})
+    </h6>
+    {{if .AllProducts}}
+    <div class="table-responsive">
+        <table class="table table-dark table-borderless mb-0" style="font-size:.875rem;">
+            <thead>
+                <tr style="color:rgba(255,255,255,.45);font-size:.78rem;text-transform:uppercase;">
+                    <th>Produk</th>
+                    <th>Seller</th>
+                    <th>Harga</th>
+                    <th>Stok</th>
+                    <th>Rating</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .AllProducts}}
+                <tr class="border-top" style="border-color:rgba(255,255,255,.06)!important;">
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <img src="{{.FotoURL}}" alt="{{.Nama}}" class="rounded-2"
+                                 style="width:36px;height:36px;object-fit:cover;">
+                            <span class="text-white">{{.Nama}}</span>
+                        </div>
+                    </td>
+                    <td class="text-muted">{{.SellerName}}</td>
+                    <td class="text-success">{{rupiah .Harga}}</td>
+                    <td>{{.Stok}}</td>
+                    <td>
+                        {{if gt .TotalReview 0}}
+                        <i class="bi bi-star-fill text-warning" style="font-size:.75rem;"></i>
+                        {{printf "%.1f" .Rating}}
+                        <small class="text-muted">({{.TotalReview}})</small>
+                        {{else}}
+                        <small class="text-muted">-</small>
+                        {{end}}
+                    </td>
+                    <td>
+                        {{if eq .Status "APPROVED"}}
+                        <span class="badge" style="background:rgba(34,197,94,.15);color:#22c55e;">APPROVED</span>
+                        {{else if eq .Status "PENDING_APPROVAL"}}
+                        <span class="badge" style="background:rgba(245,158,11,.15);color:#f59e0b;">PENDING</span>
+                        {{else if eq .Status "REJECTED"}}
+                        <span class="badge" style="background:rgba(239,68,68,.15);color:#ef4444;">REJECTED</span>
+                        {{else}}
+                        <span class="badge bg-secondary">{{.Status}}</span>
+                        {{end}}
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    {{else}}
+    <p class="text-muted mb-0">Belum ada produk.</p>
+    {{end}}
+</div>
+{{end}}

@@ -1,0 +1,107 @@
+{{define "content"}}
+<!-- Summary -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="ec-card p-3 text-center">
+            <i class="bi bi-coin" style="font-size:1.5rem;color:#f59e0b;"></i>
+            <h5 class="mt-2 mb-0">{{printf "%.0f" .TotalPoints}}</h5>
+            <small class="text-muted">Total Poin Beredar</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="ec-card p-3 text-center">
+            <i class="bi bi-list-ul" style="font-size:1.5rem;color:#a78bfa;"></i>
+            <h5 class="mt-2 mb-0">{{len .Transactions}}</h5>
+            <small class="text-muted">Total Transaksi</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="ec-card p-3 text-center">
+            <i class="bi bi-arrow-up-circle" style="font-size:1.5rem;color:#22c55e;"></i>
+            <h5 class="mt-2 mb-0">{{len .UserPoints}}</h5>
+            <small class="text-muted">User Punya Poin</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="ec-card p-3 text-center">
+            <i class="bi bi-arrow-down-circle" style="font-size:1.5rem;color:#3b82f6;"></i>
+            <h5 class="mt-2 mb-0">{{rupiah (mul .TotalPoints 100)}}</h5>
+            <small class="text-muted">Nilai Setara (Rp)</small>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- User Points Balance -->
+    <div class="col-md-4">
+        <div class="ec-card p-4">
+            <h6 class="mb-3" style="color:#f59e0b;"><i class="bi bi-wallet me-2"></i>Saldo per User</h6>
+            {{if .UserPoints}}
+            <div class="d-flex flex-column gap-2">
+                {{range .UserPoints}}
+                <div class="d-flex justify-content-between align-items-center p-2 rounded-2"
+                     style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);">
+                    <div>
+                        <div class="text-white" style="font-size:.875rem;">User #{{.UserID}}</div>
+                        <small class="text-muted">Total earned: {{printf "%.0f" .TotalEarned}}</small>
+                    </div>
+                    <span class="fw-bold" style="color:#f59e0b;">{{printf "%.0f" .Balance}} poin</span>
+                </div>
+                {{end}}
+            </div>
+            {{else}}
+            <p class="text-muted mb-0">Belum ada data poin.</p>
+            {{end}}
+        </div>
+    </div>
+
+    <!-- Transaction History -->
+    <div class="col-md-8">
+        <div class="ec-card p-4">
+            <h6 class="mb-3" style="color:#a78bfa;"><i class="bi bi-clock-history me-2"></i>Riwayat Transaksi Poin</h6>
+            {{if .Transactions}}
+            <div class="table-responsive">
+                <table class="table table-dark table-borderless mb-0" style="font-size:.875rem;">
+                    <thead>
+                        <tr style="color:rgba(255,255,255,.45);font-size:.78rem;text-transform:uppercase;">
+                            <th>User</th>
+                            <th>Tipe</th>
+                            <th class="text-end">Poin</th>
+                            <th>Keterangan</th>
+                            <th>Tanggal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range .Transactions}}
+                        <tr class="border-top" style="border-color:rgba(255,255,255,.06)!important;">
+                            <td class="text-muted">#{{.UserID}}</td>
+                            <td>
+                                {{if eq .Tipe "EARN_PURCHASE"}}
+                                <span class="badge" style="background:rgba(34,197,94,.15);color:#22c55e;font-size:.7rem;">EARN</span>
+                                {{else if eq .Tipe "REDEEM_DISCOUNT"}}
+                                <span class="badge" style="background:rgba(59,130,246,.15);color:#3b82f6;font-size:.7rem;">REDEEM</span>
+                                {{else if eq .Tipe "CONVERT_SIMPANAN"}}
+                                <span class="badge" style="background:rgba(124,58,237,.15);color:#a78bfa;font-size:.7rem;">CONVERT</span>
+                                {{else}}
+                                <span class="badge bg-secondary" style="font-size:.7rem;">{{.Tipe}}</span>
+                                {{end}}
+                            </td>
+                            <td class="text-end fw-bold {{if gt .Amount 0.0}}text-success{{else}}text-danger{{end}}">
+                                {{if gt .Amount 0.0}}+{{end}}{{printf "%.0f" .Amount}}
+                            </td>
+                            <td class="text-muted" style="font-size:.8rem;max-width:180px;">
+                                <span class="text-truncate d-block">{{.Keterangan}}</span>
+                            </td>
+                            <td class="text-muted" style="font-size:.8rem;">{{.CreatedAt}}</td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+            {{else}}
+            <p class="text-muted mb-0">Belum ada transaksi poin.</p>
+            {{end}}
+        </div>
+    </div>
+</div>
+{{end}}

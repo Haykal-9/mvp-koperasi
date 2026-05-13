@@ -1,0 +1,109 @@
+{{define "content"}}
+<!-- Metrics -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="ec-card p-3 text-center">
+            <i class="bi bi-box-seam" style="font-size:1.5rem;color:#a78bfa;"></i>
+            <h5 class="mt-2 mb-0">{{.TotalProducts}}</h5>
+            <small class="text-muted">Total Produk</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="ec-card p-3 text-center">
+            <i class="bi bi-currency-dollar" style="font-size:1.5rem;color:#22c55e;"></i>
+            <h5 class="mt-2 mb-0">Rp {{printf "%.0f" .TotalRevenue}}</h5>
+            <small class="text-muted">Pendapatan</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="ec-card p-3 text-center">
+            <i class="bi bi-clock-history" style="font-size:1.5rem;color:#f59e0b;"></i>
+            <h5 class="mt-2 mb-0">{{.PendingOrders}}</h5>
+            <small class="text-muted">Perlu Diproses</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="ec-card p-3 text-center">
+            <i class="bi bi-check-circle" style="font-size:1.5rem;color:#3b82f6;"></i>
+            <h5 class="mt-2 mb-0">{{.CompletedOrders}}</h5>
+            <small class="text-muted">Selesai</small>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <a href="/ecommerce/seller/products/create" class="text-decoration-none">
+            <div class="ec-card p-3 d-flex align-items-center gap-3">
+                <i class="bi bi-plus-circle" style="font-size:1.3rem;color:#22c55e;"></i>
+                <span class="text-white">Tambah Produk Baru</span>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="/ecommerce/seller/orders" class="text-decoration-none">
+            <div class="ec-card p-3 d-flex align-items-center gap-3">
+                <i class="bi bi-clipboard-check" style="font-size:1.3rem;color:#f59e0b;"></i>
+                <span class="text-white">Lihat Pesanan Masuk</span>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="/ecommerce/seller/earnings" class="text-decoration-none">
+            <div class="ec-card p-3 d-flex align-items-center gap-3">
+                <i class="bi bi-graph-up" style="font-size:1.3rem;color:#a78bfa;"></i>
+                <span class="text-white">Lihat Pendapatan</span>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Alerts -->
+{{if .PendingProducts}}
+<div class="alert alert-warning alert-dismissible fade show" role="alert">
+    <i class="bi bi-exclamation-triangle me-1"></i>{{.PendingProducts}} produk menunggu approval admin.
+    <a href="/ecommerce/seller/products?status=PENDING_APPROVAL" class="alert-link">Lihat</a>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{{end}}
+
+{{if .LowStock}}
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <i class="bi bi-exclamation-circle me-1"></i>{{len .LowStock}} produk stok rendah (≤5):
+    {{range .LowStock}}<strong>{{.Nama}}</strong> ({{.Stok}}) {{end}}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{{end}}
+
+<!-- Recent Orders -->
+<h5 class="mb-3"><i class="bi bi-clock-history me-1"></i>Pesanan Terbaru</h5>
+{{if .RecentOrders}}
+<div class="ec-card">
+    <div class="table-responsive">
+        <table class="table table-dark table-hover mb-0" style="background:transparent;">
+            <thead><tr><th>No. Order</th><th>Buyer</th><th>Total</th><th>Status</th><th>Tanggal</th></tr></thead>
+            <tbody>
+            {{range .RecentOrders}}
+            <tr>
+                <td><code>{{.NomorOrder}}</code></td>
+                <td>{{.BuyerName}}</td>
+                <td>Rp {{printf "%.0f" .TotalHarga}}</td>
+                <td>
+                    {{if eq .Status "SELESAI"}}<span class="badge bg-success">{{.Status}}</span>
+                    {{else if eq .Status "DIKIRIM"}}<span class="badge bg-info">{{.Status}}</span>
+                    {{else if eq .Status "DIBAYAR"}}<span class="badge bg-warning text-dark">{{.Status}}</span>
+                    {{else if eq .Status "DIPROSES"}}<span class="badge bg-primary">{{.Status}}</span>
+                    {{else}}<span class="badge bg-secondary">{{.Status}}</span>{{end}}
+                </td>
+                <td class="small text-muted">{{.CreatedAt}}</td>
+            </tr>
+            {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+{{else}}
+<div class="ec-card p-3 text-center text-muted small">Belum ada pesanan masuk.</div>
+{{end}}
+{{end}}

@@ -1,0 +1,44 @@
+{{define "content"}}
+<div class="ec-card p-4 mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:60px;height:60px;background:rgba(124,58,237,.15);">
+            <i class="bi bi-shop" style="font-size:1.5rem;color:#a78bfa;"></i>
+        </div>
+        <div>
+            <h4 class="mb-1">{{.SellerProfile.StoreName}}</h4>
+            <div class="d-flex gap-3 text-muted small">
+                <span><i class="bi bi-star-fill text-warning"></i> {{printf "%.1f" .SellerProfile.Rating}}</span>
+                <span><i class="bi bi-clock me-1"></i>{{.SellerProfile.ResponseTime}}</span>
+                <span><i class="bi bi-bag-check me-1"></i>{{.SellerProfile.TotalSold}} terjual</span>
+                <span><i class="bi bi-calendar me-1"></i>Bergabung {{.SellerProfile.JoinedAt}}</span>
+            </div>
+        </div>
+    </div>
+    <p class="text-muted mt-3 mb-0">{{.SellerProfile.Description}}</p>
+</div>
+
+<h5 class="mb-3"><i class="bi bi-box-seam me-1"></i>Produk ({{len .Products}})</h5>
+{{if .Products}}
+<div class="row g-3">
+    {{range .Products}}
+    <div class="col-6 col-md-4 col-lg-3">
+        <div class="ec-card h-100">
+            <img src="{{.FotoURL}}" class="card-img-top" alt="{{.Nama}}" style="height:180px;object-fit:cover;border-radius:.75rem .75rem 0 0;">
+            <div class="p-3">
+                <h6 style="font-size:.9rem;">
+                    <a href="/ecommerce/products/{{.ID}}" class="text-white text-decoration-none">{{.Nama}}</a>
+                </h6>
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="text-warning small"><i class="bi bi-star-fill"></i> {{printf "%.1f" .Rating}}</span>
+                    <span class="text-muted small">{{.TotalSold}} terjual</span>
+                </div>
+                <strong style="color:#a78bfa;">Rp {{printf "%.0f" .Harga}}</strong>
+            </div>
+        </div>
+    </div>
+    {{end}}
+</div>
+{{else}}
+<div class="ec-card p-4 text-center text-muted">Seller belum memiliki produk yang aktif.</div>
+{{end}}
+{{end}}

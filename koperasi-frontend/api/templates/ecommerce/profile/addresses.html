@@ -1,0 +1,63 @@
+{{define "content"}}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h5 class="mb-0"><i class="bi bi-geo-alt me-2"></i>Alamat Pengiriman</h5>
+    <a href="/ecommerce/profile/addresses/new" class="btn btn-sm btn-ec-primary">
+        <i class="bi bi-plus me-1"></i>Tambah Alamat
+    </a>
+</div>
+
+{{if .Addresses}}
+<div class="row g-3">
+    {{range .Addresses}}
+    <div class="col-md-6">
+        <div class="ec-card p-4 h-100 d-flex flex-column {{if .IsDefault}}border-primary{{end}}"
+             style="{{if .IsDefault}}border-color:rgba(124,58,237,.4)!important;{{end}}">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fw-semibold text-white">{{.Label}}</span>
+                    {{if .IsDefault}}
+                    <span class="badge" style="background:rgba(124,58,237,.2);color:#a78bfa;font-size:.7rem;">
+                        <i class="bi bi-star-fill me-1"></i>Utama
+                    </span>
+                    {{end}}
+                </div>
+            </div>
+
+            <div class="flex-grow-1">
+                <div class="text-white mb-1">{{.Penerima}}</div>
+                {{if .NoHP}}<div class="text-muted small mb-1"><i class="bi bi-telephone me-1"></i>{{.NoHP}}</div>{{end}}
+                <div class="text-muted small">
+                    {{.Alamat}}<br>
+                    {{.Kota}}{{if .Provinsi}}, {{.Provinsi}}{{end}}{{if .KodePos}} {{.KodePos}}{{end}}
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-3">
+                {{if not .IsDefault}}
+                <form method="POST" action="/ecommerce/profile/addresses/{{.ID}}/default" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-star me-1"></i>Jadikan Utama
+                    </button>
+                </form>
+                {{end}}
+                <form method="POST" action="/ecommerce/profile/addresses/{{.ID}}/delete" class="d-inline ms-auto"
+                      onsubmit="return confirm('Hapus alamat ini?')">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {{end}}
+</div>
+{{else}}
+<div class="ec-card p-5 text-center">
+    <i class="bi bi-geo-alt" style="font-size:3rem;color:rgba(255,255,255,.15);"></i>
+    <p class="text-muted mt-3 mb-3">Belum ada alamat tersimpan.</p>
+    <a href="/ecommerce/profile/addresses/new" class="btn btn-ec-primary">
+        <i class="bi bi-plus me-1"></i>Tambah Alamat Pertama
+    </a>
+</div>
+{{end}}
+{{end}}

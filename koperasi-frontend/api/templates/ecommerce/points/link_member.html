@@ -1,0 +1,68 @@
+{{define "content"}}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a href="/ecommerce/points" class="text-decoration-none" style="color:#a78bfa;">Poin & Reward</a></li>
+        <li class="breadcrumb-item active">Link Member Koperasi</li>
+    </ol>
+</nav>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        {{if .LinkedMember}}
+        <!-- Currently Linked -->
+        <div class="ec-card p-4 mb-3">
+            <h6 class="mb-3"><i class="bi bi-person-check me-1 text-success"></i>Saat Ini Linked</h6>
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:50px;height:50px;background:rgba(34,197,94,.12);">
+                    <i class="bi bi-person-check" style="color:#22c55e;font-size:1.3rem;"></i>
+                </div>
+                <div>
+                    <strong>{{.LinkedMember.Nama}}</strong>
+                    <div class="small text-muted">{{.LinkedMember.NomorAnggota}} · {{.LinkedMember.Status}}</div>
+                </div>
+            </div>
+        </div>
+        <p class="text-muted small mb-3">Cari member lain untuk mengubah link:</p>
+        {{end}}
+
+        <!-- Search -->
+        <div class="ec-card p-4">
+            <h6 class="mb-3"><i class="bi bi-search me-1"></i>Cari Member Koperasi</h6>
+            <div class="input-group mb-3">
+                <input type="text" class="form-control" id="searchMember" placeholder="Nama atau nomor anggota...">
+                <button class="btn btn-ec-primary" onclick="searchMembers()"><i class="bi bi-search"></i></button>
+            </div>
+            <div id="searchResults"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+function searchMembers() {
+    var q = document.getElementById('searchMember').value.trim();
+    if (!q || q.length < 2) { document.getElementById('searchResults').innerHTML = '<p class="text-muted small">Ketik minimal 2 karakter.</p>'; return; }
+
+    document.getElementById('searchResults').innerHTML = '<p class="text-muted small">Mencari...</p>';
+    fetch('/ecommerce/api/members/search?q=' + encodeURIComponent(q))
+        .then(r => r.json())
+        .then(data => {
+            if (!data.results || data.results.length === 0) {
+                document.getElementById('searchResults').innerHTML = '<p class="text-muted small">Tidak ditemukan.</p>';
+                return;
+            }
+            var html = '';
+            data.results.forEach(function(m) {
+                html += '<div class="d-flex justify-content-between align-items-center p-2 mb-2 rounded" style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);">';
+                html += '<div><strong>' + m.nama + '</strong><div class="small text-muted">' + m.nomor_anggota + ' · ' + m.status + '</div></div>';
+                html += '<form method="POST" action="/ecommerce/points/link-member"><input type="hidden" name="koperasi_member_id" value="' + m.id + '">';
+                html += '<button type="submit" class="btn btn-sm btn-ec-primary"><i class="bi bi-link me-1"></i>Link</button></form></div>';
+            });
+            document.getElementById('searchResults').innerHTML = html;
+        })
+        .catch(function() {
+            document.getElementById('searchResults').innerHTML = '<p class="text-danger small">Error searching.</p>';
+        });
+}
+document.getElementById('searchMember').addEventListener('keyup', function(e) { if (e.key === 'Enter') searchMembers(); });
+</script>
+{{end}}

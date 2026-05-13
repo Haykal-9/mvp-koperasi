@@ -19,7 +19,12 @@
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse">
-            <ul class="navbar-nav ms-auto">
+            <ul class="navbar-nav ms-auto align-items-center gap-2">
+                <li class="nav-item">
+                    <a href="/ecommerce/store" class="btn btn-sm" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;">
+                        <i class="bi bi-shop me-1"></i>KopHub E-Commerce
+                    </a>
+                </li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="bi bi-person-circle"></i> {{if .UserNama}}{{.UserNama}}{{else}}Guest{{end}}
@@ -61,6 +66,15 @@
                 <li class="nav-section">Keuangan</li>
                 <li class="nav-item"><a class="nav-link {{if eq .Active "journals"}}active{{end}}" href="/finance/journals"><i class="bi bi-journal-text"></i> Jurnal Keuangan</a></li>
                 <li class="nav-item"><a class="nav-link {{if eq .Active "finance-summary"}}active{{end}}" href="/finance/summary"><i class="bi bi-bar-chart"></i> Ringkasan</a></li>
+                <li class="nav-section">E-Commerce</li>
+                <li class="nav-item">
+                    <a class="nav-link d-flex align-items-center gap-2" href="/ecommerce/store"
+                       style="background:rgba(124,58,237,.12);color:#a78bfa;border-radius:.5rem;margin:.15rem .5rem;">
+                        <i class="bi bi-shop"></i>
+                        <span>KopHub E-Commerce</span>
+                        <i class="bi bi-arrow-right ms-auto" style="font-size:.75rem;opacity:.6;"></i>
+                    </a>
+                </li>
             </ul>
         </div>
     </aside>

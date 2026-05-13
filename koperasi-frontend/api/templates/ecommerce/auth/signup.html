@@ -1,0 +1,124 @@
+{{define "content"}}
+<h5 class="mb-3">Daftar Akun E-Commerce</h5>
+<form method="POST" action="/ecommerce/signup" id="signupForm">
+    <div class="mb-3">
+        <label for="username" class="form-label">Username</label>
+        <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-person"></i></span>
+            <input type="text" class="form-control" id="username" name="username"
+                   value="{{.FormUsername}}" placeholder="Pilih username" required autofocus>
+        </div>
+    </div>
+    <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+            <input type="email" class="form-control" id="email" name="email"
+                   value="{{.FormEmail}}" placeholder="email@contoh.com" required>
+        </div>
+    </div>
+    <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+            <input type="password" class="form-control" id="password" name="password"
+                   placeholder="Minimal 6 karakter" required>
+        </div>
+    </div>
+    <div class="mb-3">
+        <label for="confirm_password" class="form-label">Konfirmasi Password</label>
+        <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+            <input type="password" class="form-control" id="confirm_password" name="confirm_password"
+                   placeholder="Ulangi password" required>
+        </div>
+    </div>
+
+    <!-- Koperasi Member Linking (Collapsible) -->
+    <div class="mb-3">
+        <a class="text-decoration-none ec-link" data-bs-toggle="collapse" href="#koperasiLink" role="button" aria-expanded="false">
+            <i class="bi bi-link-45deg me-1"></i>Saya adalah Member Koperasi (Opsional)
+            <i class="bi bi-chevron-down ms-1" style="font-size:.75rem;"></i>
+        </a>
+        <div class="collapse mt-2" id="koperasiLink">
+            <div class="p-3 rounded" style="background: rgba(124,58,237,.08); border: 1px solid rgba(124,58,237,.15);">
+                <small class="text-muted d-block mb-2">
+                    <i class="bi bi-info-circle me-1"></i>Link akun Koperasi untuk konversi poin ke Simpanan.
+                </small>
+                <div class="input-group input-group-sm mb-2">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control" id="memberSearch"
+                           placeholder="Cari member (nama/nomor)..." autocomplete="off">
+                </div>
+                <div id="memberResults" class="small"></div>
+                <input type="hidden" name="koperasi_member_id" id="koperasiMemberID" value="">
+                <div id="selectedMember" class="small mt-1" style="display:none;">
+                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i><span id="selectedMemberText"></span></span>
+                    <a href="#" class="ms-2 text-danger small" onclick="clearMemberSelection(); return false;">Hapus</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-ec-primary w-100 py-2 mb-3">
+        <i class="bi bi-person-plus me-1"></i> Daftar
+    </button>
+</form>
+<div class="text-center small">
+    <p class="mb-0">Sudah punya akun? <a href="/ecommerce/login" class="ec-link">Login di sini</a></p>
+</div>
+
+<script>
+let searchTimer;
+const memberSearch = document.getElementById('memberSearch');
+const memberResults = document.getElementById('memberResults');
+const memberIDField = document.getElementById('koperasiMemberID');
+const selectedMember = document.getElementById('selectedMember');
+const selectedMemberText = document.getElementById('selectedMemberText');
+
+if (memberSearch) {
+    memberSearch.addEventListener('input', function() {
+        clearTimeout(searchTimer);
+        const q = this.value.trim();
+        if (q.length < 2) { memberResults.innerHTML = ''; return; }
+        memberResults.innerHTML = '<span class="text-muted"><i class="bi bi-arrow-repeat spin"></i> Mencari...</span>';
+        searchTimer = setTimeout(() => {
+            fetch('/ecommerce/api/members/search?q=' + encodeURIComponent(q))
+                .then(r => r.json())
+                .then(data => {
+                    if (!data || data.length === 0) {
+                        memberResults.innerHTML = '<span class="text-muted">Tidak ada member yang cocok.</span>';
+                        return;
+                    }
+                    let html = '';
+                    data.forEach(m => {
+                        const badge = m.status === 'AKTIF'
+                            ? '<span class="badge bg-success">AKTIF</span>'
+                            : '<span class="badge bg-secondary">' + m.status + '</span>';
+                        html += '<div class="d-flex align-items-center justify-content-between py-1 px-2 rounded mb-1" style="background:rgba(255,255,255,.04);cursor:pointer;" onclick="selectMember(' + m.member_id + ',\'' + m.member_name + '\',\'' + m.member_number + '\')">';
+                        html += '<span>' + m.member_name + ' (' + m.member_number + ') ' + badge + '</span>';
+                        html += '<i class="bi bi-plus-circle text-success"></i></div>';
+                    });
+                    memberResults.innerHTML = html;
+                })
+                .catch(() => { memberResults.innerHTML = '<span class="text-danger">Gagal mencari.</span>'; });
+        }, 400);
+    });
+}
+
+function selectMember(id, name, number) {
+    memberIDField.value = id;
+    selectedMemberText.textContent = name + ' (' + number + ')';
+    selectedMember.style.display = 'block';
+    memberResults.innerHTML = '';
+    memberSearch.value = '';
+}
+
+function clearMemberSelection() {
+    memberIDField.value = '';
+    selectedMember.style.display = 'none';
+    selectedMemberText.textContent = '';
+}
+</script>
+<style>.spin { animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }</style>
+{{end}}

@@ -1,0 +1,144 @@
+{{define "content"}}
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="ec-card p-3 text-center">
+            <i class="bi bi-cash-stack" style="font-size:1.5rem;color:#22c55e;"></i>
+            <h5 class="mt-2 mb-0" style="font-size:.95rem;">{{rupiah .TotalRevenue}}</h5>
+            <small class="text-muted">Total Revenue</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="ec-card p-3 text-center">
+            <i class="bi bi-receipt" style="font-size:1.5rem;color:#3b82f6;"></i>
+            <h5 class="mt-2 mb-0">{{.TotalOrders}}</h5>
+            <small class="text-muted">Total Order</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="ec-card p-3 text-center">
+            <i class="bi bi-check2-circle" style="font-size:1.5rem;color:#a78bfa;"></i>
+            <h5 class="mt-2 mb-0">{{index .StatusCount "SELESAI"}}</h5>
+            <small class="text-muted">Order Selesai</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="ec-card p-3 text-center">
+            <i class="bi bi-exclamation-circle" style="font-size:1.5rem;color:#f59e0b;"></i>
+            <h5 class="mt-2 mb-0">{{index .StatusCount "DIPROSES"}}</h5>
+            <small class="text-muted">Diproses</small>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Order Status Breakdown -->
+    <div class="col-md-5">
+        <div class="ec-card p-4 h-100">
+            <h6 class="mb-3" style="color:#a78bfa;"><i class="bi bi-pie-chart me-2"></i>Status Order</h6>
+            <div class="d-flex flex-column gap-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="d-flex align-items-center gap-2">
+                        <span class="rounded-1" style="display:inline-block;width:12px;height:12px;background:#3b82f6;"></span>
+                        DIBAYAR
+                    </span>
+                    <strong>{{index .StatusCount "DIBAYAR"}}</strong>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="d-flex align-items-center gap-2">
+                        <span class="rounded-1" style="display:inline-block;width:12px;height:12px;background:#f59e0b;"></span>
+                        DIPROSES
+                    </span>
+                    <strong>{{index .StatusCount "DIPROSES"}}</strong>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="d-flex align-items-center gap-2">
+                        <span class="rounded-1" style="display:inline-block;width:12px;height:12px;background:#06b6d4;"></span>
+                        DIKIRIM
+                    </span>
+                    <strong>{{index .StatusCount "DIKIRIM"}}</strong>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="d-flex align-items-center gap-2">
+                        <span class="rounded-1" style="display:inline-block;width:12px;height:12px;background:#22c55e;"></span>
+                        SELESAI
+                    </span>
+                    <strong>{{index .StatusCount "SELESAI"}}</strong>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="d-flex align-items-center gap-2">
+                        <span class="rounded-1" style="display:inline-block;width:12px;height:12px;background:#ef4444;"></span>
+                        BATAL
+                    </span>
+                    <strong>{{index .StatusCount "BATAL"}}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seller Performance -->
+    <div class="col-md-7">
+        <div class="ec-card p-4 h-100">
+            <h6 class="mb-3" style="color:#a78bfa;"><i class="bi bi-shop me-2"></i>Performa Seller</h6>
+            {{if .SellerStats}}
+            <div class="table-responsive">
+                <table class="table table-dark table-borderless mb-0" style="font-size:.875rem;">
+                    <thead>
+                        <tr style="color:rgba(255,255,255,.45);font-size:.78rem;text-transform:uppercase;">
+                            <th>Toko</th>
+                            <th class="text-end">Revenue</th>
+                            <th class="text-end">Order</th>
+                            <th class="text-end">Rating</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range .SellerStats}}
+                        <tr class="border-top" style="border-color:rgba(255,255,255,.06)!important;">
+                            <td>
+                                <div class="text-white">{{.Profile.StoreName}}</div>
+                                <small class="text-muted">Bergabung {{.Profile.JoinedAt}}</small>
+                            </td>
+                            <td class="text-end text-success">{{rupiah .Revenue}}</td>
+                            <td class="text-end">{{.OrderCount}}</td>
+                            <td class="text-end">
+                                <i class="bi bi-star-fill text-warning" style="font-size:.75rem;"></i>
+                                {{printf "%.1f" .Profile.Rating}}
+                            </td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+            {{else}}
+            <p class="text-muted mb-0">Belum ada data seller.</p>
+            {{end}}
+        </div>
+    </div>
+</div>
+
+<!-- Top Products -->
+<div class="ec-card p-4 mt-4">
+    <h6 class="mb-3" style="color:#a78bfa;"><i class="bi bi-trophy me-2"></i>Produk Terlaris</h6>
+    {{if .TopProducts}}
+    <div class="row g-3">
+        {{range .TopProducts}}
+        <div class="col-md-4">
+            <div class="d-flex align-items-center gap-3 p-3 rounded-3" style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);">
+                <img src="{{.FotoURL}}" alt="{{.Nama}}" class="rounded-2" style="width:50px;height:50px;object-fit:cover;">
+                <div class="flex-grow-1 min-width-0">
+                    <div class="text-white text-truncate" style="font-size:.875rem;">{{.Nama}}</div>
+                    <small class="text-muted">{{.SellerName}}</small>
+                    <div class="d-flex align-items-center gap-2 mt-1">
+                        <span class="text-success" style="font-size:.8rem;">{{rupiah .Harga}}</span>
+                        <span class="text-muted" style="font-size:.75rem;">· {{.TotalSold}} terjual</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{end}}
+    </div>
+    {{else}}
+    <p class="text-muted mb-0">Belum ada produk.</p>
+    {{end}}
+</div>
+{{end}}

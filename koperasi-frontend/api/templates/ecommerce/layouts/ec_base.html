@@ -1,0 +1,225 @@
+{{define "ec_base"}}
+<!DOCTYPE html>
+<html lang="id" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}} — KopHub E-Commerce</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --ec-primary: #7c3aed;
+            --ec-primary-hover: #6d28d9;
+            --ec-bg: #0f0c29;
+            --ec-surface: rgba(30,30,50,0.9);
+            --ec-border: rgba(255,255,255,0.06);
+            --ec-sidebar-w: 260px;
+        }
+        body {
+            background: var(--ec-bg);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            min-height: 100vh;
+        }
+        /* --- Sidebar --- */
+        .ec-sidebar {
+            position: fixed; top: 0; left: 0;
+            width: var(--ec-sidebar-w); height: 100vh;
+            background: var(--ec-surface);
+            border-right: 1px solid var(--ec-border);
+            backdrop-filter: blur(12px);
+            overflow-y: auto;
+            z-index: 1040;
+            transition: transform .3s;
+        }
+        .ec-sidebar .brand {
+            padding: 1.25rem 1rem;
+            border-bottom: 1px solid var(--ec-border);
+            display: flex; align-items: center; gap: .75rem;
+        }
+        .ec-sidebar .brand i { font-size: 1.5rem; color: var(--ec-primary); }
+        .ec-sidebar .brand span { font-weight: 700; font-size: 1.1rem; }
+        .ec-sidebar .nav-link {
+            color: rgba(255,255,255,.65);
+            padding: .65rem 1rem;
+            border-radius: .5rem;
+            margin: .15rem .5rem;
+            display: flex; align-items: center; gap: .6rem;
+            font-size: .9rem;
+            transition: background .15s, color .15s;
+        }
+        .ec-sidebar .nav-link:hover,
+        .ec-sidebar .nav-link.active {
+            background: rgba(124,58,237,.15);
+            color: #c4b5fd;
+        }
+        .ec-sidebar .nav-label {
+            font-size: .7rem; text-transform: uppercase; letter-spacing: .1rem;
+            color: rgba(255,255,255,.3);
+            padding: .75rem 1rem .35rem;
+        }
+        /* --- Main --- */
+        .ec-main {
+            margin-left: var(--ec-sidebar-w);
+            min-height: 100vh;
+        }
+        .ec-topbar {
+            background: var(--ec-surface);
+            border-bottom: 1px solid var(--ec-border);
+            padding: .75rem 1.5rem;
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 1030;
+            backdrop-filter: blur(12px);
+        }
+        .ec-topbar .btn-sidebar-toggle { display: none; }
+        .ec-content { padding: 1.5rem; }
+
+        .btn-ec-primary {
+            background: linear-gradient(135deg, var(--ec-primary), var(--ec-primary-hover));
+            border: none; color: #fff;
+        }
+        .btn-ec-primary:hover {
+            background: linear-gradient(135deg, var(--ec-primary-hover), #5b21b6);
+            color: #fff;
+        }
+        .ec-card {
+            background: var(--ec-surface);
+            border: 1px solid var(--ec-border);
+            border-radius: .75rem;
+            backdrop-filter: blur(8px);
+        }
+
+        /* Responsive */
+        @media (max-width: 991.98px) {
+            .ec-sidebar { transform: translateX(-100%); }
+            .ec-sidebar.show { transform: translateX(0); }
+            .ec-main { margin-left: 0; }
+            .ec-topbar .btn-sidebar-toggle { display: inline-flex; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="ec-sidebar" id="ecSidebar">
+        <div class="brand">
+            <i class="bi bi-shop"></i>
+            <span>KopHub E-Commerce</span>
+        </div>
+        <nav class="py-2">
+            <div class="nav-label">Marketplace</div>
+            <a href="/ecommerce/store" class="nav-link {{if eq .Active "store"}}active{{end}}">
+                <i class="bi bi-house"></i> Storefront
+            </a>
+            <a href="/ecommerce/products" class="nav-link {{if eq .Active "products"}}active{{end}}">
+                <i class="bi bi-grid"></i> Katalog Produk
+            </a>
+
+            <div class="nav-label">Saya</div>
+            <a href="/ecommerce/buyer" class="nav-link {{if eq .Active "buyer"}}active{{end}}">
+                <i class="bi bi-speedometer2"></i> Dashboard Buyer
+            </a>
+            <a href="/ecommerce/wishlist" class="nav-link {{if eq .Active "wishlist"}}active{{end}}">
+                <i class="bi bi-heart"></i> Wishlist
+            </a>
+            <a href="/ecommerce/orders" class="nav-link {{if eq .Active "orders"}}active{{end}}">
+                <i class="bi bi-bag-check"></i> Pesanan Saya
+            </a>
+            <a href="/ecommerce/points" class="nav-link {{if eq .Active "points"}}active{{end}}">
+                <i class="bi bi-star"></i> Poin & Reward
+            </a>
+            <a href="/ecommerce/profile" class="nav-link {{if eq .Active "profile"}}active{{end}}">
+                <i class="bi bi-person-circle"></i> Profil Saya
+            </a>
+            <a href="/ecommerce/profile/addresses" class="nav-link {{if eq .Active "addresses"}}active{{end}}">
+                <i class="bi bi-geo-alt"></i> Alamat
+            </a>
+
+            {{if .IsSeller}}
+            <div class="nav-label">Seller Panel</div>
+            <a href="/ecommerce/seller" class="nav-link {{if eq .Active "seller"}}active{{end}}">
+                <i class="bi bi-shop-window"></i> Seller Dashboard
+            </a>
+            <a href="/ecommerce/seller/products" class="nav-link {{if eq .Active "seller_products"}}active{{end}}">
+                <i class="bi bi-box-seam"></i> Produk Saya
+            </a>
+            <a href="/ecommerce/seller/orders" class="nav-link {{if eq .Active "seller_orders"}}active{{end}}">
+                <i class="bi bi-clipboard-check"></i> Pesanan Masuk
+            </a>
+            {{end}}
+
+            {{if eq .ECRole "ADMIN"}}
+            <div class="nav-label">Admin Panel</div>
+            <a href="/ecommerce/admin" class="nav-link {{if eq .Active "admin"}}active{{end}}">
+                <i class="bi bi-shield-check"></i> Dashboard
+            </a>
+            <a href="/ecommerce/admin/analytics" class="nav-link {{if eq .Active "admin_analytics"}}active{{end}}">
+                <i class="bi bi-bar-chart"></i> Analytics
+            </a>
+            <a href="/ecommerce/admin/products" class="nav-link {{if eq .Active "admin_products"}}active{{end}}">
+                <i class="bi bi-box-seam"></i> Review Produk
+            </a>
+            <a href="/ecommerce/admin/sellers" class="nav-link {{if eq .Active "admin_sellers"}}active{{end}}">
+                <i class="bi bi-person-badge"></i> Kelola Seller
+            </a>
+            <a href="/ecommerce/admin/orders" class="nav-link {{if eq .Active "admin_orders"}}active{{end}}">
+                <i class="bi bi-receipt"></i> Semua Order
+            </a>
+            <a href="/ecommerce/admin/vouchers" class="nav-link {{if eq .Active "admin_vouchers"}}active{{end}}">
+                <i class="bi bi-ticket-perforated"></i> Voucher
+            </a>
+            <a href="/ecommerce/admin/members" class="nav-link {{if eq .Active "admin_members"}}active{{end}}">
+                <i class="bi bi-people"></i> Member
+            </a>
+            <a href="/ecommerce/admin/points" class="nav-link {{if eq .Active "admin_points"}}active{{end}}">
+                <i class="bi bi-coin"></i> Monitoring Poin
+            </a>
+            <a href="/ecommerce/admin/audit" class="nav-link {{if eq .Active "admin_audit"}}active{{end}}">
+                <i class="bi bi-journal-text"></i> Audit Log
+            </a>
+            {{end}}
+
+            <div class="nav-label">Akun</div>
+            <a href="/ecommerce/logout" class="nav-link text-danger">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+            <a href="/login" class="nav-link" style="color: rgba(255,255,255,.4);">
+                <i class="bi bi-arrow-left-right"></i> Akses Koperasi
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main -->
+    <div class="ec-main">
+        <header class="ec-topbar">
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-sm btn-outline-secondary btn-sidebar-toggle" onclick="document.getElementById('ecSidebar').classList.toggle('show')">
+                    <i class="bi bi-list"></i>
+                </button>
+                <h5 class="mb-0">{{.Title}}</h5>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <span class="text-muted small"><i class="bi bi-person-circle me-1"></i>{{.ECUsername}}</span>
+            </div>
+        </header>
+
+        <main class="ec-content">
+            {{if .FlashError}}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-circle me-1"></i>{{.FlashError}}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {{end}}
+            {{if .FlashSuccess}}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle me-1"></i>{{.FlashSuccess}}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {{end}}
+            {{template "content" .}}
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+{{end}}

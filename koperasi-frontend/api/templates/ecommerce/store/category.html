@@ -1,0 +1,39 @@
+{{define "content"}}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a href="/ecommerce/store" class="text-decoration-none" style="color:#a78bfa;">Store</a></li>
+        <li class="breadcrumb-item active">{{.Category}}</li>
+    </ol>
+</nav>
+
+<h5 class="mb-3"><i class="bi bi-tag me-1"></i>{{.Category}}</h5>
+
+{{if .Products}}
+<div class="row g-3">
+    {{range .Products}}
+    <div class="col-6 col-md-4">
+        <div class="ec-card h-100">
+            <img src="{{.FotoURL}}" class="card-img-top" alt="{{.Nama}}" style="height:180px; object-fit:cover; border-radius:.75rem .75rem 0 0;">
+            <div class="p-3">
+                <small class="text-muted">{{.SellerName}}</small>
+                <h6 class="mt-1 mb-1" style="font-size:.9rem;">
+                    <a href="/ecommerce/products/{{.ID}}" class="text-white text-decoration-none">{{.Nama}}</a>
+                </h6>
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="text-warning small"><i class="bi bi-star-fill"></i> {{printf "%.1f" .Rating}}</span>
+                    <span class="text-muted small">{{.TotalSold}} terjual</span>
+                </div>
+                <strong style="color: #a78bfa;">Rp {{printf "%.0f" .Harga}}</strong>
+            </div>
+        </div>
+    </div>
+    {{end}}
+</div>
+{{else}}
+<div class="ec-card p-4 text-center">
+    <i class="bi bi-inbox" style="font-size:3rem;color:rgba(255,255,255,.2);"></i>
+    <p class="text-muted mt-2">Belum ada produk di kategori ini.</p>
+    <a href="/ecommerce/store" class="btn btn-sm btn-ec-primary">Kembali ke Store</a>
+</div>
+{{end}}
+{{end}}

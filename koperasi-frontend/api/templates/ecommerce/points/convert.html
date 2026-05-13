@@ -1,0 +1,92 @@
+{{define "content"}}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a href="/ecommerce/points" class="text-decoration-none" style="color:#a78bfa;">Poin & Reward</a></li>
+        <li class="breadcrumb-item active">Konversi ke Simpanan</li>
+    </ol>
+</nav>
+
+{{if .LinkedMember}}
+<div class="row g-4 justify-content-center">
+    <div class="col-md-8">
+        <!-- Target Member -->
+        <div class="ec-card p-4 mb-3">
+            <h6 class="mb-3"><i class="bi bi-person-check me-1 text-success"></i>Member Tujuan</h6>
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:50px;height:50px;background:rgba(34,197,94,.12);">
+                    <i class="bi bi-person-check" style="color:#22c55e;font-size:1.3rem;"></i>
+                </div>
+                <div>
+                    <strong>{{.LinkedMember.Nama}}</strong>
+                    <div class="small text-muted">{{.LinkedMember.NomorAnggota}}</div>
+                    <div class="small text-muted">Simpanan Sukarela saat ini: <strong>Rp {{printf "%.0f" .LinkedMember.SimpananSukarela}}</strong></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conversion Calculator -->
+        <div class="ec-card p-4 mb-3">
+            <h6 class="mb-3"><i class="bi bi-calculator me-1"></i>Kalkulator Konversi</h6>
+
+            <form method="POST" action="/ecommerce/points/convert" id="convertForm">
+                <div class="mb-3">
+                    <label class="form-label">Saldo Poin: <strong class="text-warning">{{printf "%.0f" .Balance}}</strong></label>
+                    <input type="range" class="form-range" id="poinSlider" min="100" max="{{printf "%.0f" .Balance}}" step="100" value="100" oninput="updateConversion(this.value)">
+                    <input type="hidden" name="amount" id="amountInput" value="100">
+                </div>
+
+                <div class="p-3 rounded text-center mb-3" style="background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.15);">
+                    <div class="d-flex justify-content-center align-items-center gap-3">
+                        <div>
+                            <span class="text-warning fw-bold" style="font-size:1.5rem;" id="poinDisplay">100</span>
+                            <div class="small text-muted">poin</div>
+                        </div>
+                        <i class="bi bi-arrow-right" style="font-size:1.5rem;color:rgba(255,255,255,.3);"></i>
+                        <div>
+                            <span style="color:#22c55e;font-weight:bold;font-size:1.5rem;" id="rpDisplay">Rp 10.000</span>
+                            <div class="small text-muted">Simpanan Sukarela</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-2 rounded small mb-3" style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);">
+                    <div class="d-flex justify-content-between"><span>Poin dikonversi:</span><span id="summaryPoin">100 poin</span></div>
+                    <div class="d-flex justify-content-between"><span>Rate konversi:</span><span>1 poin = Rp 100</span></div>
+                    <div class="d-flex justify-content-between"><span>Simpanan bertambah:</span><strong id="summaryRp" style="color:#22c55e;">Rp 10.000</strong></div>
+                    <div class="d-flex justify-content-between"><span>Atas nama:</span><strong>{{.LinkedMember.Nama}}</strong></div>
+                </div>
+
+                <div class="p-2 rounded small mb-3" style="background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.1);">
+                    <i class="bi bi-info-circle text-warning me-1"></i>
+                    Konversi bersifat final. Simpanan Sukarela member akan bertambah sesuai jumlah konversi. Minimum: 100 poin.
+                </div>
+
+                <button type="submit" class="btn btn-ec-primary w-100 py-2">
+                    <i class="bi bi-check-circle me-1"></i>Konfirmasi Konversi
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateConversion(val) {
+    val = parseInt(val);
+    var rp = val * 100;
+    document.getElementById('poinDisplay').textContent = val.toLocaleString('id-ID');
+    document.getElementById('rpDisplay').textContent = 'Rp ' + rp.toLocaleString('id-ID');
+    document.getElementById('summaryPoin').textContent = val.toLocaleString('id-ID') + ' poin';
+    document.getElementById('summaryRp').textContent = 'Rp ' + rp.toLocaleString('id-ID');
+    document.getElementById('amountInput').value = val;
+}
+</script>
+{{else}}
+<!-- Not Linked -->
+<div class="ec-card p-4 text-center">
+    <i class="bi bi-link-45deg" style="font-size:3rem;color:rgba(255,255,255,.15);"></i>
+    <h5 class="mt-3">Belum Link ke Member Koperasi</h5>
+    <p class="text-muted">Untuk konversi poin ke Simpanan Sukarela, link akun Anda ke member koperasi terlebih dahulu.</p>
+    <a href="/ecommerce/points/link-member" class="btn btn-ec-primary"><i class="bi bi-link me-1"></i>Link Member Koperasi</a>
+</div>
+{{end}}
+{{end}}

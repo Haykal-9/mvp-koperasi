@@ -1,0 +1,62 @@
+{{define "content"}}
+<h5 class="mb-3"><i class="bi bi-graph-up me-1"></i>Pendapatan</h5>
+
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="ec-card p-3 text-center">
+            <i class="bi bi-cash-stack" style="font-size:1.5rem;color:#22c55e;"></i>
+            <h5 class="mt-2 mb-0">Rp {{printf "%.0f" .TotalRevenue}}</h5>
+            <small class="text-muted">Total Penjualan</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="ec-card p-3 text-center">
+            <i class="bi bi-percent" style="font-size:1.5rem;color:#ef4444;"></i>
+            <h5 class="mt-2 mb-0">Rp {{printf "%.0f" .TotalCommission}}</h5>
+            <small class="text-muted">Komisi Platform (3%)</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="ec-card p-3 text-center" style="border-left:3px solid #22c55e;">
+            <i class="bi bi-wallet2" style="font-size:1.5rem;color:#a78bfa;"></i>
+            <h5 class="mt-2 mb-0">Rp {{printf "%.0f" .NetEarnings}}</h5>
+            <small class="text-muted">Pendapatan Bersih</small>
+        </div>
+    </div>
+</div>
+
+<div class="ec-card p-3 mb-4 small" style="background:rgba(124,58,237,.05);">
+    <i class="bi bi-info-circle me-1 text-muted"></i>
+    Pendapatan dihitung dari <strong>{{.CompletedOrders}} pesanan selesai</strong>. Komisi platform 3% dari subtotal produk.
+</div>
+
+<!-- Order History -->
+<h5 class="mb-3"><i class="bi bi-receipt me-1"></i>Riwayat Transaksi</h5>
+{{if .Orders}}
+<div class="ec-card">
+    <div class="table-responsive">
+        <table class="table table-dark table-hover mb-0" style="background:transparent;">
+            <thead><tr><th>Order</th><th>Buyer</th><th>Subtotal</th><th>Komisi</th><th>Bersih</th><th>Status</th></tr></thead>
+            <tbody>
+            {{range .Orders}}
+            <tr>
+                <td><code class="small">{{.NomorOrder}}</code></td>
+                <td>{{.BuyerName}}</td>
+                <td>Rp {{printf "%.0f" .Subtotal}}</td>
+                <td class="text-danger">-Rp {{printf "%.0f" (mul .Subtotal 0.03)}}</td>
+                <td class="text-success">Rp {{printf "%.0f" (mul .Subtotal 0.97)}}</td>
+                <td>
+                    {{if eq .Status "SELESAI"}}<span class="badge bg-success">{{.Status}}</span>
+                    {{else}}<span class="badge bg-secondary">{{.Status}}</span>{{end}}
+                </td>
+            </tr>
+            {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+{{else}}
+<div class="ec-card p-3 text-center text-muted small">Belum ada transaksi.</div>
+{{end}}
+{{end}}

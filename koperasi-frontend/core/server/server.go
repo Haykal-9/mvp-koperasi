@@ -8,8 +8,11 @@ import (
 	"net/http"
 	"path"
 	"strings"
+	"strconv"
 
 	"koperasi-frontend/core/handler"
+	ecommerce "koperasi-frontend/core/handler/ecommerce"
+	"koperasi-frontend/core/middleware"
 	"koperasi-frontend/core/model"
 
 	"github.com/gin-contrib/sessions"
@@ -60,6 +63,10 @@ var templateFuncs = template.FuncMap{
 		}
 		return a / b
 	},
+	"iadd": func(a, b int) int { return a + b },
+	"contains": func(s, substr string) bool { return strings.Contains(s, substr) },
+	"float64": func(i int) float64 { return float64(i) },
+	"itoa": strconv.Itoa,
 }
 
 // readTemplate reads a template file from the embedded FS.
@@ -75,9 +82,13 @@ func readTemplate(p string) (string, error) {
 func loadTemplates() {
 	pageTemplates["base"] = map[string]*template.Template{}
 	pageTemplates["auth"] = map[string]*template.Template{}
+	pageTemplates["ec_base"] = map[string]*template.Template{}
+	pageTemplates["ec_auth"] = map[string]*template.Template{}
 
 	baseLayout := "templates/layouts/base.html"
 	authLayout := "templates/layouts/auth.html"
+	ecBaseLayout := "templates/ecommerce/layouts/ec_base.html"
+	ecAuthLayout := "templates/ecommerce/layouts/ec_auth.html"
 
 	register := func(layout, layoutFile, pagePath string) {
 		name := pageNameFromPath(pagePath)
@@ -100,18 +111,33 @@ func loadTemplates() {
 		pageTemplates[layout][name] = tmpl
 	}
 
-	// Auth pages
+	// Auth pages (koperasi)
 	authEntries, _ := fs.Glob(Assets, "templates/auth/*.html")
 	for _, p := range authEntries {
 		register("auth", authLayout, p)
 	}
 
-	// Module pages
+	// Module pages (koperasi)
 	moduleDirs := []string{"dashboard", "member", "product", "order", "loan", "finance"}
 	for _, dir := range moduleDirs {
 		entries, _ := fs.Glob(Assets, "templates/"+dir+"/*.html")
 		for _, p := range entries {
 			register("base", baseLayout, p)
+		}
+	}
+
+	// E-Commerce Auth pages
+	ecAuthEntries, _ := fs.Glob(Assets, "templates/ecommerce/auth/*.html")
+	for _, p := range ecAuthEntries {
+		register("ec_auth", ecAuthLayout, p)
+	}
+
+	// E-Commerce Module pages
+	ecModuleDirs := []string{"buyer", "seller", "admin", "store", "product", "order", "wishlist", "profile", "points", "components"}
+	for _, dir := range ecModuleDirs {
+		entries, _ := fs.Glob(Assets, "templates/ecommerce/"+dir+"/*.html")
+		for _, p := range entries {
+			register("ec_base", ecBaseLayout, p)
 		}
 	}
 }
@@ -154,15 +180,47 @@ func renderPage(c *gin.Context, layout, page string, data gin.H) {
 		data["CartCount"] = handler.CartCount(c)
 	}
 
+	// E-Commerce session data injection
+	if strings.HasPrefix(layout, "ec_") {
+		if _, ok := data["ECUsername"]; !ok {
+			data["ECUsername"] = ecommerce.GetECUsername(c)
+		}
+		if _, ok := data["ECRole"]; !ok {
+			data["ECRole"] = ecommerce.GetECRole(c)
+		}
+		if _, ok := data["IsSeller"]; !ok {
+			data["IsSeller"] = ecommerce.IsECSeller(c)
+		}
+		// E-Commerce flash messages
+		if _, ok := data["FlashError"]; !ok {
+			if msg, has := handler.PopFlash(c, "ec_error"); has {
+				data["FlashError"] = msg
+			}
+		}
+		if _, ok := data["FlashSuccess"]; !ok {
+			if msg, has := handler.PopFlash(c, "ec_success"); has {
+				data["FlashSuccess"] = msg
+			}
+		}
+	}
+
 	tmpl, ok := pageTemplates[layout][page]
 	if !ok {
 		c.String(http.StatusInternalServerError, "template not found: %s/%s", layout, page)
 		return
 	}
+
+	// Determine the entry template name
 	entry := "base"
-	if layout == "auth" {
+	switch layout {
+	case "auth":
 		entry = "auth_base"
+	case "ec_base":
+		entry = "ec_base"
+	case "ec_auth":
+		entry = "ec_auth_base"
 	}
+
 	c.Status(http.StatusOK)
 	c.Header("Content-Type", "text/html; charset=utf-8")
 	if err := tmpl.ExecuteTemplate(c.Writer, entry, data); err != nil {
@@ -190,7 +248,7 @@ func SetupApp() *gin.Engine {
 		c.Redirect(http.StatusFound, "/dashboard")
 	})
 
-	// ===== AUTH =====
+	// ===== KOPERASI AUTH =====
 	authH := handler.NewAuthHandler(renderPage)
 	r.GET("/login", authH.ShowLogin)
 	r.POST("/login", authH.DoLogin)
@@ -198,7 +256,7 @@ func SetupApp() *gin.Engine {
 	r.POST("/register", authH.DoRegister)
 	r.GET("/logout", authH.DoLogout)
 
-	// ===== PROTECTED =====
+	// ===== KOPERASI PROTECTED =====
 	dashH := handler.NewDashboardHandler(renderPage)
 	memH := handler.NewMemberHandler(renderPage)
 	prodH := handler.NewProductHandler(renderPage)
@@ -262,5 +320,118 @@ func SetupApp() *gin.Engine {
 		protected.GET("/finance/summary", finH.Summary)
 	}
 
+	// ===== E-COMMERCE PUBLIC (no auth) =====
+	ecAuthH := ecommerce.NewAuthHandler(renderPage)
+	ecStoreH := ecommerce.NewStoreHandler(renderPage)
+
+	r.GET("/ecommerce/login", ecAuthH.Login)
+	r.POST("/ecommerce/login", ecAuthH.DoLogin)
+	r.GET("/ecommerce/signup", ecAuthH.Signup)
+	r.POST("/ecommerce/signup", ecAuthH.DoSignup)
+	r.GET("/ecommerce/logout", ecAuthH.Logout)
+	r.GET("/ecommerce/api/members/search", ecAuthH.SearchKoperasiMember)
+
+	// Public store pages (browsable without login)
+	r.GET("/ecommerce/store", ecStoreH.Home)
+	r.GET("/ecommerce/category/:slug", ecStoreH.CategoryPage)
+	r.GET("/ecommerce/products", ecStoreH.ProductCatalog)
+	r.GET("/ecommerce/products/:id", ecStoreH.ProductDetail)
+	r.GET("/ecommerce/seller/:id/profile", ecStoreH.SellerProfilePage)
+
+	// ===== E-COMMERCE PROTECTED (auth required) =====
+	ecBuyerH := ecommerce.NewBuyerHandler(renderPage)
+	ecWishlistH := ecommerce.NewWishlistHandler(renderPage)
+
+	ecProtected := r.Group("/ecommerce")
+	ecProtected.Use(middleware.RequireECommerceAuth())
+	{
+		// Buyer routes
+		ecProtected.GET("/buyer", ecBuyerH.Dashboard)
+
+		// Wishlist
+		ecProtected.GET("/wishlist", ecWishlistH.List)
+		ecProtected.POST("/wishlist/toggle", ecWishlistH.Toggle)
+
+		// Orders & Checkout
+		ecOrderH := ecommerce.NewOrderHandler(renderPage)
+		ecProtected.GET("/checkout", ecOrderH.ShowCheckout)
+		ecProtected.POST("/checkout", ecOrderH.DoCheckout)
+		ecProtected.GET("/orders", ecOrderH.OrderList)
+		ecProtected.GET("/orders/:id/track", ecOrderH.ShowTracking)
+
+		// Profile & Addresses
+		ecProfileH := ecommerce.NewProfileHandler(renderPage)
+		ecProtected.GET("/profile", ecProfileH.Profile)
+		ecProtected.GET("/profile/addresses", ecProfileH.Addresses)
+		ecProtected.GET("/profile/addresses/new", ecProfileH.ShowCreateAddress)
+		ecProtected.POST("/profile/addresses", ecProfileH.CreateAddress)
+		ecProtected.POST("/profile/addresses/:id/default", ecProfileH.SetDefaultAddress)
+		ecProtected.POST("/profile/addresses/:id/delete", ecProfileH.DeleteAddress)
+		ecProtected.GET("/profile/settings", ecProfileH.Settings)
+		ecProtected.POST("/profile/settings", ecProfileH.UpdateSettings)
+
+		// Reviews
+		ecReviewH := ecommerce.NewReviewHandler(renderPage)
+		ecProtected.GET("/order/:id/review", ecReviewH.ShowReview)
+		ecProtected.POST("/order/:id/review", ecReviewH.DoReview)
+
+		// Points & Loyalty
+		ecPointsH := ecommerce.NewPointsHandler(renderPage)
+		ecProtected.GET("/points", ecPointsH.Balance)
+		ecProtected.GET("/points/convert", ecPointsH.ConvertForm)
+		ecProtected.POST("/points/convert", ecPointsH.DoConvert)
+		ecProtected.GET("/points/link-member", ecPointsH.LinkMemberPage)
+		ecProtected.POST("/points/link-member", ecPointsH.DoLinkMember)
+		ecProtected.GET("/api/points/conversion-status", ecPointsH.CheckConversionStatus)
+
+		// Koperasi integration mock API
+		ecIntegrationH := ecommerce.NewIntegrationHandler()
+		ecProtected.GET("/api/koperasi/member/:id", ecIntegrationH.GetKoperasiMember)
+		ecProtected.POST("/api/koperasi/link", ecIntegrationH.LinkToKoperasi)
+		ecProtected.POST("/api/koperasi/simpanan/add", ecIntegrationH.AddToSimpanan)
+
+		// Member linking (requires auth)
+		ecProtected.POST("/link-member", ecAuthH.LinkKoperasiMember)
+		ecProtected.POST("/unlink-member", ecAuthH.UnlinkKoperasiMember)
+
+		// Seller routes (require seller status)
+		ecSellerH := ecommerce.NewSellerHandler(renderPage)
+		ecSeller := ecProtected.Group("/seller")
+		ecSeller.Use(middleware.RequireECommerceSeller())
+		{
+			ecSeller.GET("", ecSellerH.Dashboard)
+			ecSeller.GET("/products", ecSellerH.ProductList)
+			ecSeller.GET("/products/create", ecSellerH.CreateProduct)
+			ecSeller.POST("/products/create", ecSellerH.DoCreateProduct)
+			ecSeller.GET("/orders", ecSellerH.OrderList)
+			ecSeller.POST("/orders/:id/shipped", ecSellerH.MarkShipped)
+			ecSeller.GET("/earnings", ecSellerH.Earnings)
+		}
+
+		// Admin routes (require ADMIN role)
+		ecAdminH := ecommerce.NewAdminHandler(renderPage)
+		ecAdmin := ecProtected.Group("/admin")
+		ecAdmin.Use(middleware.RequireECommerceAdmin())
+		{
+			ecAdmin.GET("", ecAdminH.Dashboard)
+			ecAdmin.GET("/analytics", ecAdminH.Analytics)
+			ecAdmin.GET("/sellers", ecAdminH.SellerApprovals)
+			ecAdmin.POST("/sellers/:id/approve", ecAdminH.ApproveSeller)
+			ecAdmin.POST("/sellers/:id/reject", ecAdminH.RejectSeller)
+			ecAdmin.GET("/products", ecAdminH.ProductApprovals)
+			ecAdmin.POST("/products/:id/approve", ecAdminH.ApproveProduct)
+			ecAdmin.POST("/products/:id/reject", ecAdminH.RejectProduct)
+			ecAdmin.GET("/vouchers", ecAdminH.VoucherManagement)
+			ecAdmin.POST("/vouchers/create", ecAdminH.CreateVoucher)
+			ecAdmin.POST("/vouchers/:id/toggle", ecAdminH.ToggleVoucher)
+			ecAdmin.GET("/orders", ecAdminH.OrderManagement)
+			ecAdmin.GET("/members", ecAdminH.MemberManagement)
+			ecAdmin.GET("/points", ecAdminH.PointsMonitoring)
+			ecAdmin.GET("/audit", ecAdminH.AuditLog)
+		}
+	}
+
 	return r
 }
+
+
