@@ -187,3 +187,61 @@ func AuthRequired() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+// ===== RequireRole middleware =====
+// Aborts with 403 redirect if current user's role is not in allowed list.
+// MUST be chained after AuthRequired().
+func RequireRole(allowed ...string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		role := CurrentUserRole(c)
+		for _, r := range allowed {
+			if r == role {
+				c.Next()
+				return
+			}
+		}
+		SetFlash(c, "error", "Anda tidak memiliki akses ke halaman tersebut.")
+		c.Redirect(http.StatusFound, "/dashboard")
+		c.Abort()
+	}
+}
+
+// CurrentUserRole reads user_role from session. Returns "" if not logged in.
+func CurrentUserRole(c *gin.Context) string {
+	sess := sessions.Default(c)
+	if v := sess.Get("user_role"); v != nil {
+		if s, ok := v.(string); ok {
+			return s
+		}
+	}
+	return ""
+}
+
+// CurrentUserNama reads user_nama from session. Used for filtering
+// records that store only the user's name (Order.PembeliNama, Loan.MemberNama).
+func CurrentUserNama(c *gin.Context) string {
+	sess := sessions.Default(c)
+	if v := sess.Get("user_nama"); v != nil {
+		if s, ok := v.(string); ok {
+			return s
+		}
+	}
+	return ""
+}
+
+// CurrentUserID reads user_id from session.
+func CurrentUserID(c *gin.Context) int {
+	sess := sessions.Default(c)
+	if v := sess.Get("user_id"); v != nil {
+		if id, ok := v.(int); ok {
+			return id
+		}
+	}
+	return 0
+}
+
+// IsOwnerOrKasir returns true if the current user can perform staff actions.
+func IsOwnerOrKasir(c *gin.Context) bool {
+	r := CurrentUserRole(c)
+	return r == "OWNER" || r == "KASIR"
+}

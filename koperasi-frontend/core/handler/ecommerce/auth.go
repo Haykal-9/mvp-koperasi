@@ -295,18 +295,17 @@ func (h *AuthHandler) UnlinkKoperasiMember(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/ecommerce/points")
 }
 
-// Logout clears the e-commerce session.
+// Logout clears the entire session (both EC + Koperasi). Full logout is
+// required because RequireECommerceAuth middleware does SSO fallback from the
+// koperasi session — clearing only the EC keys would let the user "auto-login"
+// again on the next protected request and land back at the dashboard.
 // GET /ecommerce/logout
 func (h *AuthHandler) Logout(c *gin.Context) {
 	sess := sessions.Default(c)
-	sess.Delete("ec_user_id")
-	sess.Delete("ec_username")
-	sess.Delete("ec_email")
-	sess.Delete("ec_role")
-	sess.Delete("ec_is_seller")
+	sess.Clear() // clears both EC + Koperasi keys atomically
 	_ = sess.Save()
 
-	handler.SetFlash(c, "ec_success", "Anda telah keluar dari E-Commerce.")
+	handler.SetFlash(c, "ec_success", "Anda telah keluar.")
 	c.Redirect(http.StatusFound, "/ecommerce/login")
 }
 

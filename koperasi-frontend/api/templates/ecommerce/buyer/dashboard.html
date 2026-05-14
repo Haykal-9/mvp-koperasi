@@ -1,79 +1,85 @@
 {{define "content"}}
-<!-- Quick Stats -->
-<div class="row g-3 mb-4">
+<div class="mb-4">
+    <div class="zp-eyebrow mb-2">DASHBOARD BUYER</div>
+    <h1 class="zp-display-lg">Selamat datang kembali.</h1>
+</div>
+
+<!-- Quick stats — cream feature cards -->
+<div class="row g-3 mb-5">
     <div class="col-6 col-md-3">
-        <div class="ec-card p-3 text-center">
-            <i class="bi bi-bag-check" style="font-size:1.5rem;color:#22c55e;"></i>
-            <h5 class="mt-2 mb-0">{{.OrderCount}}</h5>
-            <small class="text-muted">Pesanan</small>
+        <div class="card p-4">
+            <div class="zp-eyebrow mb-2">PESANAN</div>
+            <div class="zp-display-sub-lg">{{.OrderCount}}</div>
+        </div>
+    </div>
+    <!-- Polarity-flipped featured tile for points -->
+    <div class="col-6 col-md-3">
+        <div class="zp-card-dark" style="padding: 24px;">
+            <div class="zp-eyebrow mb-2" style="color: var(--zp-canvas-soft);">POIN</div>
+            <div class="zp-display-sub-lg" style="color: var(--zp-on-primary);">{{printf "%.0f" .PointsBalance}}</div>
         </div>
     </div>
     <div class="col-6 col-md-3">
-        <div class="ec-card p-3 text-center">
-            <i class="bi bi-star" style="font-size:1.5rem;color:#f59e0b;"></i>
-            <h5 class="mt-2 mb-0">{{printf "%.0f" .PointsBalance}}</h5>
-            <small class="text-muted">Poin</small>
+        <div class="card p-4">
+            <div class="zp-eyebrow mb-2">WISHLIST</div>
+            <div class="zp-display-sub-lg">{{.WishlistCount}}</div>
         </div>
     </div>
     <div class="col-6 col-md-3">
-        <div class="ec-card p-3 text-center">
-            <i class="bi bi-heart" style="font-size:1.5rem;color:#ef4444;"></i>
-            <h5 class="mt-2 mb-0">{{.WishlistCount}}</h5>
-            <small class="text-muted">Wishlist</small>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="ec-card p-3 text-center">
-            <i class="bi bi-geo-alt" style="font-size:1.5rem;color:#3b82f6;"></i>
-            <h5 class="mt-2 mb-0">{{len .Addresses}}</h5>
-            <small class="text-muted">Alamat</small>
+        <div class="card p-4">
+            <div class="zp-eyebrow mb-2">ALAMAT</div>
+            <div class="zp-display-sub-lg">{{len .Addresses}}</div>
         </div>
     </div>
 </div>
 
-<!-- Koperasi Link Status -->
+<!-- Koperasi link banner — dark feature card -->
 {{if .LinkedMember}}
-<div class="ec-card p-3 mb-4 d-flex align-items-center gap-3" style="border-left: 3px solid #22c55e;">
-    <i class="bi bi-link-45deg" style="font-size:1.3rem;color:#22c55e;"></i>
-    <div>
-        <small class="text-muted">Linked Koperasi Member</small>
-        <div class="fw-bold">{{.LinkedMember}}</div>
+<div class="zp-card-dark mb-5 d-flex align-items-center gap-3 flex-wrap">
+    <i class="bi bi-person-check" style="font-size:1.5rem;color: var(--zp-primary);"></i>
+    <div class="flex-grow-1">
+        <div class="zp-eyebrow mb-1" style="color: var(--zp-canvas-soft);">ANGGOTA KOPERASI</div>
+        <div class="zp-display-xs" style="color: var(--zp-on-primary);">{{.LinkedMember}}</div>
     </div>
-    <a href="/ecommerce/points" class="btn btn-sm btn-outline-success ms-auto">Konversi Poin</a>
+    <a href="/ecommerce/points" class="btn btn-primary btn-sm">Konversi poin</a>
 </div>
 {{else}}
-<div class="ec-card p-3 mb-4 d-flex align-items-center gap-3" style="border-left: 3px solid rgba(255,255,255,.1);">
-    <i class="bi bi-link-45deg" style="font-size:1.3rem;color:rgba(255,255,255,.3);"></i>
-    <div>
-        <small class="text-muted">Koperasi Member</small>
-        <div class="small text-muted">Belum di-link. Link untuk konversi poin ke Simpanan.</div>
+<div class="card p-4 mb-5 d-flex flex-row align-items-center gap-3 flex-wrap">
+    <i class="bi bi-person-plus" style="font-size:1.5rem;color: var(--zp-primary);"></i>
+    <div class="flex-grow-1">
+        <div class="zp-eyebrow mb-1">JADI ANGGOTA KOPERASI</div>
+        <div class="zp-body-md">Daftarkan diri jadi anggota untuk konversi poin ke Simpanan Sukarela.</div>
     </div>
-    <a href="/ecommerce/points" class="btn btn-sm btn-outline-light ms-auto">Link Sekarang</a>
+    <a href="/ecommerce/points/link-member" class="btn btn-primary btn-sm">Daftar sekarang</a>
 </div>
 {{end}}
 
-<!-- Recent Orders -->
-<h5 class="mb-3"><i class="bi bi-clock-history me-1"></i>Pesanan Terbaru</h5>
+<!-- Recent orders -->
+<div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4">
+    <div>
+        <div class="zp-eyebrow mb-2">PESANAN TERBARU</div>
+        <h2 class="zp-display-lg mb-0">Aktivitas belanjamu.</h2>
+    </div>
+    <a href="/ecommerce/orders" class="btn btn-outline-dark btn-sm d-none d-md-inline-flex">Semua pesanan</a>
+</div>
 {{if .RecentOrders}}
-<div class="ec-card mb-4">
+<div class="card mb-5" style="padding: 0; overflow: hidden;">
     <div class="table-responsive">
-        <table class="table table-dark table-hover mb-0" style="background:transparent;">
+        <table class="table table-hover mb-0">
             <thead><tr>
                 <th>No. Order</th><th>Seller</th><th>Total</th><th>Status</th><th>Tanggal</th>
             </tr></thead>
             <tbody>
             {{range .RecentOrders}}
             <tr>
-                <td><code>{{.NomorOrder}}</code></td>
-                <td>{{.SellerName}}</td>
-                <td>Rp {{printf "%.0f" .TotalHarga}}</td>
+                <td><span class="zp-body-md-strong">{{.NomorOrder}}</span></td>
+                <td class="zp-body-md">{{.SellerName}}</td>
+                <td class="zp-body-md-strong">Rp {{printf "%.0f" .TotalHarga}}</td>
                 <td>
-                    {{if eq .Status "SELESAI"}}<span class="badge bg-success">{{.Status}}</span>
-                    {{else if eq .Status "DIKIRIM"}}<span class="badge bg-info">{{.Status}}</span>
-                    {{else if eq .Status "DIPROSES"}}<span class="badge bg-warning text-dark">{{.Status}}</span>
-                    {{else}}<span class="badge bg-secondary">{{.Status}}</span>{{end}}
+                    {{if eq .Status "SELESAI"}}<span class="badge zp-badge-primary">{{.Status}}</span>
+                    {{else}}<span class="badge zp-badge">{{.Status}}</span>{{end}}
                 </td>
-                <td class="small text-muted">{{.CreatedAt}}</td>
+                <td class="zp-caption">{{.CreatedAt}}</td>
             </tr>
             {{end}}
             </tbody>
@@ -81,22 +87,30 @@
     </div>
 </div>
 {{else}}
-<div class="ec-card p-3 mb-4 text-center text-muted small">Belum ada pesanan. <a href="/ecommerce/store" style="color:#a78bfa;">Mulai belanja!</a></div>
+<div class="card p-5 text-center mb-5">
+    <p class="zp-body-md mb-3">Belum ada pesanan.</p>
+    <div><a href="/ecommerce/store" class="btn btn-primary btn-sm">Mulai belanja</a></div>
+</div>
 {{end}}
 
 <!-- Recommended -->
 {{if .Recommended}}
-<h5 class="mb-3"><i class="bi bi-lightning me-1"></i>Rekomendasi</h5>
+<div class="mb-4">
+    <div class="zp-eyebrow mb-2">REKOMENDASI</div>
+    <h2 class="zp-display-lg mb-0">Mungkin kamu suka.</h2>
+</div>
 <div class="row g-3">
     {{range .Recommended}}
     <div class="col-6 col-md-3">
-        <div class="ec-card h-100">
-            <img src="{{.FotoURL}}" class="card-img-top" alt="{{.Nama}}" style="height:140px;object-fit:cover;border-radius:.75rem .75rem 0 0;">
-            <div class="p-2">
-                <small><a href="/ecommerce/products/{{.ID}}" class="text-white text-decoration-none">{{.Nama}}</a></small>
-                <div><strong class="small" style="color:#a78bfa;">Rp {{printf "%.0f" .Harga}}</strong></div>
+        <a href="/ecommerce/products/{{.ID}}" class="text-decoration-none">
+            <div class="card h-100">
+                <img src="{{.FotoURL}}" class="card-img-top" alt="{{.Nama}}" style="height:160px;object-fit:cover;">
+                <div class="p-3">
+                    <div class="zp-body-md-strong mb-1">{{.Nama}}</div>
+                    <div class="zp-display-xs">Rp {{printf "%.0f" .Harga}}</div>
+                </div>
             </div>
-        </div>
+        </a>
     </div>
     {{end}}
 </div>

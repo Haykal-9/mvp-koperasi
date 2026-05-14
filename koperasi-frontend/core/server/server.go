@@ -13,6 +13,7 @@ import (
 	"koperasi-frontend/core/handler"
 	ecommerce "koperasi-frontend/core/handler/ecommerce"
 	"koperasi-frontend/core/middleware"
+	"koperasi-frontend/core/mock"
 	"koperasi-frontend/core/model"
 
 	"github.com/gin-contrib/sessions"
@@ -165,6 +166,18 @@ func renderPage(c *gin.Context, layout, page string, data gin.H) {
 		}
 	}
 
+	// Sidebar (base layout) needs the MemberID for ANGGOTA shortcut links.
+	if _, ok := data["MemberID"]; !ok {
+		if nama, ok := data["UserNama"].(string); ok && nama != "" {
+			for i := range mock.Members {
+				if mock.Members[i].Nama == nama {
+					data["MemberID"] = mock.Members[i].ID
+					break
+				}
+			}
+		}
+	}
+
 	if _, ok := data["FlashError"]; !ok {
 		if msg, has := handler.PopFlash(c, "error"); has {
 			data["FlashError"] = msg
@@ -267,57 +280,78 @@ func SetupApp() *gin.Engine {
 	protected := r.Group("/")
 	protected.Use(handler.AuthRequired())
 	{
+		// Dashboard — handler internally routes to staff/anggota view by role
 		protected.GET("/dashboard", dashH.Index)
 
-		protected.GET("/members", memH.List)
-		protected.GET("/members/register", memH.ShowRegister)
-		protected.POST("/members/register", memH.DoRegister)
+		// ===== Keanggotaan =====
+		// Staff-only views: full member list, registration by pengurus, approve/reject.
+		protected.GET("/members", handler.RequireRole("OWNER", "KASIR"), memH.List)
+		// Form pendaftaran — anggota baru self-register, OWNER bisa daftarkan dari sisi pengurus.
+		// KASIR tidak boleh: tugas KASIR adalah operasional, bukan administratif.
+		protected.GET("/members/register", handler.RequireRole("OWNER", "ANGGOTA"), memH.ShowRegister)
+		protected.POST("/members/register", handler.RequireRole("OWNER", "ANGGOTA"), memH.DoRegister)
+		protected.POST("/members/:id/approve", handler.RequireRole("OWNER"), memH.Approve)
+		protected.POST("/members/:id/reject", handler.RequireRole("OWNER"), memH.Reject)
+		// Detail/simpanan/resign — ownership-guarded inside the handler (ANGGOTA only own).
 		protected.GET("/members/:id", memH.Detail)
-		protected.POST("/members/:id/approve", memH.Approve)
-		protected.POST("/members/:id/reject", memH.Reject)
 		protected.GET("/members/:id/simpanan", memH.ShowSimpanan)
 		protected.POST("/members/:id/simpanan", memH.DoSimpanan)
 		protected.GET("/members/:id/resign", memH.ShowResign)
 		protected.POST("/members/:id/resign", memH.DoResign)
 
+		// ===== Produk =====
+		// Browsing & detail open to all logged-in users. Staff actions gated.
 		protected.GET("/products", prodH.Catalog)
-		protected.GET("/products/create", prodH.ShowCreate)
-		protected.POST("/products/create", prodH.DoCreate)
-		protected.GET("/products/review", prodH.Review)
 		protected.GET("/products/:id", prodH.Detail)
-		protected.POST("/products/:id/approve", prodH.Approve)
-		protected.POST("/products/:id/reject", prodH.Reject)
-		protected.GET("/products/:id/stock", prodH.ShowStock)
-		protected.POST("/products/:id/stock", prodH.DoStock)
+		protected.GET("/products/create", handler.RequireRole("OWNER", "KASIR"), prodH.ShowCreate)
+		protected.POST("/products/create", handler.RequireRole("OWNER", "KASIR"), prodH.DoCreate)
+		protected.GET("/products/review", handler.RequireRole("OWNER"), prodH.Review)
+		protected.POST("/products/:id/approve", handler.RequireRole("OWNER"), prodH.Approve)
+		protected.POST("/products/:id/reject", handler.RequireRole("OWNER"), prodH.Reject)
+		protected.GET("/products/:id/stock", handler.RequireRole("OWNER", "KASIR"), prodH.ShowStock)
+		protected.POST("/products/:id/stock", handler.RequireRole("OWNER", "KASIR"), prodH.DoStock)
 
+		// ===== Cart & Order =====
+		// Cart/checkout — every authenticated user can shop.
 		protected.GET("/cart", orderH.ShowCart)
 		protected.POST("/cart/add", orderH.AddToCart)
 		protected.POST("/cart/update", orderH.UpdateCart)
 		protected.POST("/cart/remove", orderH.RemoveFromCart)
 		protected.GET("/checkout", orderH.ShowCheckout)
 		protected.POST("/checkout", orderH.DoCheckout)
+		// Order list — ANGGOTA filtered to own orders inside the handler.
 		protected.GET("/orders", orderH.List)
-		protected.GET("/orders/complaints", orderH.Complaints)
+		// Order detail — ownership-guarded inside the handler.
 		protected.GET("/orders/:id", orderH.Detail)
-		protected.POST("/orders/:id/ship", orderH.Ship)
+		// Konfirmasi terima oleh pembeli sendiri — boleh ANGGOTA (handler cek ownership).
 		protected.POST("/orders/:id/complete", orderH.Complete)
+		// Komplain hanya boleh oleh pemilik order (handler cek ownership).
 		protected.GET("/orders/:id/complain", orderH.ShowComplain)
 		protected.POST("/orders/:id/complain", orderH.DoComplain)
-		protected.POST("/orders/:id/resolve", orderH.Resolve)
+		// Tindakan staff: kirim & daftar/resolve komplain.
+		protected.POST("/orders/:id/ship", handler.RequireRole("OWNER", "KASIR"), orderH.Ship)
+		protected.GET("/orders/complaints", handler.RequireRole("OWNER", "KASIR"), orderH.Complaints)
+		protected.POST("/orders/:id/resolve", handler.RequireRole("OWNER"), orderH.Resolve)
 
+		// ===== Pinjaman =====
+		// List — ANGGOTA filtered to own loans inside the handler.
 		protected.GET("/loans", loanH.List)
 		protected.GET("/loans/apply", loanH.ShowApply)
 		protected.POST("/loans/apply", loanH.DoApply)
+		// Detail — ownership-guarded inside the handler.
 		protected.GET("/loans/:id", loanH.Detail)
-		protected.POST("/loans/:id/approve", loanH.Approve)
-		protected.POST("/loans/:id/reject", loanH.Reject)
-		protected.POST("/loans/:id/disburse", loanH.Disburse)
+		// Pay angsuran — pemilik pinjaman bisa bayar sendiri (handler cek ownership).
 		protected.POST("/loans/:id/pay", loanH.Pay)
+		// Tindakan pengurus.
+		protected.POST("/loans/:id/approve", handler.RequireRole("OWNER"), loanH.Approve)
+		protected.POST("/loans/:id/reject", handler.RequireRole("OWNER"), loanH.Reject)
+		protected.POST("/loans/:id/disburse", handler.RequireRole("OWNER"), loanH.Disburse)
 
-		protected.GET("/finance/journals", finH.Journals)
-		protected.GET("/finance/journals/create", finH.ShowCreateJournal)
-		protected.POST("/finance/journals/create", finH.DoCreateJournal)
-		protected.GET("/finance/summary", finH.Summary)
+		// ===== Keuangan Koperasi (OWNER only — jurnal & ringkasan kas) =====
+		protected.GET("/finance/journals", handler.RequireRole("OWNER"), finH.Journals)
+		protected.GET("/finance/journals/create", handler.RequireRole("OWNER"), finH.ShowCreateJournal)
+		protected.POST("/finance/journals/create", handler.RequireRole("OWNER"), finH.DoCreateJournal)
+		protected.GET("/finance/summary", handler.RequireRole("OWNER"), finH.Summary)
 	}
 
 	// ===== E-COMMERCE PUBLIC (no auth) =====

@@ -50,22 +50,54 @@
         <div class="offcanvas-body p-0">
             <ul class="nav flex-column kop-sidebar-nav">
                 <li class="nav-item"><a class="nav-link {{if eq .Active "dashboard"}}active{{end}}" href="/dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+
+                {{/* ===== Keanggotaan ===== */}}
+                {{if or (eq .UserRole "OWNER") (eq .UserRole "KASIR")}}
                 <li class="nav-section">Keanggotaan</li>
                 <li class="nav-item"><a class="nav-link {{if eq .Active "members"}}active{{end}}" href="/members"><i class="bi bi-people"></i> Daftar Anggota</a></li>
+                {{if eq .UserRole "OWNER"}}
+                <li class="nav-item"><a class="nav-link {{if eq .Active "member-register"}}active{{end}}" href="/members/register"><i class="bi bi-person-plus"></i> Daftarkan Anggota</a></li>
+                {{end}}
+                {{else if eq .UserRole "ANGGOTA"}}
+                <li class="nav-section">Keanggotaan Saya</li>
+                {{if .MemberID}}
+                <li class="nav-item"><a class="nav-link {{if eq .Active "profile"}}active{{end}}" href="/members/{{.MemberID}}"><i class="bi bi-person-badge"></i> Profil Saya</a></li>
+                <li class="nav-item"><a class="nav-link {{if eq .Active "simpanan"}}active{{end}}" href="/members/{{.MemberID}}/simpanan"><i class="bi bi-piggy-bank"></i> Simpanan Saya</a></li>
+                {{else}}
                 <li class="nav-item"><a class="nav-link {{if eq .Active "member-register"}}active{{end}}" href="/members/register"><i class="bi bi-person-plus"></i> Daftar Jadi Anggota</a></li>
+                {{end}}
+                {{end}}
+
+                {{/* ===== POS & Produk ===== */}}
                 <li class="nav-section">POS & Produk</li>
                 <li class="nav-item"><a class="nav-link {{if eq .Active "products"}}active{{end}}" href="/products"><i class="bi bi-shop"></i> Katalog Produk</a></li>
+                {{if or (eq .UserRole "OWNER") (eq .UserRole "KASIR")}}
                 <li class="nav-item"><a class="nav-link {{if eq .Active "product-create"}}active{{end}}" href="/products/create"><i class="bi bi-plus-square"></i> Tambah Produk</a></li>
+                {{end}}
+                {{if eq .UserRole "OWNER"}}
                 <li class="nav-item"><a class="nav-link {{if eq .Active "product-review"}}active{{end}}" href="/products/review"><i class="bi bi-check2-square"></i> Review Produk</a></li>
+                {{end}}
                 <li class="nav-item"><a class="nav-link {{if eq .Active "cart"}}active{{end}}" href="/cart"><i class="bi bi-cart3"></i> Keranjang {{if .CartCount}}<span class="badge bg-danger rounded-pill ms-1">{{.CartCount}}</span>{{end}}</a></li>
-                <li class="nav-item"><a class="nav-link {{if eq .Active "orders"}}active{{end}}" href="/orders"><i class="bi bi-receipt"></i> Riwayat Order</a></li>
+                <li class="nav-item"><a class="nav-link {{if eq .Active "orders"}}active{{end}}" href="/orders"><i class="bi bi-receipt"></i> {{if eq .UserRole "ANGGOTA"}}Pesanan Saya{{else}}Riwayat Order{{end}}</a></li>
+                {{if or (eq .UserRole "OWNER") (eq .UserRole "KASIR")}}
                 <li class="nav-item"><a class="nav-link {{if eq .Active "complaints"}}active{{end}}" href="/orders/complaints"><i class="bi bi-exclamation-triangle"></i> Komplain</a></li>
+                {{end}}
+
+                {{/* ===== Pinjaman ===== */}}
                 <li class="nav-section">Pinjaman</li>
-                <li class="nav-item"><a class="nav-link {{if eq .Active "loans"}}active{{end}}" href="/loans"><i class="bi bi-cash-stack"></i> Daftar Pinjaman</a></li>
+                <li class="nav-item"><a class="nav-link {{if eq .Active "loans"}}active{{end}}" href="/loans"><i class="bi bi-cash-stack"></i> {{if eq .UserRole "ANGGOTA"}}Pinjaman Saya{{else}}Daftar Pinjaman{{end}}</a></li>
+                {{if eq .UserRole "ANGGOTA"}}
                 <li class="nav-item"><a class="nav-link {{if eq .Active "loan-apply"}}active{{end}}" href="/loans/apply"><i class="bi bi-pencil-square"></i> Ajukan Pinjaman</a></li>
+                {{end}}
+
+                {{/* ===== Keuangan (OWNER only) ===== */}}
+                {{if eq .UserRole "OWNER"}}
                 <li class="nav-section">Keuangan</li>
                 <li class="nav-item"><a class="nav-link {{if eq .Active "journals"}}active{{end}}" href="/finance/journals"><i class="bi bi-journal-text"></i> Jurnal Keuangan</a></li>
                 <li class="nav-item"><a class="nav-link {{if eq .Active "finance-summary"}}active{{end}}" href="/finance/summary"><i class="bi bi-bar-chart"></i> Ringkasan</a></li>
+                {{end}}
+
+                {{/* ===== E-Commerce ===== */}}
                 <li class="nav-section">E-Commerce</li>
                 <li class="nav-item">
                     <a class="nav-link d-flex align-items-center gap-2" href="/ecommerce/store"

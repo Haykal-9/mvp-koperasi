@@ -1,71 +1,76 @@
 {{define "content"}}
-<nav aria-label="breadcrumb" class="mb-3">
-    <ol class="breadcrumb small">
-        <li class="breadcrumb-item"><a href="/ecommerce/products" class="text-decoration-none" style="color:#a78bfa;">Katalog</a></li>
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/ecommerce/products">Katalog</a></li>
         <li class="breadcrumb-item active">{{.Product.Nama}}</li>
     </ol>
 </nav>
 
 <div class="row g-4">
-    <!-- Product Image & Info -->
+    <!-- Foto produk -->
     <div class="col-md-5">
-        <div class="ec-card p-2">
-            <img src="{{.Product.FotoURL}}" class="w-100 rounded" alt="{{.Product.Nama}}" style="max-height:400px;object-fit:cover;">
+        <div class="card" style="padding: 0; overflow: hidden;">
+            <img src="{{.Product.FotoURL}}" class="w-100" alt="{{.Product.Nama}}" style="max-height:520px;object-fit:cover;display:block;">
         </div>
     </div>
 
     <div class="col-md-7">
-        <div class="ec-card p-4">
-            <span class="badge mb-2" style="background:rgba(124,58,237,.15);color:#a78bfa;">{{.Product.Kategori}}</span>
-            <h4 class="mb-1">{{.Product.Nama}}</h4>
+        <div class="card p-4">
+            <span class="badge zp-badge mb-3" style="align-self: flex-start;">{{.Product.Kategori}}</span>
 
-            <div class="d-flex align-items-center gap-3 mb-3">
-                <span class="text-warning"><i class="bi bi-star-fill"></i> {{printf "%.1f" .Product.Rating}}</span>
-                <span class="text-muted small">{{.Product.TotalReview}} ulasan</span>
-                <span class="text-muted small">{{.Product.TotalSold}} terjual</span>
+            <h1 class="zp-display-lg mb-3">{{.Product.Nama}}</h1>
+
+            <div class="d-flex align-items-center gap-3 mb-3 zp-caption">
+                <span><i class="bi bi-star-fill" style="color: var(--zp-primary);"></i> {{printf "%.1f" .Product.Rating}}</span>
+                <span>·</span>
+                <span>{{.Product.TotalReview}} ulasan</span>
+                <span>·</span>
+                <span>{{.Product.TotalSold}} terjual</span>
             </div>
 
-            <h3 style="color:#a78bfa;" class="mb-3">Rp {{printf "%.0f" .Product.Harga}}</h3>
+            <div class="zp-display-sub-lg mb-4">Rp {{printf "%.0f" .Product.Harga}}</div>
 
-            <p class="text-muted">{{.Product.Deskripsi}}</p>
+            <p class="zp-body-md mb-4">{{.Product.Deskripsi}}</p>
 
-            <div class="d-flex gap-2 mb-3 small text-muted">
+            <div class="d-flex gap-3 mb-4 zp-caption">
                 <span><i class="bi bi-box me-1"></i>Stok: {{.Product.Stok}}</span>
                 <span>·</span>
                 <span><i class="bi bi-truck me-1"></i>Berat: {{.Product.Berat}}g</span>
             </div>
 
             <!-- Actions -->
-            <div class="d-flex gap-2 mb-4 align-items-end">
+            <div class="d-flex gap-3 mb-4 align-items-end flex-wrap">
                 <div>
-                    <label class="form-label small">Jumlah</label>
-                    <input type="number" class="form-control form-control-sm" id="buyQty" value="1" min="1" max="{{.Product.Stok}}" style="width:80px;">
+                    <label class="form-label">Jumlah</label>
+                    <input type="number" class="form-control" id="buyQty" value="1" min="1" max="{{.Product.Stok}}" style="width:120px;">
                 </div>
-                <a href="#" class="btn btn-ec-primary" id="buyBtn" onclick="window.location.href='/ecommerce/checkout?product_id={{.Product.ID}}&qty='+document.getElementById('buyQty').value; return false;">
-                    <i class="bi bi-bag-plus me-1"></i>Beli Sekarang
+                <a href="#" class="btn btn-primary btn-lg" id="buyBtn"
+                   onclick="window.location.href='/ecommerce/checkout?product_id={{.Product.ID}}&qty='+document.getElementById('buyQty').value; return false;">
+                    Beli sekarang
                 </a>
                 <form method="POST" action="/ecommerce/wishlist/toggle" class="d-inline">
                     <input type="hidden" name="product_id" value="{{.Product.ID}}">
-                    <button type="submit" class="btn {{if .IsWishlisted}}btn-danger{{else}}btn-outline-danger{{end}}">
+                    <button type="submit" class="btn btn-outline-dark btn-lg" title="Wishlist">
                         <i class="bi bi-heart{{if .IsWishlisted}}-fill{{end}}"></i>
                     </button>
                 </form>
             </div>
 
-            <!-- Seller Card -->
+            <!-- Seller Card — dark feature card -->
             {{if .SellerProfile}}
-            <div class="p-3 rounded" style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);">
+            <div class="zp-card-dark">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:40px;height:40px;background:rgba(124,58,237,.15);">
-                        <i class="bi bi-shop" style="color:#a78bfa;"></i>
+                    <div class="d-flex align-items-center justify-content-center"
+                         style="width:48px;height:48px;background:var(--zp-canvas);border-radius:9999px;flex-shrink:0;">
+                        <i class="bi bi-shop" style="color: var(--zp-primary);"></i>
                     </div>
                     <div class="flex-grow-1">
-                        <a href="/ecommerce/seller/{{.SellerProfile.SellerID}}/profile" class="text-decoration-none text-white fw-bold">{{.SellerProfile.StoreName}}</a>
-                        <div class="small text-muted">
-                            <i class="bi bi-star-fill text-warning"></i> {{printf "%.1f" .SellerProfile.Rating}} · {{.SellerProfile.ResponseTime}}
+                        <a href="/ecommerce/seller/{{.SellerProfile.SellerID}}/profile" class="zp-display-xs text-decoration-none" style="color: var(--zp-on-primary);">{{.SellerProfile.StoreName}}</a>
+                        <div class="zp-caption" style="color: var(--zp-canvas-soft);">
+                            <i class="bi bi-star-fill" style="color: var(--zp-primary);"></i> {{printf "%.1f" .SellerProfile.Rating}} · {{.SellerProfile.ResponseTime}}
                         </div>
                     </div>
-                    <a href="/ecommerce/seller/{{.SellerProfile.SellerID}}/profile" class="btn btn-sm btn-outline-light">Kunjungi</a>
+                    <a href="/ecommerce/seller/{{.SellerProfile.SellerID}}/profile" class="btn btn-outline-light btn-sm">Kunjungi toko</a>
                 </div>
             </div>
             {{end}}
@@ -74,40 +79,50 @@
 </div>
 
 <!-- Reviews -->
-<div class="mt-4">
-    <h5 class="mb-3"><i class="bi bi-chat-left-text me-1"></i>Ulasan ({{len .Reviews}})</h5>
+<div class="mt-5">
+    <div class="zp-eyebrow mb-2">ULASAN</div>
+    <h2 class="zp-display-lg mb-4">{{len .Reviews}} ulasan untuk produk ini.</h2>
     {{if .Reviews}}
+    <div class="row g-3">
     {{range .Reviews}}
-    <div class="ec-card p-3 mb-2">
-        <div class="d-flex justify-content-between mb-1">
-            <strong class="small">{{.Username}}</strong>
-            <small class="text-muted">{{.CreatedAt}}</small>
+        <div class="col-md-6">
+            <div class="card p-4">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="zp-body-md-strong">{{.Username}}</span>
+                    <span class="zp-caption">{{.CreatedAt}}</span>
+                </div>
+                <div class="mb-2">
+                    <span class="zp-caption"><i class="bi bi-star-fill" style="color: var(--zp-primary);"></i> {{.Rating}}/5</span>
+                </div>
+                <p class="zp-body-md mb-0">{{.Komentar}}</p>
+            </div>
         </div>
-        <div class="mb-1">
-            <span class="text-warning small"><i class="bi bi-star-fill"></i> {{.Rating}}/5</span>
-        </div>
-        <p class="small text-muted mb-0">{{.Komentar}}</p>
-    </div>
     {{end}}
+    </div>
     {{else}}
-    <div class="ec-card p-3 text-center text-muted small">Belum ada ulasan untuk produk ini.</div>
+    <div class="card p-5 text-center">
+        <p class="zp-body-md mb-0">Belum ada ulasan untuk produk ini.</p>
+    </div>
     {{end}}
 </div>
 
 <!-- Related Products -->
 {{if .RelatedProducts}}
-<div class="mt-4">
-    <h5 class="mb-3"><i class="bi bi-grid me-1"></i>Produk Lain dari Seller</h5>
+<div class="mt-5">
+    <div class="zp-eyebrow mb-2">PRODUK LAIN</div>
+    <h2 class="zp-display-lg mb-4">Dari seller yang sama.</h2>
     <div class="row g-3">
         {{range .RelatedProducts}}
         <div class="col-6 col-md-3">
-            <div class="ec-card h-100">
-                <img src="{{.FotoURL}}" class="card-img-top" alt="{{.Nama}}" style="height:140px;object-fit:cover;border-radius:.75rem .75rem 0 0;">
-                <div class="p-2">
-                    <small><a href="/ecommerce/products/{{.ID}}" class="text-white text-decoration-none">{{.Nama}}</a></small>
-                    <div><strong class="small" style="color:#a78bfa;">Rp {{printf "%.0f" .Harga}}</strong></div>
+            <a href="/ecommerce/products/{{.ID}}" class="text-decoration-none">
+                <div class="card h-100">
+                    <img src="{{.FotoURL}}" class="card-img-top" alt="{{.Nama}}" style="height:160px;object-fit:cover;">
+                    <div class="p-3">
+                        <div class="zp-body-md-strong mb-1">{{.Nama}}</div>
+                        <div class="zp-display-xs">Rp {{printf "%.0f" .Harga}}</div>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
         {{end}}
     </div>

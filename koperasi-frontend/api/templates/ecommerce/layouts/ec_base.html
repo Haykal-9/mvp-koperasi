@@ -1,109 +1,760 @@
 {{define "ec_base"}}
 <!DOCTYPE html>
-<html lang="id" data-bs-theme="dark">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{.Title}} — KopHub E-Commerce</title>
+    <title>{{.Title}} — Zapier by KopHub</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Mona+Sans:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* ============================================================
+           ZAPIER INSPIRED — design tokens (from DESIGN zapier.md)
+           Warm cream canvas + coffee ink + single orange CTA accent.
+           ============================================================ */
         :root {
-            --ec-primary: #7c3aed;
-            --ec-primary-hover: #6d28d9;
-            --ec-bg: #0f0c29;
-            --ec-surface: rgba(30,30,50,0.9);
-            --ec-border: rgba(255,255,255,0.06);
+            /* Brand */
+            --zp-primary: #ff4f00;
+            --zp-primary-hover: #e64700;
+            --zp-on-primary: #fffefb;
+
+            /* Surface */
+            --zp-canvas: #fffefb;
+            --zp-canvas-soft: #f8f4f0;
+
+            /* Text ladder (all warm-coffee) */
+            --zp-ink: #201515;
+            --zp-ink-soft: #2f2a26;
+            --zp-ink-mid: #36342e;
+            --zp-body: #605d52;
+            --zp-body-mid: #939084;
+            --zp-mute: #c5c0b1;
+
+            /* Radius — 12px is the brand's signature */
+            --zp-r-none: 0px;
+            --zp-r-sm: 6px;
+            --zp-r-md: 12px;
+            --zp-r-pill: 9999px;
+
+            /* Spacing 4px base */
+            --zp-s-xxs: 2px;
+            --zp-s-xs: 4px;
+            --zp-s-sm: 8px;
+            --zp-s-md: 12px;
+            --zp-s-lg: 16px;
+            --zp-s-xl: 24px;
+            --zp-s-2xl: 32px;
+            --zp-s-3xl: 48px;
+            --zp-s-4xl: 64px;
+
+            /* Layout */
             --ec-sidebar-w: 260px;
+
+            /* Type families — Degular Display is proprietary, fallback Mona Sans + Inter */
+            --zp-font-display: "Mona Sans", "Degular Display", Inter, system-ui, -apple-system, sans-serif;
+            --zp-font-ui: "Inter", system-ui, -apple-system, sans-serif;
         }
+
+        /* ============================================================
+           GLOBAL
+           ============================================================ */
+        html { scroll-behavior: smooth; }
         body {
-            background: var(--ec-bg);
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--zp-canvas);
+            color: var(--zp-ink);
+            font-family: var(--zp-font-ui);
+            font-size: 16px;
+            font-weight: 400;
+            line-height: 24px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
             min-height: 100vh;
         }
-        /* --- Sidebar --- */
+        ::selection { background: var(--zp-primary); color: var(--zp-on-primary); }
+
+        /* ----- Typography roles ----- */
+        .zp-display-xl  { font-family: var(--zp-font-display); font-size: 56px; font-weight: 500; line-height: 56px; color: var(--zp-ink); letter-spacing: 0; }
+        .zp-display-lg  { font-family: var(--zp-font-display); font-size: 48px; font-weight: 500; line-height: 48px; color: var(--zp-ink); letter-spacing: 0; }
+        .zp-display-md  { font-family: var(--zp-font-display); font-size: 32px; font-weight: 500; line-height: 36px; color: var(--zp-ink); letter-spacing: 1px; }
+        .zp-display-sub-lg  { font-family: var(--zp-font-ui); font-size: 48px; font-weight: 500; line-height: 49.92px; color: var(--zp-ink); }
+        .zp-display-sub-md  { font-family: var(--zp-font-ui); font-size: 32px; font-weight: 400; line-height: 40px; color: var(--zp-ink); }
+        .zp-display-sub-sm  { font-family: var(--zp-font-ui); font-size: 24px; font-weight: 600; line-height: 30px; letter-spacing: -0.6px; color: var(--zp-ink); }
+        .zp-display-xs  { font-family: var(--zp-font-ui); font-size: 20px; font-weight: 700; line-height: 25px; letter-spacing: -0.5px; color: var(--zp-ink); }
+        .zp-body-lg     { font-family: var(--zp-font-ui); font-size: 20px; font-weight: 400; line-height: 30px; letter-spacing: -0.2px; color: var(--zp-body); }
+        .zp-body-md     { font-family: var(--zp-font-ui); font-size: 18px; font-weight: 400; line-height: 27px; color: var(--zp-body); }
+        .zp-body-md-strong { font-family: var(--zp-font-ui); font-size: 18px; font-weight: 600; line-height: 27px; color: var(--zp-ink); }
+        .zp-body-sm     { font-family: var(--zp-font-ui); font-size: 16px; font-weight: 400; line-height: 24px; color: var(--zp-body); }
+        .zp-body-sm-strong { font-family: var(--zp-font-ui); font-size: 16px; font-weight: 600; line-height: 24px; color: var(--zp-ink); }
+        .zp-caption     { font-family: var(--zp-font-ui); font-size: 14px; font-weight: 400; line-height: 21px; color: var(--zp-body-mid); }
+        .zp-eyebrow     { font-family: var(--zp-font-display); font-size: 14px; font-weight: 500; line-height: 14px; letter-spacing: 1px; color: var(--zp-ink); text-transform: uppercase; }
+
+        /* Bootstrap heading defaults follow the Zapier ladder */
+        h1, h2, h3, h4, h5, h6 { font-family: var(--zp-font-display); color: var(--zp-ink); font-weight: 500; letter-spacing: 0; }
+        h1 { font-size: 56px; line-height: 56px; }
+        h2 { font-size: 48px; line-height: 48px; }
+        h3 { font-size: 32px; line-height: 36px; letter-spacing: 1px; }
+        h4 { font-size: 24px; line-height: 30px; letter-spacing: -0.6px; font-family: var(--zp-font-ui); font-weight: 600; }
+        h5 { font-size: 20px; line-height: 25px; letter-spacing: -0.5px; font-family: var(--zp-font-ui); font-weight: 700; }
+        h6 { font-size: 16px; line-height: 24px; font-family: var(--zp-font-ui); font-weight: 600; }
+
+        @media (max-width: 767.98px) {
+            .zp-display-xl, h1 { font-size: 40px; line-height: 44px; }
+            .zp-display-lg, h2 { font-size: 32px; line-height: 36px; }
+            .zp-display-md, h3 { font-size: 24px; line-height: 28px; letter-spacing: 0.5px; }
+        }
+
+        /* ============================================================
+           SIDEBAR — dark coffee ink (footer-style polarity)
+           ============================================================ */
         .ec-sidebar {
             position: fixed; top: 0; left: 0;
             width: var(--ec-sidebar-w); height: 100vh;
-            background: var(--ec-surface);
-            border-right: 1px solid var(--ec-border);
-            backdrop-filter: blur(12px);
+            background: var(--zp-ink);
+            color: var(--zp-canvas-soft);
             overflow-y: auto;
             z-index: 1040;
-            transition: transform .3s;
+            transition: transform .25s ease;
         }
         .ec-sidebar .brand {
-            padding: 1.25rem 1rem;
-            border-bottom: 1px solid var(--ec-border);
-            display: flex; align-items: center; gap: .75rem;
+            padding: 20px 20px;
+            border-bottom: 1px solid rgba(255,254,251,.08);
+            display: flex; align-items: center; gap: 10px;
         }
-        .ec-sidebar .brand i { font-size: 1.5rem; color: var(--ec-primary); }
-        .ec-sidebar .brand span { font-weight: 700; font-size: 1.1rem; }
+        .ec-sidebar .brand i {
+            font-size: 1.5rem;
+            color: var(--zp-primary);
+        }
+        .ec-sidebar .brand span {
+            font-family: var(--zp-font-display);
+            font-weight: 500;
+            font-size: 20px;
+            letter-spacing: -0.5px;
+            color: var(--zp-on-primary);
+        }
         .ec-sidebar .nav-link {
-            color: rgba(255,255,255,.65);
-            padding: .65rem 1rem;
-            border-radius: .5rem;
-            margin: .15rem .5rem;
-            display: flex; align-items: center; gap: .6rem;
-            font-size: .9rem;
-            transition: background .15s, color .15s;
+            color: rgba(255,254,251,.65);
+            padding: 10px 16px;
+            margin: 2px 12px;
+            border-radius: var(--zp-r-sm);
+            display: flex; align-items: center; gap: 10px;
+            font-family: var(--zp-font-ui);
+            font-size: 16px;
+            font-weight: 400;
+            line-height: 24px;
+            transition: background .15s ease, color .15s ease;
+            position: relative;
         }
-        .ec-sidebar .nav-link:hover,
+        .ec-sidebar .nav-link:hover {
+            background: rgba(255,254,251,.06);
+            color: var(--zp-on-primary);
+        }
+        /* Active row uses brand primary as left indicator — ex-app-shell-row pattern */
         .ec-sidebar .nav-link.active {
-            background: rgba(124,58,237,.15);
-            color: #c4b5fd;
+            background: rgba(255,254,251,.08);
+            color: var(--zp-on-primary);
+            font-weight: 600;
+        }
+        .ec-sidebar .nav-link.active::before {
+            content: "";
+            position: absolute;
+            left: -4px; top: 6px; bottom: 6px;
+            width: 3px;
+            background: var(--zp-primary);
+            border-radius: 3px;
         }
         .ec-sidebar .nav-label {
-            font-size: .7rem; text-transform: uppercase; letter-spacing: .1rem;
-            color: rgba(255,255,255,.3);
-            padding: .75rem 1rem .35rem;
+            font-family: var(--zp-font-display);
+            font-size: 14px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--zp-body-mid);
+            padding: 20px 20px 8px;
         }
-        /* --- Main --- */
-        .ec-main {
-            margin-left: var(--ec-sidebar-w);
-            min-height: 100vh;
-        }
+        .ec-sidebar .nav-link.text-danger { color: #f4a8a8 !important; }
+        .ec-sidebar .nav-link.text-danger:hover { background: rgba(244,168,168,.1); color: #fff !important; }
+
+        /* ============================================================
+           MAIN + TOPBAR — warm cream
+           ============================================================ */
+        .ec-main { margin-left: var(--ec-sidebar-w); min-height: 100vh; background: var(--zp-canvas); }
         .ec-topbar {
-            background: var(--ec-surface);
-            border-bottom: 1px solid var(--ec-border);
-            padding: .75rem 1.5rem;
+            background: var(--zp-canvas);
+            border-bottom: 1px solid var(--zp-canvas-soft);
+            padding: 12px 24px;
             display: flex; align-items: center; justify-content: space-between;
             position: sticky; top: 0; z-index: 1030;
-            backdrop-filter: blur(12px);
+        }
+        .ec-topbar h5 {
+            margin: 0;
+            font-family: var(--zp-font-ui);
+            font-weight: 600;
+            font-size: 20px;
+            line-height: 25px;
+            letter-spacing: -0.5px;
+            color: var(--zp-ink);
         }
         .ec-topbar .btn-sidebar-toggle { display: none; }
-        .ec-content { padding: 1.5rem; }
+        .ec-content { padding: 48px 32px 64px; max-width: 1280px; }
 
-        .btn-ec-primary {
-            background: linear-gradient(135deg, var(--ec-primary), var(--ec-primary-hover));
-            border: none; color: #fff;
+        /* ============================================================
+           BUTTONS — 12px rounded rectangle (non-pill)
+           ============================================================ */
+        .btn {
+            font-family: var(--zp-font-ui);
+            font-size: 18px;
+            font-weight: 600;
+            line-height: 27px;
+            padding: 12px 24px;
+            border-radius: var(--zp-r-md);
+            letter-spacing: 0;
+            border-width: 1px;
+            transition: background .15s ease, color .15s ease, border-color .15s ease, transform .1s ease;
         }
-        .btn-ec-primary:hover {
-            background: linear-gradient(135deg, var(--ec-primary-hover), #5b21b6);
-            color: #fff;
+        .btn-sm { font-size: 14.4px; font-weight: 700; line-height: 14.4px; letter-spacing: 0.144px; padding: 8px 16px; }
+        .btn-lg { font-size: 20px; padding: 16px 32px; }
+
+        /* Primary: saturated orange — the brand's only conversion signal */
+        .btn-primary, .btn-ec-primary, .btn-success {
+            background: var(--zp-primary);
+            border-color: var(--zp-primary);
+            color: var(--zp-on-primary);
         }
-        .ec-card {
-            background: var(--ec-surface);
-            border: 1px solid var(--ec-border);
-            border-radius: .75rem;
-            backdrop-filter: blur(8px);
+        .btn-primary:hover, .btn-ec-primary:hover, .btn-success:hover,
+        .btn-primary:focus, .btn-ec-primary:focus, .btn-success:focus {
+            background: var(--zp-primary-hover);
+            border-color: var(--zp-primary-hover);
+            color: var(--zp-on-primary);
+        }
+        .btn-primary:active, .btn-ec-primary:active, .btn-success:active { transform: translateY(1px); }
+
+        /* Secondary: dark coffee ink */
+        .btn-secondary, .btn-dark {
+            background: var(--zp-ink);
+            border-color: var(--zp-ink);
+            color: var(--zp-on-primary);
+        }
+        .btn-secondary:hover, .btn-dark:hover {
+            background: var(--zp-ink-soft);
+            border-color: var(--zp-ink-soft);
+            color: var(--zp-on-primary);
+        }
+
+        /* Tertiary: outline ink */
+        .btn-outline-primary, .btn-outline-secondary, .btn-outline-dark {
+            background: var(--zp-canvas);
+            border: 1px solid var(--zp-ink);
+            color: var(--zp-ink);
+        }
+        .btn-outline-primary:hover, .btn-outline-secondary:hover, .btn-outline-dark:hover {
+            background: var(--zp-ink);
+            border-color: var(--zp-ink);
+            color: var(--zp-on-primary);
+        }
+
+        /* Outline on dark (used inside ink hero / sidebar) */
+        .btn-outline-light {
+            background: transparent;
+            border: 1px solid var(--zp-on-primary);
+            color: var(--zp-on-primary);
+        }
+        .btn-outline-light:hover {
+            background: var(--zp-on-primary);
+            color: var(--zp-ink);
+        }
+
+        .btn-danger {
+            background: #b91c1c; border-color: #b91c1c; color: var(--zp-on-primary);
+        }
+        .btn-danger:hover { background: #991b1b; border-color: #991b1b; }
+
+        .btn-warning {
+            background: var(--zp-primary); border-color: var(--zp-primary); color: var(--zp-on-primary);
+        }
+
+        /* ============================================================
+           CARDS — canvas-soft fill, 12px radius (Level 2 elevation by surface contrast)
+           ============================================================ */
+        .ec-card, .card {
+            background: var(--zp-canvas-soft);
+            border: 1px solid transparent;
+            border-radius: var(--zp-r-md);
+            color: var(--zp-ink);
+            box-shadow: none;
+            backdrop-filter: none;
+        }
+        .card-header {
+            background: transparent;
+            border-bottom: 1px solid var(--zp-mute);
+            font-family: var(--zp-font-ui);
+            font-weight: 600;
+            font-size: 18px;
+            line-height: 27px;
+            color: var(--zp-ink);
+            padding: 16px 24px;
+        }
+
+        /* Pricing card — outline on canvas */
+        .zp-pricing-card {
+            background: var(--zp-canvas);
+            border: 1px solid var(--zp-ink);
+            border-radius: var(--zp-r-md);
+            padding: 24px;
+            color: var(--zp-ink);
+        }
+        /* Pricing featured — polarity flip */
+        .zp-pricing-card-featured {
+            background: var(--zp-ink);
+            border: 1px solid var(--zp-ink);
+            border-radius: var(--zp-r-md);
+            padding: 24px;
+            color: var(--zp-on-primary);
+        }
+        .zp-pricing-card-featured h1,
+        .zp-pricing-card-featured h2,
+        .zp-pricing-card-featured h3,
+        .zp-pricing-card-featured h4,
+        .zp-pricing-card-featured h5,
+        .zp-pricing-card-featured h6,
+        .zp-pricing-card-featured .zp-display-md,
+        .zp-pricing-card-featured .zp-display-sub-sm,
+        .zp-pricing-card-featured .zp-body-md-strong,
+        .zp-pricing-card-featured .zp-body-sm-strong { color: var(--zp-on-primary); }
+        .zp-pricing-card-featured .zp-body-md,
+        .zp-pricing-card-featured .zp-body-sm,
+        .zp-pricing-card-featured .zp-caption { color: var(--zp-canvas-soft); }
+
+        /* Feature dark card — polarity flip on demand */
+        .zp-card-dark {
+            background: var(--zp-ink);
+            color: var(--zp-on-primary);
+            border-radius: var(--zp-r-md);
+            padding: 24px;
+        }
+        .zp-card-dark h1, .zp-card-dark h2, .zp-card-dark h3, .zp-card-dark h4, .zp-card-dark h5,
+        .zp-card-dark .zp-eyebrow { color: var(--zp-on-primary); }
+
+        /* ============================================================
+           HERO / CONTENT BANDS
+           ============================================================ */
+        .zp-hero-band {
+            background: var(--zp-canvas);
+            color: var(--zp-ink);
+            padding: 64px 24px;
+            border-radius: var(--zp-r-md);
+            margin-bottom: 48px;
+        }
+        .zp-hero-band-dark {
+            background: var(--zp-ink);
+            color: var(--zp-on-primary);
+            padding: 64px 24px;
+            border-radius: var(--zp-r-md);
+            margin-bottom: 48px;
+        }
+        .zp-hero-band-dark h1, .zp-hero-band-dark h2, .zp-hero-band-dark .zp-display-xl,
+        .zp-hero-band-dark .zp-display-lg, .zp-hero-band-dark .zp-eyebrow { color: var(--zp-on-primary); }
+        .zp-hero-band-dark .zp-body-md, .zp-hero-band-dark .zp-body-lg { color: var(--zp-canvas-soft); }
+
+        .zp-content-band-cream {
+            background: var(--zp-canvas-soft);
+            color: var(--zp-ink);
+            padding: 48px 24px;
+            border-radius: var(--zp-r-md);
+            margin-bottom: 48px;
+        }
+
+        /* ============================================================
+           FORMS — text-input primitives
+           ============================================================ */
+        .form-control, .form-select {
+            font-family: var(--zp-font-ui);
+            font-size: 18px;
+            font-weight: 400;
+            line-height: 27px;
+            background: var(--zp-canvas);
+            color: var(--zp-ink);
+            border: 1px solid var(--zp-ink);
+            border-radius: var(--zp-r-sm);
+            padding: 12px 16px;
+            min-height: 48px;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--zp-primary);
+            box-shadow: 0 0 0 3px rgba(255,79,0,.15);
+            background: var(--zp-canvas);
+            color: var(--zp-ink);
+        }
+        .form-control::placeholder { color: var(--zp-body-mid); }
+        .form-label { font-family: var(--zp-font-ui); font-weight: 600; font-size: 16px; line-height: 24px; color: var(--zp-ink); }
+        .input-group-text {
+            background: var(--zp-canvas);
+            border: 1px solid var(--zp-ink);
+            color: var(--zp-ink);
+            border-radius: var(--zp-r-sm);
+        }
+        .form-check-input:checked { background-color: var(--zp-primary); border-color: var(--zp-primary); }
+
+        /* ============================================================
+           BADGES / PILLS — single inline pill recipe
+           ============================================================ */
+        .badge {
+            font-family: var(--zp-font-ui);
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 1.2;
+            padding: 4px 12px;
+            border-radius: var(--zp-r-pill);
+            letter-spacing: 0;
+            text-transform: none;
+            background: var(--zp-canvas-soft);
+            color: var(--zp-ink);
+        }
+        .zp-badge { background: var(--zp-canvas-soft); color: var(--zp-ink); }
+        .zp-badge-ink { background: var(--zp-ink); color: var(--zp-on-primary); }
+        .zp-badge-primary { background: var(--zp-primary); color: var(--zp-on-primary); }
+        .zp-badge-outline { background: var(--zp-canvas); color: var(--zp-ink); border: 1px solid var(--zp-ink); }
+
+        .bg-primary { background-color: var(--zp-primary) !important; color: var(--zp-on-primary) !important; }
+        .bg-success { background-color: var(--zp-canvas-soft) !important; color: var(--zp-ink) !important; }
+        .bg-secondary { background-color: var(--zp-canvas-soft) !important; color: var(--zp-ink) !important; }
+        .bg-dark { background-color: var(--zp-ink) !important; color: var(--zp-on-primary) !important; }
+        .bg-warning { background-color: var(--zp-primary) !important; color: var(--zp-on-primary) !important; }
+        .bg-danger { background-color: #b91c1c !important; color: var(--zp-on-primary) !important; }
+        .bg-info { background-color: var(--zp-canvas-soft) !important; color: var(--zp-ink) !important; }
+        .bg-light { background-color: var(--zp-canvas-soft) !important; color: var(--zp-ink) !important; }
+
+        /* ============================================================
+           TABLES — data-table cell pattern
+           ============================================================ */
+        .table {
+            font-family: var(--zp-font-ui);
+            color: var(--zp-ink);
+            --bs-table-bg: transparent;
+        }
+        .table > :not(caption) > * > * { padding: 12px 16px; background: transparent; color: var(--zp-ink); }
+        .table thead th {
+            font-family: var(--zp-font-ui);
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 21px;
+            color: var(--zp-body-mid);
+            background: var(--zp-canvas-soft);
+            border-bottom: 1px solid var(--zp-mute);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .table tbody tr { border-bottom: 1px solid var(--zp-mute); }
+        .table-hover tbody tr:hover { background: var(--zp-canvas-soft); }
+
+        /* ============================================================
+           UTILITIES — color overrides
+           ============================================================ */
+        .text-white { color: var(--zp-on-primary) !important; }
+        .text-muted { color: var(--zp-body-mid) !important; }
+        .text-success { color: var(--zp-primary) !important; }
+        .text-warning { color: var(--zp-primary) !important; }
+        .text-danger  { color: #991b1b !important; }
+        .text-primary { color: var(--zp-primary) !important; }
+        .text-info    { color: var(--zp-body) !important; }
+
+        a { color: var(--zp-ink); text-decoration: underline; text-underline-offset: 2px; }
+        a:hover { color: var(--zp-primary); }
+        a.text-decoration-none, .nav-link, .navbar-brand { text-decoration: none; }
+
+        code { color: var(--zp-ink); background: var(--zp-canvas-soft); padding: 2px 6px; border-radius: var(--zp-r-sm); font-size: 14px; }
+
+        hr { border-color: var(--zp-mute); opacity: 1; }
+
+        /* Nav pills inside content — status filters use orange active */
+        .nav-pills .nav-link {
+            color: var(--zp-ink);
+            border-radius: var(--zp-r-md);
+            padding: 8px 16px;
+            font-family: var(--zp-font-ui);
+            font-size: 16px;
+            font-weight: 600;
+            background: transparent;
+            border: 1px solid transparent;
+        }
+        .nav-pills .nav-link:hover { background: var(--zp-canvas-soft); color: var(--zp-ink); }
+        .nav-pills .nav-link.active {
+            background: var(--zp-primary);
+            color: var(--zp-on-primary);
+        }
+
+        /* Alerts */
+        .alert {
+            border-radius: var(--zp-r-md);
+            border: 1px solid var(--zp-mute);
+            background: var(--zp-canvas-soft);
+            color: var(--zp-ink);
+            font-family: var(--zp-font-ui);
+            padding: 16px 24px;
+        }
+        .alert-success { background: var(--zp-canvas-soft); border-color: var(--zp-primary); color: var(--zp-ink); }
+        .alert-danger  { background: #fee2e2; border-color: #fecaca; color: #7f1d1d; }
+        .alert-warning { background: var(--zp-canvas-soft); border-color: var(--zp-primary); color: var(--zp-ink); }
+        .alert-info    { background: var(--zp-canvas-soft); border-color: var(--zp-mute); color: var(--zp-ink); }
+
+        /* Breadcrumbs */
+        .breadcrumb { font-family: var(--zp-font-ui); }
+        .breadcrumb-item, .breadcrumb-item a { color: var(--zp-body-mid); font-size: 14px; }
+        .breadcrumb-item.active { color: var(--zp-ink); }
+        .breadcrumb-item + .breadcrumb-item::before { color: var(--zp-mute); }
+
+        /* Image radius */
+        .ec-card img.card-img-top,
+        .card img.card-img-top {
+            border-radius: var(--zp-r-md) var(--zp-r-md) 0 0;
+        }
+
+        /* ============================================================
+           TOP NAVBAR — variant untuk Anggota (non-seller, non-admin)
+           Cream canvas, coffee ink, orange active indicator
+           ============================================================ */
+        .ec-topnav {
+            background: var(--zp-canvas);
+            border-bottom: 1px solid var(--zp-canvas-soft);
+            position: sticky; top: 0; z-index: 1040;
+        }
+        .ec-topnav-inner {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+        .ec-topnav-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--zp-font-display);
+            font-weight: 500;
+            font-size: 20px;
+            letter-spacing: -0.5px;
+            color: var(--zp-ink);
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+        .ec-topnav-brand:hover { color: var(--zp-ink); text-decoration: none; }
+        .ec-topnav-brand i { color: var(--zp-primary); font-size: 22px; }
+        .ec-topnav-menu {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-grow: 1;
+        }
+        .ec-topnav-link {
+            font-family: var(--zp-font-ui);
+            font-size: 16px;
+            font-weight: 500;
+            line-height: 24px;
+            color: var(--zp-ink);
+            padding: 8px 14px;
+            border-radius: var(--zp-r-sm);
+            text-decoration: none;
+            transition: background .15s ease, color .15s ease;
+            position: relative;
+        }
+        .ec-topnav-link:hover { background: var(--zp-canvas-soft); color: var(--zp-ink); text-decoration: none; }
+        .ec-topnav-link.active {
+            color: var(--zp-primary);
+            font-weight: 600;
+        }
+        .ec-topnav-link.active::after {
+            content: "";
+            position: absolute;
+            left: 14px; right: 14px;
+            bottom: -16px;
+            height: 2px;
+            background: var(--zp-primary);
+        }
+
+        /* Profile dropdown trigger */
+        .ec-topnav-account { flex-shrink: 0; }
+        .ec-account-trigger {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: transparent;
+            border: 1px solid var(--zp-mute);
+            border-radius: var(--zp-r-md);
+            padding: 8px 14px;
+            font-family: var(--zp-font-ui);
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--zp-ink);
+            cursor: pointer;
+            transition: background .15s ease, border-color .15s ease;
+        }
+        .ec-account-trigger:hover { background: var(--zp-canvas-soft); border-color: var(--zp-ink); }
+        .ec-account-trigger i.bi-person-circle { font-size: 18px; color: var(--zp-primary); }
+        .ec-account-trigger i.bi-chevron-down { font-size: 12px; }
+
+        .ec-account-menu {
+            background: var(--zp-canvas);
+            border: 1px solid var(--zp-mute);
+            border-radius: var(--zp-r-md);
+            padding: 8px;
+            min-width: 220px;
+            box-shadow: 0 8px 24px rgba(32,21,21,.08);
+        }
+        .ec-account-menu .dropdown-header {
+            font-family: var(--zp-font-display);
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--zp-body-mid);
+            padding: 8px 12px 4px;
+        }
+        .ec-account-menu .dropdown-item {
+            font-family: var(--zp-font-ui);
+            font-size: 15px;
+            color: var(--zp-ink);
+            padding: 8px 12px;
+            border-radius: var(--zp-r-sm);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+        .ec-account-menu .dropdown-item:hover { background: var(--zp-canvas-soft); color: var(--zp-ink); }
+        .ec-account-menu .dropdown-item i { color: var(--zp-body-mid); width: 16px; }
+        .ec-account-menu .dropdown-item.ec-text-danger { color: #991b1b; }
+        .ec-account-menu .dropdown-item.ec-text-danger:hover { background: #fee2e2; }
+        .ec-account-menu .dropdown-item.ec-text-danger i { color: #991b1b; }
+        .ec-account-menu .dropdown-divider {
+            border-color: var(--zp-canvas-soft);
+            margin: 6px 0;
+        }
+
+        /* Hamburger toggle (mobile only) */
+        .ec-topnav-toggle {
+            display: none;
+            background: transparent;
+            border: 1px solid var(--zp-mute);
+            border-radius: var(--zp-r-sm);
+            padding: 6px 12px;
+            color: var(--zp-ink);
+            cursor: pointer;
+            margin-left: auto;
+        }
+
+        /* Full-width main content for navbar layout */
+        .ec-fullwidth {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 48px 32px 64px;
         }
 
         /* Responsive */
         @media (max-width: 991.98px) {
-            .ec-sidebar { transform: translateX(-100%); }
-            .ec-sidebar.show { transform: translateX(0); }
+            .ec-sidebar { transform: translateX(-100%); width: 280px; }
+            .ec-sidebar.show { transform: translateX(0); box-shadow: 0 0 40px rgba(0,0,0,.4); }
             .ec-main { margin-left: 0; }
             .ec-topbar .btn-sidebar-toggle { display: inline-flex; }
+            .zp-hero-band, .zp-hero-band-dark { padding: 48px 20px; }
+
+            /* Top navbar mobile: collapse menu under hamburger */
+            .ec-topnav-toggle { display: inline-flex; }
+            .ec-topnav-menu {
+                display: none;
+                position: absolute;
+                top: 100%; left: 0; right: 0;
+                background: var(--zp-canvas);
+                border-bottom: 1px solid var(--zp-canvas-soft);
+                flex-direction: column;
+                align-items: stretch;
+                padding: 8px 16px 16px;
+                gap: 2px;
+            }
+            .ec-topnav-menu.show { display: flex; }
+            .ec-topnav-link.active::after { display: none; }
+            .ec-topnav-link.active { background: var(--zp-canvas-soft); }
+            .ec-topnav-inner { position: relative; gap: 12px; }
+        }
+        @media (max-width: 575.98px) {
+            .ec-content { padding: 24px 16px 48px; }
+            .ec-fullwidth { padding: 24px 16px 48px; }
+            .ec-account-trigger span { display: none; }
         }
     </style>
 </head>
 <body>
-    <!-- Sidebar -->
+{{if and (not .IsSeller) (ne .ECRole "ADMIN")}}
+{{/* ====================================================================
+     ANGGOTA / Buyer layout — TOP NAVBAR
+     ==================================================================== */}}
+    <nav class="ec-topnav">
+        <div class="ec-topnav-inner">
+            <a class="ec-topnav-brand" href="/ecommerce/store">
+                <i class="bi bi-lightning-charge-fill"></i>
+                <span>KopHub</span>
+            </a>
+
+            <div class="ec-topnav-menu" id="ecTopnavMenu">
+                <a href="/ecommerce/store" class="ec-topnav-link {{if eq .Active "store"}}active{{end}}">Storefront</a>
+                <a href="/ecommerce/products" class="ec-topnav-link {{if eq .Active "products"}}active{{end}}">Katalog</a>
+                <a href="/ecommerce/orders" class="ec-topnav-link {{if eq .Active "orders"}}active{{end}}">Pesanan Saya</a>
+                <a href="/ecommerce/wishlist" class="ec-topnav-link {{if eq .Active "wishlist"}}active{{end}}">Wishlist</a>
+                <a href="/ecommerce/points" class="ec-topnav-link {{if eq .Active "points"}}active{{end}}">Poin &amp; Reward</a>
+            </div>
+
+            <button class="ec-topnav-toggle"
+                    onclick="document.getElementById('ecTopnavMenu').classList.toggle('show')"
+                    aria-label="Toggle menu">
+                <i class="bi bi-list"></i>
+            </button>
+
+            <div class="ec-topnav-account dropdown">
+                <button class="ec-account-trigger" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-person-circle"></i>
+                    <span>{{.ECUsername}}</span>
+                    <i class="bi bi-chevron-down"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end ec-account-menu">
+                    <li class="dropdown-header">{{.ECUsername}}</li>
+                    <li><a class="dropdown-item" href="/ecommerce/buyer"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                    <li><a class="dropdown-item" href="/ecommerce/profile"><i class="bi bi-person"></i> Profil</a></li>
+                    <li><a class="dropdown-item" href="/ecommerce/profile/addresses"><i class="bi bi-geo-alt"></i> Alamat</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="/login"><i class="bi bi-arrow-left-right"></i> Akses Koperasi</a></li>
+                    <li><a class="dropdown-item ec-text-danger" href="/ecommerce/logout"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="ec-fullwidth">
+        {{if .FlashError}}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-circle me-1"></i>{{.FlashError}}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {{end}}
+        {{if .FlashSuccess}}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-1"></i>{{.FlashSuccess}}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {{end}}
+        {{template "content" .}}
+    </main>
+
+{{else}}
+{{/* ====================================================================
+     SELLER / ADMIN layout — SIDEBAR (existing, banyak menu)
+     ==================================================================== */}}
+    <!-- Sidebar (coffee ink — footer-style polarity) -->
     <aside class="ec-sidebar" id="ecSidebar">
         <div class="brand">
-            <i class="bi bi-shop"></i>
-            <span>KopHub E-Commerce</span>
+            <i class="bi bi-lightning-charge-fill"></i>
+            <span>KopHub</span>
         </div>
         <nav class="py-2">
             <div class="nav-label">Marketplace</div>
@@ -116,7 +767,7 @@
 
             <div class="nav-label">Saya</div>
             <a href="/ecommerce/buyer" class="nav-link {{if eq .Active "buyer"}}active{{end}}">
-                <i class="bi bi-speedometer2"></i> Dashboard Buyer
+                <i class="bi bi-speedometer2"></i> Dashboard
             </a>
             <a href="/ecommerce/wishlist" class="nav-link {{if eq .Active "wishlist"}}active{{end}}">
                 <i class="bi bi-heart"></i> Wishlist
@@ -128,7 +779,7 @@
                 <i class="bi bi-star"></i> Poin & Reward
             </a>
             <a href="/ecommerce/profile" class="nav-link {{if eq .Active "profile"}}active{{end}}">
-                <i class="bi bi-person-circle"></i> Profil Saya
+                <i class="bi bi-person-circle"></i> Profil
             </a>
             <a href="/ecommerce/profile/addresses" class="nav-link {{if eq .Active "addresses"}}active{{end}}">
                 <i class="bi bi-geo-alt"></i> Alamat
@@ -182,7 +833,7 @@
             <a href="/ecommerce/logout" class="nav-link text-danger">
                 <i class="bi bi-box-arrow-right"></i> Logout
             </a>
-            <a href="/login" class="nav-link" style="color: rgba(255,255,255,.4);">
+            <a href="/login" class="nav-link">
                 <i class="bi bi-arrow-left-right"></i> Akses Koperasi
             </a>
         </nav>
@@ -191,14 +842,14 @@
     <!-- Main -->
     <div class="ec-main">
         <header class="ec-topbar">
-            <div class="d-flex align-items-center gap-2">
-                <button class="btn btn-sm btn-outline-secondary btn-sidebar-toggle" onclick="document.getElementById('ecSidebar').classList.toggle('show')">
+            <div class="d-flex align-items-center gap-3">
+                <button class="btn btn-sm btn-outline-dark btn-sidebar-toggle" onclick="document.getElementById('ecSidebar').classList.toggle('show')">
                     <i class="bi bi-list"></i>
                 </button>
-                <h5 class="mb-0">{{.Title}}</h5>
+                <h5>{{.Title}}</h5>
             </div>
             <div class="d-flex align-items-center gap-3">
-                <span class="text-muted small"><i class="bi bi-person-circle me-1"></i>{{.ECUsername}}</span>
+                <span class="zp-caption"><i class="bi bi-person-circle me-1"></i>{{.ECUsername}}</span>
             </div>
         </header>
 
@@ -218,6 +869,7 @@
             {{template "content" .}}
         </main>
     </div>
+{{end}}
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

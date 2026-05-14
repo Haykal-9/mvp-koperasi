@@ -185,41 +185,55 @@ func (h *OrderHandler) DoCheckout(c *gin.Context) {
 }
 
 // ===== GET /orders =====
+// ANGGOTA hanya melihat order miliknya; OWNER/KASIR melihat semua order.
 func (h *OrderHandler) List(c *gin.Context) {
 	statusFilter := strings.ToUpper(c.Query("status"))
+	role := CurrentUserRole(c)
+	userNama := CurrentUserNama(c)
+	scopeOwn := role == "ANGGOTA"
+
 	out := []model.Order{}
+	cnt := map[string]int{}
+	totalAll := 0
 	for i := len(mock.Orders) - 1; i >= 0; i-- {
 		o := mock.Orders[i]
+		if scopeOwn && o.PembeliNama != userNama {
+			continue
+		}
+		totalAll++
+		cnt[o.Status]++
 		if statusFilter != "" && statusFilter != "ALL" && o.Status != statusFilter {
 			continue
 		}
 		out = append(out, o)
 	}
-	// counts per status
-	cnt := map[string]int{}
-	for _, o := range mock.Orders {
-		cnt[o.Status]++
-	}
 	h.Render(c, "base", "order/history", gin.H{
-		"Title":        "Riwayat Order",
-		"Active":       "orders",
-		"Orders":       out,
-		"StatusFilter": statusFilter,
-		"CountAll":     len(mock.Orders),
-		"CountDibayar": cnt["DIBAYAR"],
-		"CountDikirim": cnt["DIKIRIM"],
-		"CountSelesai": cnt["SELESAI"],
+		"Title":         "Riwayat Order",
+		"Active":        "orders",
+		"Orders":        out,
+		"StatusFilter":  statusFilter,
+		"CountAll":      totalAll,
+		"CountDibayar":  cnt["DIBAYAR"],
+		"CountDikirim":  cnt["DIKIRIM"],
+		"CountSelesai":  cnt["SELESAI"],
 		"CountDisputed": cnt["DISPUTED"],
 		"CountBatal":    cnt["BATAL"],
+		"ScopeOwn":      scopeOwn,
 	})
 }
 
 // ===== GET /orders/:id =====
+// ANGGOTA hanya boleh akses order miliknya sendiri.
 func (h *OrderHandler) Detail(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	o := mock.FindOrderByID(id)
 	if o == nil {
 		c.String(http.StatusNotFound, "Order tidak ditemukan")
+		return
+	}
+	if CurrentUserRole(c) == "ANGGOTA" && o.PembeliNama != CurrentUserNama(c) {
+		SetFlash(c, "error", "Anda hanya bisa melihat pesanan milik sendiri.")
+		c.Redirect(http.StatusFound, "/orders")
 		return
 	}
 	timeline := buildTimeline(o)
@@ -230,6 +244,8 @@ func (h *OrderHandler) Detail(c *gin.Context) {
 		"Order":      o,
 		"Timeline":   timeline,
 		"NetPenjual": netPenjual,
+		"CanShip":    IsOwnerOrKasir(c),
+		"CanResolve": CurrentUserRole(c) == "OWNER",
 	})
 }
 
@@ -292,11 +308,17 @@ func (h *OrderHandler) Ship(c *gin.Context) {
 }
 
 // ===== POST /orders/:id/complete =====
+// Konfirmasi terima — boleh pembeli sendiri, OWNER, atau KASIR.
 func (h *OrderHandler) Complete(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	o := mock.FindOrderByID(id)
 	if o == nil {
 		c.String(http.StatusNotFound, "Order tidak ditemukan")
+		return
+	}
+	if !IsOwnerOrKasir(c) && o.PembeliNama != CurrentUserNama(c) {
+		SetFlash(c, "error", "Anda hanya bisa mengonfirmasi pesanan milik sendiri.")
+		c.Redirect(http.StatusFound, "/orders")
 		return
 	}
 	if o.Status != "DIKIRIM" {
@@ -310,11 +332,17 @@ func (h *OrderHandler) Complete(c *gin.Context) {
 }
 
 // ===== GET /orders/:id/complain =====
+// Hanya pemilik order yang boleh membuka form komplain (kecuali staff).
 func (h *OrderHandler) ShowComplain(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	o := mock.FindOrderByID(id)
 	if o == nil {
 		c.String(http.StatusNotFound, "Order tidak ditemukan")
+		return
+	}
+	if !IsOwnerOrKasir(c) && o.PembeliNama != CurrentUserNama(c) {
+		SetFlash(c, "error", "Anda hanya bisa mengajukan komplain untuk pesanan milik sendiri.")
+		c.Redirect(http.StatusFound, "/orders")
 		return
 	}
 	h.Render(c, "base", "order/complain", gin.H{
@@ -330,6 +358,11 @@ func (h *OrderHandler) DoComplain(c *gin.Context) {
 	o := mock.FindOrderByID(id)
 	if o == nil {
 		c.String(http.StatusNotFound, "Order tidak ditemukan")
+		return
+	}
+	if !IsOwnerOrKasir(c) && o.PembeliNama != CurrentUserNama(c) {
+		SetFlash(c, "error", "Anda hanya bisa mengajukan komplain untuk pesanan milik sendiri.")
+		c.Redirect(http.StatusFound, "/orders")
 		return
 	}
 	if o.Status != "DIKIRIM" && o.Status != "SELESAI" {

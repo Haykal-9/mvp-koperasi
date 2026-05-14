@@ -1,75 +1,70 @@
 {{define "content"}}
-<h5 class="mb-3"><i class="bi bi-receipt me-1"></i>Pesanan Saya</h5>
+<div class="mb-4">
+    <div class="zp-eyebrow mb-2">PESANAN SAYA</div>
+    <h1 class="zp-display-lg">Riwayat belanjamu.</h1>
+</div>
 
-<!-- Filter -->
-<div class="ec-card p-3 mb-3">
-    <div class="d-flex gap-2 flex-wrap">
-        <a href="/ecommerce/orders" class="btn btn-sm {{if not .StatusFilter}}btn-ec-primary{{else}}btn-outline-light{{end}}">Semua</a>
-        <a href="/ecommerce/orders?status=DIBAYAR" class="btn btn-sm {{if eq .StatusFilter "DIBAYAR"}}btn-warning{{else}}btn-outline-warning{{end}}">Dibayar</a>
-        <a href="/ecommerce/orders?status=DIPROSES" class="btn btn-sm {{if eq .StatusFilter "DIPROSES"}}btn-primary{{else}}btn-outline-primary{{end}}">Diproses</a>
-        <a href="/ecommerce/orders?status=DIKIRIM" class="btn btn-sm {{if eq .StatusFilter "DIKIRIM"}}btn-info{{else}}btn-outline-info{{end}}">Dikirim</a>
-        <a href="/ecommerce/orders?status=SELESAI" class="btn btn-sm {{if eq .StatusFilter "SELESAI"}}btn-success{{else}}btn-outline-success{{end}}">Selesai</a>
-    </div>
+<!-- Filter pills -->
+<div class="d-flex gap-2 flex-wrap mb-4">
+    <a href="/ecommerce/orders" class="btn btn-sm {{if not .StatusFilter}}btn-primary{{else}}btn-outline-dark{{end}}">Semua</a>
+    <a href="/ecommerce/orders?status=DIBAYAR" class="btn btn-sm {{if eq .StatusFilter "DIBAYAR"}}btn-primary{{else}}btn-outline-dark{{end}}">Dibayar</a>
+    <a href="/ecommerce/orders?status=DIPROSES" class="btn btn-sm {{if eq .StatusFilter "DIPROSES"}}btn-primary{{else}}btn-outline-dark{{end}}">Diproses</a>
+    <a href="/ecommerce/orders?status=DIKIRIM" class="btn btn-sm {{if eq .StatusFilter "DIKIRIM"}}btn-primary{{else}}btn-outline-dark{{end}}">Dikirim</a>
+    <a href="/ecommerce/orders?status=SELESAI" class="btn btn-sm {{if eq .StatusFilter "SELESAI"}}btn-primary{{else}}btn-outline-dark{{end}}">Selesai</a>
 </div>
 
 {{if .Orders}}
 {{range .Orders}}
-<div class="ec-card p-3 mb-3">
-    <div class="d-flex justify-content-between align-items-start mb-2">
+<div class="card p-4 mb-3">
+    <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
         <div>
-            <a href="/ecommerce/orders/{{.ID}}/track" class="text-decoration-none">
-                <code>{{.NomorOrder}}</code>
-            </a>
-            <span class="text-muted small ms-2">{{.CreatedAt}}</span>
+            <a href="/ecommerce/orders/{{.ID}}/track" class="zp-body-md-strong text-decoration-none">{{.NomorOrder}}</a>
+            <span class="zp-caption ms-2">{{.CreatedAt}}</span>
         </div>
-        {{if eq .Status "SELESAI"}}<span class="badge bg-success">{{.Status}}</span>
-        {{else if eq .Status "DIKIRIM"}}<span class="badge bg-info">{{.Status}}</span>
-        {{else if eq .Status "DIBAYAR"}}<span class="badge bg-warning text-dark">{{.Status}}</span>
-        {{else if eq .Status "DIPROSES"}}<span class="badge bg-primary">{{.Status}}</span>
-        {{else}}<span class="badge bg-secondary">{{.Status}}</span>{{end}}
+        <span class="badge {{if eq .Status "SELESAI"}}zp-badge-primary{{else if eq .Status "DIKIRIM"}}zp-badge-ink{{else}}zp-badge{{end}}">{{.Status}}</span>
     </div>
 
-    <div class="small text-muted mb-2">
+    <div class="zp-caption mb-3">
         <i class="bi bi-shop me-1"></i>{{.SellerName}}
     </div>
 
     {{range .Items}}
-    <div class="d-flex justify-content-between small py-1" style="border-bottom:1px solid rgba(255,255,255,.04);">
-        <span>{{.ProductNama}} × {{.Jumlah}}</span>
-        <span>Rp {{printf "%.0f" .Subtotal}}</span>
+    <div class="d-flex justify-content-between py-2" style="border-bottom:1px solid var(--zp-mute);">
+        <span class="zp-body-md">{{.ProductNama}} <span class="zp-caption">× {{.Jumlah}}</span></span>
+        <span class="zp-body-md-strong">Rp {{printf "%.0f" .Subtotal}}</span>
     </div>
     {{end}}
 
-    <div class="d-flex justify-content-between align-items-center mt-2">
-        <div class="small text-muted">
+    <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+        <div class="zp-caption">
             <i class="bi bi-truck me-1"></i>{{.ShippingOption}}
-            {{if .ResiPengiriman}}· <code>{{.ResiPengiriman}}</code>{{end}}
+            {{if .ResiPengiriman}}· {{.ResiPengiriman}}{{end}}
         </div>
         <div class="text-end">
-            <strong style="color:#a78bfa;">Rp {{printf "%.0f" .TotalHarga}}</strong>
+            <div class="zp-display-xs">Rp {{printf "%.0f" .TotalHarga}}</div>
             {{if gt .PointsEarned 0.0}}
-            <div class="text-warning small">+{{printf "%.0f" .PointsEarned}} poin</div>
+            <div class="zp-caption" style="color: var(--zp-primary);">+{{printf "%.0f" .PointsEarned}} poin</div>
             {{end}}
         </div>
     </div>
 
-    <div class="mt-2 d-flex gap-2 justify-content-end">
-        <a href="/ecommerce/orders/{{.ID}}/track" class="btn btn-sm btn-outline-light">
+    <div class="mt-3 d-flex gap-2 justify-content-end">
+        <a href="/ecommerce/orders/{{.ID}}/track" class="btn btn-outline-dark btn-sm">
             <i class="bi bi-geo-alt me-1"></i>Tracking
         </a>
         {{if eq .Status "SELESAI"}}
-        <a href="/ecommerce/order/{{.ID}}/review" class="btn btn-sm btn-outline-warning">
-            <i class="bi bi-star me-1"></i>Beri Ulasan
+        <a href="/ecommerce/order/{{.ID}}/review" class="btn btn-primary btn-sm">
+            <i class="bi bi-star me-1"></i>Beri ulasan
         </a>
         {{end}}
     </div>
 </div>
 {{end}}
 {{else}}
-<div class="ec-card p-4 text-center">
-    <i class="bi bi-bag" style="font-size:3rem;color:rgba(255,255,255,.15);"></i>
-    <p class="text-muted mt-2">Belum ada pesanan{{if .StatusFilter}} dengan status "{{.StatusFilter}}"{{end}}.</p>
-    <a href="/ecommerce/store" class="btn btn-sm btn-ec-primary"><i class="bi bi-shop me-1"></i>Mulai Belanja</a>
+<div class="card p-5 text-center">
+    <i class="bi bi-bag" style="font-size:3rem;color:var(--zp-mute);"></i>
+    <p class="zp-body-md mt-3 mb-3">Belum ada pesanan{{if .StatusFilter}} dengan status "{{.StatusFilter}}"{{end}}.</p>
+    <div><a href="/ecommerce/store" class="btn btn-primary btn-sm">Mulai belanja</a></div>
 </div>
 {{end}}
 {{end}}

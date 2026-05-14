@@ -99,40 +99,55 @@ func (h *LoanHandler) DoApply(c *gin.Context) {
 }
 
 // ===== GET /loans =====
+// ANGGOTA hanya melihat pinjaman miliknya; OWNER/KASIR melihat semua.
 func (h *LoanHandler) List(c *gin.Context) {
 	statusFilter := strings.ToUpper(c.Query("status"))
+	role := CurrentUserRole(c)
+	userNama := CurrentUserNama(c)
+	scopeOwn := role == "ANGGOTA"
+
 	out := []model.Loan{}
+	cnt := map[string]int{}
+	totalAll := 0
 	for i := len(mock.Loans) - 1; i >= 0; i-- {
 		l := mock.Loans[i]
+		if scopeOwn && l.MemberNama != userNama {
+			continue
+		}
+		totalAll++
+		cnt[l.Status]++
 		if statusFilter != "" && statusFilter != "ALL" && l.Status != statusFilter {
 			continue
 		}
 		out = append(out, l)
-	}
-	cnt := map[string]int{}
-	for _, l := range mock.Loans {
-		cnt[l.Status]++
 	}
 	h.Render(c, "base", "loan/list", gin.H{
 		"Title":          "Daftar Pinjaman",
 		"Active":         "loans",
 		"Loans":          out,
 		"StatusFilter":   statusFilter,
-		"CountAll":       len(mock.Loans),
+		"CountAll":       totalAll,
 		"CountPending":   cnt["PENDING"],
 		"CountDisetujui": cnt["DISETUJUI"],
 		"CountAktif":     cnt["AKTIF"],
 		"CountLunas":     cnt["LUNAS"],
 		"CountDitolak":   cnt["DITOLAK"],
+		"ScopeOwn":       scopeOwn,
 	})
 }
 
 // ===== GET /loans/:id =====
+// ANGGOTA hanya boleh akses pinjaman miliknya.
 func (h *LoanHandler) Detail(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	l := mock.FindLoanByID(id)
 	if l == nil {
 		c.String(http.StatusNotFound, "Pinjaman tidak ditemukan")
+		return
+	}
+	if CurrentUserRole(c) == "ANGGOTA" && l.MemberNama != CurrentUserNama(c) {
+		SetFlash(c, "error", "Anda hanya bisa melihat pinjaman milik sendiri.")
+		c.Redirect(http.StatusFound, "/loans")
 		return
 	}
 	progressPct := 0.0
@@ -162,6 +177,7 @@ func (h *LoanHandler) Detail(c *gin.Context) {
 		"ProgressPct": progressPct,
 		"NextInst":    nextInst,
 		"EstAngsuran": estAngsuran,
+		"CanReview":   CurrentUserRole(c) == "OWNER",
 	})
 }
 
@@ -226,11 +242,17 @@ func (h *LoanHandler) Disburse(c *gin.Context) {
 }
 
 // ===== POST /loans/:id/pay =====
+// Pemilik pinjaman bisa bayar sendiri; KASIR/OWNER bisa bayar atas nama anggota.
 func (h *LoanHandler) Pay(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	l := mock.FindLoanByID(id)
 	if l == nil {
 		c.String(http.StatusNotFound, "Pinjaman tidak ditemukan")
+		return
+	}
+	if !IsOwnerOrKasir(c) && l.MemberNama != CurrentUserNama(c) {
+		SetFlash(c, "error", "Anda hanya bisa membayar angsuran pinjaman sendiri.")
+		c.Redirect(http.StatusFound, "/loans")
 		return
 	}
 	if l.Status != "AKTIF" {

@@ -19,6 +19,47 @@ func NextMemberID() int {
 	return max + 1
 }
 
+// RegisterPendingMember creates a new Member with PENDING status and appends it
+// to the Members slice. Used by e-commerce → koperasi linking flow where the EC
+// user is registering themselves as a new koperasi member. Returns the new ID.
+func RegisterPendingMember(nama, nik, alamat, noHP string) int {
+	id := NextMemberID()
+	Members = append(Members, model.Member{
+		ID:           id,
+		NomorAnggota: "-",
+		Nama:         strings.TrimSpace(nama),
+		NIK:          strings.TrimSpace(nik),
+		Alamat:       strings.TrimSpace(alamat),
+		NoHP:         strings.TrimSpace(noHP),
+		Status:       "PENDING",
+		TanggalMasuk: time.Now().Format("2006-01-02"),
+	})
+	return id
+}
+
+// IsNIKRegistered reports whether the NIK already exists on any member record.
+func IsNIKRegistered(nik string) bool {
+	nik = strings.TrimSpace(nik)
+	for _, m := range Members {
+		if m.NIK == nik {
+			return true
+		}
+	}
+	return false
+}
+
+// RemoveMemberByID deletes a member record by ID. Used as rollback when a
+// dependent operation after RegisterPendingMember fails. Returns true if removed.
+func RemoveMemberByID(id int) bool {
+	for i, m := range Members {
+		if m.ID == id {
+			Members = append(Members[:i], Members[i+1:]...)
+			return true
+		}
+	}
+	return false
+}
+
 // GenerateNomorAnggota produces a fresh "KOP-XXXX" ID slot for an approved member.
 func GenerateNomorAnggota() string {
 	highest := 0

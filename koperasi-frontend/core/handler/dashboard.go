@@ -2,6 +2,7 @@ package handler
 
 import (
 	"koperasi-frontend/core/mock"
+	"koperasi-frontend/core/model"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,8 +21,19 @@ type dashboardActivity struct {
 	Nominal   float64
 }
 
+// Index routes the dashboard view by role:
+//   OWNER / KASIR  -> full operational dashboard
+//   ANGGOTA        -> personal self-service dashboard
 func (h *DashboardHandler) Index(c *gin.Context) {
-	// stats
+	if CurrentUserRole(c) == "ANGGOTA" {
+		h.anggotaView(c)
+		return
+	}
+	h.staffView(c)
+}
+
+// ===== Staff (OWNER/KASIR) — operational overview =====
+func (h *DashboardHandler) staffView(c *gin.Context) {
 	anggotaAktif := 0
 	anggotaPending := 0
 	totalSimpanan := 0.0
@@ -72,7 +84,6 @@ func (h *DashboardHandler) Index(c *gin.Context) {
 		}
 	}
 
-	// recent activity (last 4 orders by ID desc)
 	activities := []dashboardActivity{}
 	for i := len(mock.Orders) - 1; i >= 0 && len(activities) < 4; i-- {
 		o := mock.Orders[i]
@@ -97,5 +108,72 @@ func (h *DashboardHandler) Index(c *gin.Context) {
 		"OrderDisputed":    orderDisputed,
 		"TotalOmzet":       totalOmzet,
 		"Activities":       activities,
+	})
+}
+
+// ===== ANGGOTA — personal self-service view =====
+func (h *DashboardHandler) anggotaView(c *gin.Context) {
+	userNama := CurrentUserNama(c)
+
+	var member *model.Member
+	for i := range mock.Members {
+		if mock.Members[i].Nama == userNama {
+			member = &mock.Members[i]
+			break
+		}
+	}
+
+	totalSimpanan := 0.0
+	if member != nil {
+		totalSimpanan = member.SimpananPokok + member.SimpananWajib + member.SimpananSukarela
+	}
+
+	pinjamanAktif := 0
+	pinjamanPending := 0
+	sisaPinjaman := 0.0
+	for _, l := range mock.Loans {
+		if l.MemberNama != userNama {
+			continue
+		}
+		switch l.Status {
+		case "AKTIF":
+			pinjamanAktif++
+			sisaPinjaman += l.SisaPokok
+		case "PENDING":
+			pinjamanPending++
+		}
+	}
+
+	orderAktif := 0
+	orderSelesai := 0
+	recentOrders := []model.Order{}
+	for i := len(mock.Orders) - 1; i >= 0; i-- {
+		o := mock.Orders[i]
+		if o.PembeliNama != userNama {
+			continue
+		}
+		switch o.Status {
+		case "SELESAI":
+			orderSelesai++
+		case "BATAL":
+		default:
+			orderAktif++
+		}
+		if len(recentOrders) < 5 {
+			recentOrders = append(recentOrders, o)
+		}
+	}
+
+	h.Render(c, "base", "dashboard/anggota", gin.H{
+		"Title":           "Dashboard",
+		"Active":          "dashboard",
+		"Member":          member,
+		"TotalSimpanan":   totalSimpanan,
+		"PinjamanAktif":   pinjamanAktif,
+		"PinjamanPending": pinjamanPending,
+		"SisaPinjaman":    sisaPinjaman,
+		"OrderAktif":      orderAktif,
+		"OrderSelesai":    orderSelesai,
+		"RecentOrders":    recentOrders,
 	})
 }

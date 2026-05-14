@@ -58,6 +58,7 @@ func (h *MemberHandler) List(c *gin.Context) {
 }
 
 // ===== GET /members/:id =====
+// ANGGOTA hanya boleh melihat profilnya sendiri.
 func (h *MemberHandler) Detail(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	m := mock.FindMemberByID(id)
@@ -65,13 +66,19 @@ func (h *MemberHandler) Detail(c *gin.Context) {
 		c.String(http.StatusNotFound, "Anggota tidak ditemukan")
 		return
 	}
+	if !IsOwnerOrKasir(c) && m.Nama != CurrentUserNama(c) {
+		SetFlash(c, "error", "Anda hanya bisa melihat profil sendiri.")
+		c.Redirect(http.StatusFound, "/dashboard")
+		return
+	}
 	h.Render(c, "base", "member/detail", gin.H{
-		"Title":            "Detail Anggota",
-		"Active":           "members",
-		"Member":           m,
-		"TotalSimpanan":    m.SimpananPokok + m.SimpananWajib + m.SimpananSukarela,
-		"SimpananHistory":  mock.SimpananByMember(m.Nama),
-		"PinjamanHistory":  mock.LoansByMember(m.Nama),
+		"Title":           "Detail Anggota",
+		"Active":          "members",
+		"Member":          m,
+		"TotalSimpanan":   m.SimpananPokok + m.SimpananWajib + m.SimpananSukarela,
+		"SimpananHistory": mock.SimpananByMember(m.Nama),
+		"PinjamanHistory": mock.LoansByMember(m.Nama),
+		"CanReview":       CurrentUserRole(c) == "OWNER",
 	})
 }
 
@@ -175,11 +182,17 @@ func (h *MemberHandler) Reject(c *gin.Context) {
 }
 
 // ===== GET /members/:id/simpanan =====
+// ANGGOTA hanya boleh melihat simpanan sendiri.
 func (h *MemberHandler) ShowSimpanan(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	m := mock.FindMemberByID(id)
 	if m == nil {
 		c.String(http.StatusNotFound, "Anggota tidak ditemukan")
+		return
+	}
+	if !IsOwnerOrKasir(c) && m.Nama != CurrentUserNama(c) {
+		SetFlash(c, "error", "Anda hanya bisa melihat simpanan sendiri.")
+		c.Redirect(http.StatusFound, "/dashboard")
 		return
 	}
 	h.Render(c, "base", "member/simpanan", gin.H{
@@ -188,15 +201,22 @@ func (h *MemberHandler) ShowSimpanan(c *gin.Context) {
 		"Member":          m,
 		"TotalSimpanan":   m.SimpananPokok + m.SimpananWajib + m.SimpananSukarela,
 		"SimpananHistory": mock.SimpananByMember(m.Nama),
+		"CanRecord":       IsOwnerOrKasir(c),
 	})
 }
 
 // ===== POST /members/:id/simpanan =====
+// Pencatatan transaksi simpanan hanya boleh OWNER/KASIR.
 func (h *MemberHandler) DoSimpanan(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	m := mock.FindMemberByID(id)
 	if m == nil {
 		c.String(http.StatusNotFound, "Anggota tidak ditemukan")
+		return
+	}
+	if !IsOwnerOrKasir(c) {
+		SetFlash(c, "error", "Hanya pengurus/kasir yang bisa mencatat transaksi simpanan.")
+		c.Redirect(http.StatusFound, "/members/"+strconv.Itoa(id)+"/simpanan")
 		return
 	}
 	jenis := strings.ToUpper(c.PostForm("jenis"))
@@ -237,11 +257,18 @@ func (h *MemberHandler) DoSimpanan(c *gin.Context) {
 }
 
 // ===== GET /members/:id/resign =====
+// Pengajuan resign — pemilik akun atau OWNER; KASIR tidak boleh approve.
 func (h *MemberHandler) ShowResign(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	m := mock.FindMemberByID(id)
 	if m == nil {
 		c.String(http.StatusNotFound, "Anggota tidak ditemukan")
+		return
+	}
+	role := CurrentUserRole(c)
+	if role != "OWNER" && m.Nama != CurrentUserNama(c) {
+		SetFlash(c, "error", "Anda hanya bisa mengajukan pengunduran diri sendiri.")
+		c.Redirect(http.StatusFound, "/dashboard")
 		return
 	}
 	// outstanding obligations: aktif loans
@@ -262,11 +289,18 @@ func (h *MemberHandler) ShowResign(c *gin.Context) {
 }
 
 // ===== POST /members/:id/resign =====
+// Hanya pemilik akun yang mengajukan, atau OWNER yang memproses.
 func (h *MemberHandler) DoResign(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	m := mock.FindMemberByID(id)
 	if m == nil {
 		c.String(http.StatusNotFound, "Anggota tidak ditemukan")
+		return
+	}
+	role := CurrentUserRole(c)
+	if role != "OWNER" && m.Nama != CurrentUserNama(c) {
+		SetFlash(c, "error", "Anda hanya bisa mengajukan pengunduran diri sendiri.")
+		c.Redirect(http.StatusFound, "/dashboard")
 		return
 	}
 	var sisaPinjaman float64

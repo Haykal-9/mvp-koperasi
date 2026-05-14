@@ -1,73 +1,137 @@
 {{define "content"}}
-<!-- Hero Banner -->
-<div class="ec-card p-4 mb-4" style="background: linear-gradient(135deg, rgba(124,58,237,.3), rgba(109,40,217,.1)); border-color: rgba(124,58,237,.2);">
-    <div class="row align-items-center">
-        <div class="col-md-8">
-            <h2 class="mb-2"><i class="bi bi-shop me-2"></i>KopHub Marketplace</h2>
-            <p class="text-muted mb-3">Belanja produk berkualitas dari seller terpercaya anggota koperasi.</p>
-            <a href="/ecommerce/products" class="btn btn-ec-primary"><i class="bi bi-grid me-1"></i> Lihat Semua Produk</a>
-        </div>
-        <div class="col-md-4 text-end d-none d-md-block">
-            <i class="bi bi-bag-check" style="font-size: 5rem; color: rgba(124,58,237,.3);"></i>
-        </div>
-    </div>
-</div>
-
-<!-- Categories -->
-<h5 class="mb-3"><i class="bi bi-tag me-1"></i>Kategori</h5>
-<div class="row g-3 mb-4">
-    {{range .Categories}}
-    <div class="col-6 col-md-3">
-        <a href="/ecommerce/products?category={{.}}" class="text-decoration-none">
-            <div class="ec-card p-3 text-center h-100" style="transition: transform .15s;">
-                <i class="bi bi-folder2-open" style="font-size: 1.5rem; color: #a78bfa;"></i>
-                <h6 class="mt-2 mb-0 text-white">{{.}}</h6>
-            </div>
-        </a>
-    </div>
-    {{end}}
-</div>
-
-<!-- Featured Products -->
-<h5 class="mb-3"><i class="bi bi-star me-1"></i>Produk Unggulan</h5>
-<div class="row g-3 mb-4">
-    {{range .FeaturedProducts}}
-    <div class="col-6 col-md-4 col-lg-3">
-        <div class="ec-card h-100">
-            <img src="{{.FotoURL}}" class="card-img-top" alt="{{.Nama}}" style="height:180px; object-fit:cover; border-radius:.75rem .75rem 0 0;">
-            <div class="p-3">
-                <small class="text-muted">{{.SellerName}}</small>
-                <h6 class="mt-1 mb-1" style="font-size:.9rem;">
-                    <a href="/ecommerce/products/{{.ID}}" class="text-white text-decoration-none">{{.Nama}}</a>
-                </h6>
-                <div class="d-flex align-items-center gap-2 mb-2">
-                    <span class="text-warning small"><i class="bi bi-star-fill"></i> {{printf "%.1f" .Rating}}</span>
-                    <span class="text-muted small">{{.TotalSold}} terjual</span>
-                </div>
-                <strong style="color: #a78bfa;">Rp {{printf "%.0f" .Harga}}</strong>
+<!-- ============================================================
+     HERO BAND — cream canvas, Degular display-xl, orange CTA
+     ============================================================ -->
+<section class="zp-hero-band">
+    <div class="row align-items-center g-5">
+        <div class="col-lg-7">
+            <div class="zp-eyebrow mb-3">KOPHUB MARKETPLACE</div>
+            <h1 class="zp-display-xl mb-3">
+                Belanja yang otomatis.<br>Koperasi yang bekerja.
+            </h1>
+            <p class="zp-body-lg mb-4" style="max-width: 540px;">
+                Satu marketplace untuk anggota koperasi — terhubung otomatis ke poin,
+                simpanan, dan reward. Tidak perlu pindah aplikasi.
+            </p>
+            <div class="d-flex flex-wrap gap-3">
+                <a href="/ecommerce/products" class="btn btn-primary">
+                    Mulai belanja gratis
+                </a>
+                <a href="/ecommerce/buyer" class="btn btn-outline-dark">
+                    Buka dashboard
+                </a>
             </div>
         </div>
-    </div>
-    {{end}}
-</div>
-
-<!-- Sellers -->
-<h5 class="mb-3"><i class="bi bi-shop-window me-1"></i>Seller Terpercaya</h5>
-<div class="row g-3">
-    {{range .Sellers}}
-    <div class="col-md-6">
-        <a href="/ecommerce/seller/{{.SellerID}}/profile" class="text-decoration-none">
-            <div class="ec-card p-3 d-flex align-items-center gap-3">
-                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:50px;height:50px;background:rgba(124,58,237,.15);">
-                    <i class="bi bi-shop" style="font-size:1.3rem;color:#a78bfa;"></i>
-                </div>
+        <div class="col-lg-5 d-none d-lg-block">
+            <div class="zp-card-dark" style="padding: 32px; aspect-ratio: 5/6; display: flex; flex-direction: column; justify-content: space-between;">
                 <div>
-                    <h6 class="mb-0 text-white">{{.StoreName}}</h6>
-                    <small class="text-muted"><i class="bi bi-star-fill text-warning"></i> {{printf "%.1f" .Rating}} · {{.TotalSold}} terjual · {{.ResponseTime}}</small>
+                    <div class="zp-eyebrow mb-3" style="color: var(--zp-mute);">FEATURED WORKFLOW</div>
+                    <div class="zp-display-sub-md" style="color: var(--zp-on-primary);">
+                        Beli produk →<br>
+                        <span style="color: var(--zp-primary);">otomatis dapat poin</span><br>
+                        → tukar ke simpanan.
+                    </div>
+                </div>
+                <div class="zp-body-sm" style="color: var(--zp-canvas-soft);">
+                    Integrasi pertama dengan Koperasi Digital.
                 </div>
             </div>
-        </a>
+        </div>
     </div>
-    {{end}}
-</div>
+</section>
+
+<!-- ============================================================
+     CONTENT BAND CREAM — kategori
+     ============================================================ -->
+<section class="zp-content-band-cream">
+    <div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4">
+        <div>
+            <div class="zp-eyebrow mb-2">KATEGORI</div>
+            <h2 class="zp-display-lg mb-0">Telusuri berdasarkan minat.</h2>
+        </div>
+        <a href="/ecommerce/products" class="btn btn-outline-dark btn-sm d-none d-md-inline-flex">Semua kategori</a>
+    </div>
+    <div class="row g-3">
+        {{range .Categories}}
+        <div class="col-6 col-md-3">
+            <a href="/ecommerce/products?category={{.}}" class="text-decoration-none">
+                <div class="card h-100" style="background: var(--zp-canvas); padding: 24px; transition: border-color .15s; border: 1px solid var(--zp-mute);">
+                    <i class="bi bi-folder2-open" style="font-size: 1.5rem; color: var(--zp-primary);"></i>
+                    <div class="zp-display-xs mt-3">{{.}}</div>
+                </div>
+            </a>
+        </div>
+        {{end}}
+    </div>
+</section>
+
+<!-- ============================================================
+     PRODUK UNGGULAN — content-band-light + canvas-soft cards
+     ============================================================ -->
+<section class="mb-5">
+    <div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4">
+        <div>
+            <div class="zp-eyebrow mb-2">PRODUK UNGGULAN</div>
+            <h2 class="zp-display-lg mb-0">Yang lagi dicari banyak orang.</h2>
+        </div>
+        <a href="/ecommerce/products" class="btn btn-outline-dark btn-sm d-none d-md-inline-flex">Lihat semua</a>
+    </div>
+    <div class="row g-4">
+        {{range .FeaturedProducts}}
+        <div class="col-6 col-md-4 col-lg-3">
+            <a href="/ecommerce/products/{{.ID}}" class="text-decoration-none">
+                <div class="card h-100">
+                    <img src="{{.FotoURL}}" class="card-img-top" alt="{{.Nama}}" style="height:220px; object-fit:cover;">
+                    <div class="p-3">
+                        <div class="zp-caption mb-1">{{.SellerName}}</div>
+                        <div class="zp-body-md-strong mb-2" style="min-height:54px;">{{.Nama}}</div>
+                        <div class="d-flex align-items-center gap-2 mb-3 zp-caption">
+                            <span style="color: var(--zp-primary);"><i class="bi bi-star-fill"></i> {{printf "%.1f" .Rating}}</span>
+                            <span>·</span>
+                            <span>{{.TotalSold}} terjual</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="zp-display-sub-sm">Rp {{printf "%.0f" .Harga}}</span>
+                            <span class="badge zp-badge">{{.Kategori}}</span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {{end}}
+    </div>
+</section>
+
+<!-- ============================================================
+     SELLERS — feature-cream rows
+     ============================================================ -->
+<section class="mb-4">
+    <div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4">
+        <div>
+            <div class="zp-eyebrow mb-2">SELLER TERPERCAYA</div>
+            <h2 class="zp-display-lg mb-0">Dibalik setiap produk, ada cerita.</h2>
+        </div>
+    </div>
+    <div class="row g-3">
+        {{range .Sellers}}
+        <div class="col-md-6">
+            <a href="/ecommerce/seller/{{.SellerID}}/profile" class="text-decoration-none">
+                <div class="card p-3 d-flex flex-row align-items-center gap-3">
+                    <div class="d-flex align-items-center justify-content-center"
+                         style="width:56px;height:56px;background:var(--zp-canvas);border-radius:9999px;flex-shrink:0;border:1px solid var(--zp-mute);">
+                        <i class="bi bi-shop" style="font-size:1.4rem;color: var(--zp-primary);"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="zp-display-xs mb-1">{{.StoreName}}</div>
+                        <div class="zp-caption">
+                            <i class="bi bi-star-fill" style="color: var(--zp-primary);"></i> {{printf "%.1f" .Rating}} · {{.TotalSold}} terjual · {{.ResponseTime}}
+                        </div>
+                    </div>
+                    <i class="bi bi-arrow-right" style="font-size:1.1rem;color:var(--zp-body-mid);"></i>
+                </div>
+            </a>
+        </div>
+        {{end}}
+    </div>
+</section>
 {{end}}

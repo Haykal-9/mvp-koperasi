@@ -1,31 +1,34 @@
 {{define "content"}}
-<h5 class="mb-3"><i class="bi bi-cart-check me-1"></i>Checkout</h5>
+<div class="mb-4">
+    <div class="zp-eyebrow mb-2">CHECKOUT</div>
+    <h1 class="zp-display-lg">Selesaikan pesananmu.</h1>
+</div>
 
 <form method="POST" action="/ecommerce/checkout" id="checkoutForm" data-subtotal="{{printf "%.0f" .Subtotal}}" data-weight="{{.TotalWeight}}">
 <input type="hidden" name="product_id" value="{{.Product.ID}}">
 <input type="hidden" name="qty" value="{{.Qty}}">
 
 <div class="row g-4">
-    <!-- Left: Order Summary -->
+    <!-- Left: order summary -->
     <div class="col-md-7">
         <!-- Items -->
-        <div class="ec-card p-3 mb-3">
-            <h6 class="mb-3"><i class="bi bi-bag me-1"></i>Ringkasan Pesanan</h6>
+        <div class="card p-4 mb-3">
+            <div class="zp-display-sub-sm mb-3">Ringkasan pesanan</div>
             {{range .Items}}
             <div class="d-flex gap-3 align-items-center">
-                <img src="{{$.Product.FotoURL}}" alt="{{.ProductNama}}" class="rounded" style="width:60px;height:60px;object-fit:cover;">
+                <img src="{{$.Product.FotoURL}}" alt="{{.ProductNama}}" style="width:72px;height:72px;object-fit:cover;border-radius:var(--zp-r-sm);">
                 <div class="flex-grow-1">
-                    <div class="fw-bold small">{{.ProductNama}}</div>
-                    <div class="text-muted small">{{.Jumlah}} × Rp {{printf "%.0f" .HargaSatuan}}</div>
+                    <div class="zp-body-md-strong">{{.ProductNama}}</div>
+                    <div class="zp-caption">{{.Jumlah}} × Rp {{printf "%.0f" .HargaSatuan}}</div>
                 </div>
-                <strong style="color:#a78bfa;">Rp {{printf "%.0f" .Subtotal}}</strong>
+                <span class="zp-display-xs">Rp {{printf "%.0f" .Subtotal}}</span>
             </div>
             {{end}}
         </div>
 
         <!-- Address -->
-        <div class="ec-card p-3 mb-3">
-            <h6 class="mb-3"><i class="bi bi-geo-alt me-1"></i>Alamat Pengiriman</h6>
+        <div class="card p-4 mb-3">
+            <div class="zp-display-sub-sm mb-3">Alamat pengiriman</div>
             {{if .Addresses}}
             <select class="form-select mb-2" name="alamat" id="alamatSelect">
                 {{range .Addresses}}
@@ -33,99 +36,109 @@
                     {{.Label}} — {{.Penerima}}, {{.Alamat}}, {{.Kota}} {{.KodePos}}
                 </option>
                 {{end}}
-                <option value="__custom__">Alamat Lain...</option>
+                <option value="__custom__">Alamat lain...</option>
             </select>
             <input type="text" class="form-control" id="customAlamat" name="alamat_custom" placeholder="Masukkan alamat lengkap..." style="display:none;">
             {{else}}
             <input type="text" class="form-control" name="alamat" placeholder="Masukkan alamat lengkap..." required>
-            <small class="text-muted">Belum ada alamat tersimpan. <a href="/ecommerce/buyer" style="color:#a78bfa;">Tambah alamat</a></small>
+            <div class="zp-caption mt-2">Belum ada alamat tersimpan. <a href="/ecommerce/buyer">Tambah alamat</a></div>
             {{end}}
         </div>
 
         <!-- Shipping -->
-        <div class="ec-card p-3 mb-3">
-            <h6 class="mb-3"><i class="bi bi-truck me-1"></i>Pengiriman</h6>
-            <div class="small text-muted mb-2">Berat: {{.TotalWeight}}g</div>
+        <div class="card p-4 mb-3">
+            <div class="zp-display-sub-sm mb-3">Pengiriman</div>
+            <div class="zp-caption mb-3">Berat: {{.TotalWeight}}g</div>
             {{range .ShippingOpts}}
-            <div class="form-check mb-2">
-                <input class="form-check-input" type="radio" name="shipping_option" value="{{.ID}}" id="ship{{.ID}}" data-price="{{printf "%.0f" .Harga}}" {{if eq .ID 1}}checked{{end}}>
-                <label class="form-check-label d-flex justify-content-between w-100" for="ship{{.ID}}">
-                    <span><strong>{{.Nama}}</strong> <small class="text-muted">({{.Provider}})</small></span>
-                    <span><small class="text-muted">{{.Estimasi}}</small> · <strong>Rp {{printf "%.0f" .Harga}}</strong></span>
-                </label>
-            </div>
+            <label class="d-flex justify-content-between align-items-center py-3"
+                   style="border-bottom: 1px solid var(--zp-mute); cursor: pointer;">
+                <div class="d-flex align-items-center gap-3">
+                    <input class="form-check-input mt-0" type="radio" name="shipping_option" value="{{.ID}}"
+                           id="ship{{.ID}}" data-price="{{printf "%.0f" .Harga}}" {{if eq .ID 1}}checked{{end}}>
+                    <div>
+                        <div class="zp-body-md-strong">{{.Nama}}</div>
+                        <div class="zp-caption">{{.Provider}} · {{.Estimasi}}</div>
+                    </div>
+                </div>
+                <span class="zp-body-md-strong">Rp {{printf "%.0f" .Harga}}</span>
+            </label>
             {{end}}
         </div>
     </div>
 
-    <!-- Right: Payment Summary -->
+    <!-- Right: payment summary -->
     <div class="col-md-5">
-        <div class="ec-card p-3 mb-3">
-            <h6 class="mb-3"><i class="bi bi-ticket-perforated me-1"></i>Voucher</h6>
-            <div class="input-group input-group-sm">
+        <div class="card p-4 mb-3">
+            <div class="zp-display-sub-sm mb-3">Voucher</div>
+            <div class="input-group">
                 <input type="text" class="form-control" name="voucher_code" placeholder="Kode voucher (opsional)">
                 <span class="input-group-text"><i class="bi bi-check"></i></span>
             </div>
-            <small class="text-muted">Coba: HEMAT10 atau GRATIS15K</small>
+            <div class="zp-caption mt-2">Coba: HEMAT10 atau GRATIS15K</div>
         </div>
 
         {{if gt .PointsBalance 0.0}}
-        <div class="ec-card p-3 mb-3">
-            <h6 class="mb-3"><i class="bi bi-star me-1"></i>Pakai Poin</h6>
-            <div class="d-flex justify-content-between small mb-2">
-                <span>Saldo poin:</span>
-                <strong class="text-warning">{{printf "%.0f" .PointsBalance}} poin</strong>
+        <div class="card p-4 mb-3">
+            <div class="zp-display-sub-sm mb-3">Pakai poin</div>
+            <div class="d-flex justify-content-between zp-body-sm mb-2">
+                <span>Saldo poin</span>
+                <strong>{{printf "%.0f" .PointsBalance}} poin</strong>
             </div>
-            <div class="input-group input-group-sm">
-                <input type="number" class="form-control" name="points_used" value="0" min="0" max="{{printf "%.0f" .PointsBalance}}" placeholder="Poin yang digunakan">
+            <div class="input-group">
+                <input type="number" class="form-control" name="points_used" value="0" min="0" max="{{printf "%.0f" .PointsBalance}}">
                 <span class="input-group-text">poin</span>
             </div>
-            <small class="text-muted">1 poin = Rp 1 diskon</small>
+            <div class="zp-caption mt-2">1 poin = Rp 1 diskon</div>
         </div>
         {{end}}
 
-        <div class="ec-card p-3 mb-3">
-            <h6 class="mb-3"><i class="bi bi-credit-card me-1"></i>Metode Pembayaran</h6>
+        <div class="card p-4 mb-3">
+            <div class="zp-display-sub-sm mb-3">Metode pembayaran</div>
             <div class="form-check mb-2">
                 <input class="form-check-input" type="radio" name="metode_bayar" value="Transfer Bank" id="payBank" checked>
-                <label class="form-check-label" for="payBank">Transfer Bank</label>
+                <label class="form-check-label zp-body-md" for="payBank">Transfer Bank</label>
             </div>
             <div class="form-check mb-2">
                 <input class="form-check-input" type="radio" name="metode_bayar" value="QRIS" id="payQRIS">
-                <label class="form-check-label" for="payQRIS">QRIS</label>
+                <label class="form-check-label zp-body-md" for="payQRIS">QRIS</label>
             </div>
             <div class="form-check">
                 <input class="form-check-input" type="radio" name="metode_bayar" value="COD" id="payCOD">
-                <label class="form-check-label" for="payCOD">COD (Bayar di Tempat)</label>
+                <label class="form-check-label zp-body-md" for="payCOD">COD (Bayar di Tempat)</label>
             </div>
         </div>
 
-        <div class="ec-card p-3">
-            <h6 class="mb-3">Ringkasan</h6>
-            <div class="d-flex justify-content-between small mb-1">
-                <span>Subtotal</span><span>Rp {{printf "%.0f" .Subtotal}}</span>
+        <!-- Featured pricing card (dark polarity flip) -->
+        <div class="zp-pricing-card-featured">
+            <div class="zp-eyebrow mb-3" style="color: var(--zp-canvas-soft);">RINGKASAN</div>
+            <div class="d-flex justify-content-between mb-2" style="color: var(--zp-canvas-soft);">
+                <span class="zp-body-sm">Subtotal</span>
+                <span class="zp-body-sm-strong" style="color: var(--zp-on-primary);">Rp {{printf "%.0f" .Subtotal}}</span>
             </div>
-            <div class="d-flex justify-content-between small mb-1 text-muted">
-                <span>Ongkir</span><span id="summOngkir">—</span>
+            <div class="d-flex justify-content-between mb-2" style="color: var(--zp-canvas-soft);">
+                <span class="zp-body-sm">Ongkir</span>
+                <span class="zp-body-sm-strong" style="color: var(--zp-on-primary);" id="summOngkir">—</span>
             </div>
-            <div class="d-flex justify-content-between small mb-1 text-success" id="summVoucherRow" style="display:none!important;">
-                <span>Diskon Voucher</span><span id="summVoucher">-Rp 0</span>
+            <div class="d-flex justify-content-between mb-2" id="summVoucherRow" style="display:none!important;color: var(--zp-canvas-soft);">
+                <span class="zp-body-sm">Diskon voucher</span>
+                <span class="zp-body-sm-strong" style="color: var(--zp-primary);" id="summVoucher">-Rp 0</span>
             </div>
-            <div class="d-flex justify-content-between small mb-1 text-warning" id="summPointsRow" style="display:none!important;">
-                <span>Redeem Poin</span><span id="summPoints">-Rp 0</span>
+            <div class="d-flex justify-content-between mb-2" id="summPointsRow" style="display:none!important;color: var(--zp-canvas-soft);">
+                <span class="zp-body-sm">Redeem poin</span>
+                <span class="zp-body-sm-strong" style="color: var(--zp-primary);" id="summPoints">-Rp 0</span>
             </div>
-            <hr style="border-color:rgba(255,255,255,.1);">
-            <div class="d-flex justify-content-between">
-                <strong>Total</strong>
-                <strong style="color:#a78bfa;" id="summTotal">Rp {{printf "%.0f" .Subtotal}}</strong>
+            <hr style="border-color: rgba(255,254,251,.15);">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <span class="zp-body-md-strong" style="color: var(--zp-on-primary);">Total</span>
+                <span class="zp-display-sub-lg" id="summTotal" style="color: var(--zp-on-primary); font-weight: 500;">Rp {{printf "%.0f" .Subtotal}}</span>
             </div>
-            <button type="submit" class="btn btn-ec-primary w-100 mt-3 py-2">
-                <i class="bi bi-bag-check me-1"></i>Bayar Sekarang
+            <button type="submit" class="btn btn-primary w-100 btn-lg">
+                Bayar sekarang
             </button>
         </div>
 
         {{if .IsLinked}}
-        <div class="small text-muted mt-2 text-center">
+        <div class="zp-caption mt-3 text-center">
             <i class="bi bi-info-circle me-1"></i>Poin dari pembelian ini bisa dikonversi ke Simpanan Koperasi.
         </div>
         {{end}}
@@ -134,7 +147,6 @@
 </form>
 
 <script>
-// Address custom input toggle
 const sel = document.getElementById('alamatSelect');
 const custom = document.getElementById('customAlamat');
 if (sel) {

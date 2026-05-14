@@ -1,57 +1,204 @@
 {{define "ec_auth_base"}}
 <!DOCTYPE html>
-<html lang="id" data-bs-theme="dark">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{.Title}} — KopHub E-Commerce</title>
+    <title>{{.Title}} — Zapier by KopHub</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Mona+Sans:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --zp-primary: #ff4f00;
+            --zp-primary-hover: #e64700;
+            --zp-on-primary: #fffefb;
+            --zp-canvas: #fffefb;
+            --zp-canvas-soft: #f8f4f0;
+            --zp-ink: #201515;
+            --zp-ink-soft: #2f2a26;
+            --zp-body: #605d52;
+            --zp-body-mid: #939084;
+            --zp-mute: #c5c0b1;
+            --zp-r-sm: 6px;
+            --zp-r-md: 12px;
+            --zp-r-pill: 9999px;
+            --zp-font-display: "Mona Sans", "Degular Display", Inter, system-ui, sans-serif;
+            --zp-font-ui: "Inter", system-ui, sans-serif;
+        }
         body {
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--zp-canvas);
+            color: var(--zp-ink);
+            font-family: var(--zp-font-ui);
+            padding: 24px;
         }
-        .auth-card {
+        .auth-shell {
             width: 100%;
-            max-width: 460px;
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 1rem;
-            background: rgba(30,30,50,0.85);
-            backdrop-filter: blur(12px);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            max-width: 1100px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            border-radius: var(--zp-r-md);
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(32,21,21,.06);
         }
-        .auth-card .card-header {
-            background: transparent;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-            text-align: center;
-            padding: 1.5rem;
+        @media (max-width: 991.98px) {
+            .auth-shell { grid-template-columns: 1fr; max-width: 480px; }
+            .auth-aside { display: none; }
         }
-        .brand-icon { font-size: 2.5rem; color: #7c3aed; }
-        .btn-ec-primary {
-            background: linear-gradient(135deg, #7c3aed, #6d28d9);
-            border: none;
-            color: #fff;
+
+        /* Left aside — dark coffee polarity */
+        .auth-aside {
+            background: var(--zp-ink);
+            color: var(--zp-on-primary);
+            padding: 64px 48px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 600px;
         }
-        .btn-ec-primary:hover {
-            background: linear-gradient(135deg, #6d28d9, #5b21b6);
-            color: #fff;
+        .auth-aside .brand {
+            display: flex; align-items: center; gap: 12px;
+            font-family: var(--zp-font-display);
+            font-weight: 500;
+            font-size: 24px;
+            letter-spacing: -0.6px;
+            color: var(--zp-on-primary);
         }
-        a.ec-link { color: #a78bfa; text-decoration: none; }
-        a.ec-link:hover { color: #c4b5fd; text-decoration: underline; }
+        .auth-aside .brand i { color: var(--zp-primary); font-size: 28px; }
+        .auth-aside .display {
+            font-family: var(--zp-font-display);
+            font-weight: 500;
+            font-size: 48px;
+            line-height: 48px;
+            color: var(--zp-on-primary);
+            margin: 48px 0 16px;
+        }
+        .auth-aside .lead {
+            font-family: var(--zp-font-ui);
+            font-size: 18px;
+            line-height: 27px;
+            color: var(--zp-canvas-soft);
+            max-width: 360px;
+        }
+        .auth-aside .footnote {
+            font-family: var(--zp-font-ui);
+            font-size: 14px;
+            color: var(--zp-mute);
+        }
+
+        /* Right form — cream canvas */
+        .auth-form {
+            background: var(--zp-canvas);
+            padding: 64px 48px;
+        }
+        .auth-form .eyebrow {
+            font-family: var(--zp-font-display);
+            font-size: 14px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--zp-ink);
+            margin-bottom: 8px;
+        }
+        .auth-form .title {
+            font-family: var(--zp-font-display);
+            font-weight: 500;
+            font-size: 32px;
+            line-height: 36px;
+            color: var(--zp-ink);
+            margin-bottom: 32px;
+        }
+
+        h5, h6 { font-family: var(--zp-font-display); color: var(--zp-ink); font-weight: 500; }
+        .form-label {
+            font-family: var(--zp-font-ui);
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--zp-ink);
+        }
+        .form-control, .form-select {
+            font-family: var(--zp-font-ui);
+            font-size: 18px;
+            background: var(--zp-canvas);
+            color: var(--zp-ink);
+            border: 1px solid var(--zp-ink);
+            border-radius: var(--zp-r-sm);
+            padding: 12px 16px;
+            min-height: 48px;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--zp-primary);
+            box-shadow: 0 0 0 3px rgba(255,79,0,.15);
+            background: var(--zp-canvas);
+        }
+        .input-group-text {
+            background: var(--zp-canvas);
+            border: 1px solid var(--zp-ink);
+            color: var(--zp-ink);
+            border-radius: var(--zp-r-sm);
+        }
+        .btn {
+            font-family: var(--zp-font-ui);
+            font-weight: 600;
+            border-radius: var(--zp-r-md);
+            padding: 12px 24px;
+            font-size: 18px;
+            line-height: 27px;
+            border-width: 1px;
+        }
+        .btn-ec-primary, .btn-primary {
+            background: var(--zp-primary);
+            border-color: var(--zp-primary);
+            color: var(--zp-on-primary);
+        }
+        .btn-ec-primary:hover, .btn-primary:hover {
+            background: var(--zp-primary-hover);
+            border-color: var(--zp-primary-hover);
+            color: var(--zp-on-primary);
+        }
+        a, .ec-link {
+            color: var(--zp-ink);
+            text-decoration: underline;
+            text-underline-offset: 2px;
+            font-weight: 600;
+        }
+        a:hover, .ec-link:hover { color: var(--zp-primary); }
+        .text-muted { color: var(--zp-body-mid) !important; }
+        .alert { border-radius: var(--zp-r-md); font-family: var(--zp-font-ui); }
+        .alert-success { background: var(--zp-canvas-soft); border-color: var(--zp-primary); color: var(--zp-ink); }
+        .alert-danger { background: #fee2e2; border-color: #fecaca; color: #7f1d1d; }
+        .badge { background: var(--zp-canvas-soft); color: var(--zp-ink); border-radius: var(--zp-r-pill); padding: 4px 12px; font-weight: 500; }
+        .bg-success { background-color: var(--zp-canvas-soft) !important; color: var(--zp-ink) !important; }
+        .bg-secondary { background-color: var(--zp-canvas-soft) !important; color: var(--zp-ink) !important; }
     </style>
 </head>
 <body>
-    <div class="auth-card card">
-        <div class="card-header">
-            <i class="bi bi-shop brand-icon"></i>
-            <h4 class="mt-2 mb-0">KopHub E-Commerce</h4>
-        </div>
-        <div class="card-body p-4">
+    <div class="auth-shell">
+        <!-- Brand aside (dark coffee) -->
+        <aside class="auth-aside">
+            <div class="brand">
+                <i class="bi bi-lightning-charge-fill"></i>
+                <span>KopHub</span>
+            </div>
+            <div>
+                <div class="display">Belanja yang otomatis.<br>Koperasi yang bekerja.</div>
+                <p class="lead">Satu marketplace untuk anggota koperasi — dengan integrasi poin, simpanan, dan reward.</p>
+            </div>
+            <div class="footnote">© 2026 KopHub by Koperasi Digital</div>
+        </aside>
+
+        <!-- Form -->
+        <section class="auth-form">
+            <div class="eyebrow">KOPHUB · MARKETPLACE</div>
+            <div class="title">{{.Title}}</div>
+
             {{if .FlashError}}
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 <i class="bi bi-exclamation-circle me-1"></i>{{.FlashError}}
@@ -65,7 +212,7 @@
             </div>
             {{end}}
             {{template "content" .}}
-        </div>
+        </section>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

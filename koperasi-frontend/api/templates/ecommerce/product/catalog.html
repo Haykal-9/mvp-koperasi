@@ -1,23 +1,31 @@
 {{define "content"}}
-<!-- Search & Filters -->
-<div class="ec-card p-3 mb-4">
-    <form method="GET" action="/ecommerce/products" class="row g-2 align-items-end">
+<!-- Page header — Zapier editorial -->
+<div class="mb-5">
+    <div class="zp-eyebrow mb-3">KATALOG PRODUK</div>
+    <h1 class="zp-display-lg">Semuanya, dalam satu tempat.</h1>
+</div>
+
+<!-- Search & filters -->
+<div class="card p-4 mb-4">
+    <form method="GET" action="/ecommerce/products" class="row g-3 align-items-end">
         <div class="col-md-5">
+            <label class="form-label">Cari</label>
             <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-search"></i></span>
                 <input type="text" class="form-control" name="q" value="{{.Query}}" placeholder="Cari produk...">
             </div>
         </div>
         <div class="col-md-4">
+            <label class="form-label">Kategori</label>
             <select class="form-select" name="category" onchange="this.form.submit()">
-                <option value="">Semua Kategori</option>
+                <option value="">Semua kategori</option>
                 {{range .Categories}}
                 <option value="{{.}}" {{if eq . $.Category}}selected{{end}}>{{.}}</option>
                 {{end}}
             </select>
         </div>
         <div class="col-md-3">
-            <button type="submit" class="btn btn-ec-primary w-100"><i class="bi bi-funnel me-1"></i>Filter</button>
+            <button type="submit" class="btn btn-primary w-100">Terapkan filter</button>
         </div>
     </form>
 </div>
@@ -25,38 +33,37 @@
 <!-- Results -->
 {{if .Products}}
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <small class="text-muted">{{len .Products}} produk ditemukan</small>
+    <span class="zp-caption">{{len .Products}} produk ditemukan</span>
 </div>
-<div class="row g-3">
+<div class="row g-4">
     {{range .Products}}
     <div class="col-6 col-md-4 col-lg-3">
-        <div class="ec-card h-100">
-            <img src="{{.FotoURL}}" class="card-img-top" alt="{{.Nama}}" style="height:180px; object-fit:cover; border-radius:.75rem .75rem 0 0;">
-            <div class="p-3">
-                <a href="/ecommerce/seller/{{.SellerID}}/profile" class="text-decoration-none">
-                    <small style="color:#a78bfa;">{{.SellerName}}</small>
-                </a>
-                <h6 class="mt-1 mb-1" style="font-size:.9rem;">
-                    <a href="/ecommerce/products/{{.ID}}" class="text-white text-decoration-none">{{.Nama}}</a>
-                </h6>
-                <div class="d-flex align-items-center gap-2 mb-2">
-                    <span class="text-warning small"><i class="bi bi-star-fill"></i> {{printf "%.1f" .Rating}}</span>
-                    <span class="text-muted small">{{.TotalSold}} terjual</span>
-                </div>
-                <div class="d-flex justify-content-between align-items-center">
-                    <strong style="color: #a78bfa;">Rp {{printf "%.0f" .Harga}}</strong>
-                    <span class="badge" style="background:rgba(124,58,237,.15);color:#a78bfa;">{{.Kategori}}</span>
+        <a href="/ecommerce/products/{{.ID}}" class="text-decoration-none">
+            <div class="card h-100">
+                <img src="{{.FotoURL}}" class="card-img-top" alt="{{.Nama}}" style="height:220px; object-fit:cover;">
+                <div class="p-3">
+                    <div class="zp-caption mb-1">{{.SellerName}}</div>
+                    <div class="zp-body-md-strong mb-2" style="min-height:54px;">{{.Nama}}</div>
+                    <div class="d-flex align-items-center gap-2 mb-3 zp-caption">
+                        <span style="color: var(--zp-primary);"><i class="bi bi-star-fill"></i> {{printf "%.1f" .Rating}}</span>
+                        <span>·</span>
+                        <span>{{.TotalSold}} terjual</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="zp-display-sub-sm">Rp {{printf "%.0f" .Harga}}</span>
+                        <span class="badge zp-badge">{{.Kategori}}</span>
+                    </div>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
     {{end}}
 </div>
 {{else}}
-<div class="ec-card p-4 text-center">
-    <i class="bi bi-search" style="font-size:3rem;color:rgba(255,255,255,.2);"></i>
-    <p class="text-muted mt-2">Tidak ada produk yang sesuai filter.</p>
-    <a href="/ecommerce/products" class="btn btn-sm btn-ec-primary">Reset Filter</a>
+<div class="card p-5 text-center">
+    <i class="bi bi-search" style="font-size:3rem;color:var(--zp-mute);"></i>
+    <p class="zp-body-md mt-3 mb-3">Tidak ada produk yang sesuai filter.</p>
+    <div><a href="/ecommerce/products" class="btn btn-outline-dark btn-sm">Reset filter</a></div>
 </div>
 {{end}}
 {{end}}

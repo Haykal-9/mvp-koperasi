@@ -1,0 +1,170 @@
+{{define "content"}}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="mb-1"><i class="bi bi-person-circle text-success"></i> Halo, {{.UserNama}}</h2>
+        <p class="text-muted mb-0">Ringkasan keanggotaan & aktivitas Anda di Koperasi Digital.</p>
+    </div>
+    {{if .Member}}
+    <span class="badge bg-light text-dark border">
+        <i class="bi bi-card-text"></i> {{.Member.NomorAnggota}} · {{.Member.Status}}
+    </span>
+    {{end}}
+</div>
+
+{{if not .Member}}
+<div class="alert alert-warning d-flex align-items-center gap-2">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <div>
+        Akun Anda belum terdaftar sebagai anggota koperasi.
+        <a href="/members/register" class="alert-link">Daftar sebagai anggota</a> untuk mengakses fitur simpanan & pinjaman.
+    </div>
+</div>
+{{end}}
+
+<!-- Stat cards: simpanan, pinjaman, order -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-xl-3">
+        <div class="card kop-stat-card h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="stat-icon" style="background:#cfe2ff;color:#0d6efd"><i class="bi bi-piggy-bank-fill"></i></div>
+                <div>
+                    <div class="stat-label">Total Simpanan</div>
+                    <div class="stat-value">{{rupiah .TotalSimpanan}}</div>
+                    {{if .Member}}
+                    <small class="text-muted">Pokok + wajib + sukarela</small>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card kop-stat-card h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="stat-icon" style="background:#fff3cd;color:#fd7e14"><i class="bi bi-cash-stack"></i></div>
+                <div>
+                    <div class="stat-label">Pinjaman Aktif</div>
+                    <div class="stat-value">{{.PinjamanAktif}}</div>
+                    {{if gt .SisaPinjaman 0.0}}
+                    <small class="text-muted">Sisa pokok {{rupiah .SisaPinjaman}}</small>
+                    {{else if gt .PinjamanPending 0}}
+                    <small class="text-warning"><i class="bi bi-hourglass-split"></i> {{.PinjamanPending}} pengajuan</small>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card kop-stat-card h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="stat-icon" style="background:#d1e7dd;color:#198754"><i class="bi bi-bag-check"></i></div>
+                <div>
+                    <div class="stat-label">Pesanan Aktif</div>
+                    <div class="stat-value">{{.OrderAktif}}</div>
+                    <small class="text-muted">{{.OrderSelesai}} selesai</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card kop-stat-card h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="stat-icon" style="background:#f8d7da;color:#dc3545"><i class="bi bi-receipt"></i></div>
+                <div>
+                    <div class="stat-label">Status Anggota</div>
+                    <div class="stat-value" style="font-size:1.1rem;">
+                        {{if .Member}}{{.Member.Status}}{{else}}Belum daftar{{end}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick actions -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <a href="/products" class="text-decoration-none">
+            <div class="card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <i class="bi bi-shop fs-3 text-success"></i>
+                    <div>
+                        <div class="fw-bold text-dark">Belanja di toko koperasi</div>
+                        <small class="text-muted">Browse katalog produk</small>
+                    </div>
+                    <i class="bi bi-arrow-right ms-auto text-muted"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+    {{if .Member}}
+    <div class="col-md-4">
+        <a href="/members/{{.Member.ID}}/simpanan" class="text-decoration-none">
+            <div class="card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <i class="bi bi-piggy-bank fs-3 text-primary"></i>
+                    <div>
+                        <div class="fw-bold text-dark">Riwayat simpanan</div>
+                        <small class="text-muted">Lihat saldo & transaksi</small>
+                    </div>
+                    <i class="bi bi-arrow-right ms-auto text-muted"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="/loans/apply" class="text-decoration-none">
+            <div class="card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <i class="bi bi-cash-stack fs-3 text-warning"></i>
+                    <div>
+                        <div class="fw-bold text-dark">Ajukan pinjaman</div>
+                        <small class="text-muted">Pinjaman anggota</small>
+                    </div>
+                    <i class="bi bi-arrow-right ms-auto text-muted"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+    {{end}}
+</div>
+
+<!-- Recent personal orders -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-clock-history me-1"></i>Pesanan Terbaru Anda</span>
+        <a href="/orders" class="btn btn-sm btn-outline-primary">Lihat semua</a>
+    </div>
+    <div class="card-body p-0">
+        {{if .RecentOrders}}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>No. Order</th>
+                        <th>Tanggal</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {{range .RecentOrders}}
+                    <tr>
+                        <td><a href="/orders/{{.ID}}" class="text-decoration-none"><code>{{.NomorOrder}}</code></a></td>
+                        <td><small class="text-muted">{{.CreatedAt}}</small></td>
+                        <td>{{rupiah .TotalHarga}}</td>
+                        <td><span class="badge {{statusClass .Status}}">{{.Status}}</span></td>
+                    </tr>
+                {{end}}
+                </tbody>
+            </table>
+        </div>
+        {{else}}
+        <div class="kop-empty-state">
+            <i class="bi bi-bag"></i>
+            <p class="mt-2 mb-2">Belum ada pesanan.</p>
+            <a href="/products" class="btn btn-sm btn-primary">Mulai belanja</a>
+        </div>
+        {{end}}
+    </div>
+</div>
+{{end}}

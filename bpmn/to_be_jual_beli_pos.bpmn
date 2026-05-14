@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions
+  xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+  targetNamespace="http://bpmn.io/schema/bpmn"
+  id="Defs_TBPOS">
+
+  <bpmn:collaboration id="Collab_TBPOS">
+    <bpmn:participant id="Part_TBPOS" name="To-Be: Jual Beli di Toko Koperasi (POS Digital)" processRef="Proc_TBPOS"/>
+  </bpmn:collaboration>
+
+  <bpmn:process id="Proc_TBPOS" name="To-Be: Jual Beli di Toko Koperasi (POS Digital)" isExecutable="false">
+    <bpmn:laneSet id="LS_TBPOS">
+      <bpmn:lane id="POS_Lane_Pembeli" name="Pembeli (Anggota / Non-Anggota)">
+        <bpmn:flowNodeRef>POS_SE</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>POS_T_PB</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>POS_T_PT</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>POS_EE</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="POS_Lane_Kasir" name="Kasir Koperasi">
+        <bpmn:flowNodeRef>POS_T_K1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>POS_T_K2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>POS_T_K3</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>POS_T_K4</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="POS_Lane_Sistem" name="Sistem POS Koperasi (Otomatis)">
+        <bpmn:flowNodeRef>POS_T_S1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>POS_T_S2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>POS_T_S3</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>POS_GW_S</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>POS_T_S4a</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>POS_T_S4b</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>POS_GW_SM</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>POS_T_S5</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <!-- Pembeli lane -->
+    <bpmn:startEvent id="POS_SE" name="Datang ke Kasir Koperasi">
+      <bpmn:outgoing>POSF1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="POS_T_PB" name="Lakukan Pembayaran (Tunai / QRIS / Saldo Sukarela)">
+      <bpmn:incoming>POSF7</bpmn:incoming>
+      <bpmn:outgoing>POSF8</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="POS_T_PT" name="Terima Struk &amp; Barang">
+      <bpmn:incoming>POSF14</bpmn:incoming>
+      <bpmn:outgoing>POSF15</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="POS_EE" name="Transaksi Selesai">
+      <bpmn:incoming>POSF15</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Kasir lane -->
+    <bpmn:userTask id="POS_T_K1" name="Tanya Status Anggota &amp; Scan Kartu / Mode Walk-In">
+      <bpmn:incoming>POSF1</bpmn:incoming>
+      <bpmn:outgoing>POSF2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="POS_T_K2" name="Scan Semua Barang ke POS">
+      <bpmn:incoming>POSF3</bpmn:incoming>
+      <bpmn:outgoing>POSF4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="POS_T_K3" name="Konfirmasi Total ke Pembeli">
+      <bpmn:incoming>POSF5</bpmn:incoming>
+      <bpmn:outgoing>POSF7</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="POS_T_K4" name="Cetak Struk &amp; Serahkan Barang">
+      <bpmn:incoming>POSF13</bpmn:incoming>
+      <bpmn:outgoing>POSF14</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- Sistem POS lane -->
+    <bpmn:serviceTask id="POS_T_S1" name="Lookup Profil Anggota / Set Mode Walk-In" camunda:type="external" camunda:topic="posLookup">
+      <bpmn:incoming>POSF2</bpmn:incoming>
+      <bpmn:outgoing>POSF3</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="POS_T_S2" name="Hitung Total Otomatis (Apply Harga Anggota jika Linked)" camunda:type="external" camunda:topic="posHitung">
+      <bpmn:incoming>POSF4</bpmn:incoming>
+      <bpmn:outgoing>POSF5</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="POS_T_S3" name="Validasi &amp; Konfirmasi Pembayaran" camunda:type="external" camunda:topic="posValidasiBayar">
+      <bpmn:incoming>POSF8</bpmn:incoming>
+      <bpmn:outgoing>POSF9</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="POS_GW_S" name="Status Pembeli?">
+      <bpmn:incoming>POSF9</bpmn:incoming>
+      <bpmn:outgoing>POSF10a</bpmn:outgoing>
+      <bpmn:outgoing>POSF10b</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="POS_T_S4a" name="Catat Transaksi Linked Profil + Tambah Poin Loyalty + Update Kontribusi SHU" camunda:type="external" camunda:topic="posCatatAnggota">
+      <bpmn:incoming>POSF10a</bpmn:incoming>
+      <bpmn:outgoing>POSF11a</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="POS_T_S4b" name="Catat Guest Sale (Tanpa Identitas Pembeli)" camunda:type="external" camunda:topic="posCatatGuest">
+      <bpmn:incoming>POSF10b</bpmn:incoming>
+      <bpmn:outgoing>POSF11b</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="POS_GW_SM" name="">
+      <bpmn:incoming>POSF11a</bpmn:incoming>
+      <bpmn:incoming>POSF11b</bpmn:incoming>
+      <bpmn:outgoing>POSF12</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="POS_T_S5" name="Update Stok Otomatis &amp; Catat Omzet Harian" camunda:type="external" camunda:topic="posStokOmzet">
+      <bpmn:incoming>POSF12</bpmn:incoming>
+      <bpmn:outgoing>POSF13</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- Sequence flows -->
+    <bpmn:sequenceFlow id="POSF1"   sourceRef="POS_SE"     targetRef="POS_T_K1"/>
+    <bpmn:sequenceFlow id="POSF2"   sourceRef="POS_T_K1"   targetRef="POS_T_S1"/>
+    <bpmn:sequenceFlow id="POSF3"   sourceRef="POS_T_S1"   targetRef="POS_T_K2"/>
+    <bpmn:sequenceFlow id="POSF4"   sourceRef="POS_T_K2"   targetRef="POS_T_S2"/>
+    <bpmn:sequenceFlow id="POSF5"   sourceRef="POS_T_S2"   targetRef="POS_T_K3"/>
+    <bpmn:sequenceFlow id="POSF7"   sourceRef="POS_T_K3"   targetRef="POS_T_PB"/>
+    <bpmn:sequenceFlow id="POSF8"   sourceRef="POS_T_PB"   targetRef="POS_T_S3"/>
+    <bpmn:sequenceFlow id="POSF9"   sourceRef="POS_T_S3"   targetRef="POS_GW_S"/>
+    <bpmn:sequenceFlow id="POSF10a" name="Anggota (Linked)"   sourceRef="POS_GW_S" targetRef="POS_T_S4a"/>
+    <bpmn:sequenceFlow id="POSF10b" name="Walk-In (Non-Anggota)" sourceRef="POS_GW_S" targetRef="POS_T_S4b"/>
+    <bpmn:sequenceFlow id="POSF11a" sourceRef="POS_T_S4a"  targetRef="POS_GW_SM"/>
+    <bpmn:sequenceFlow id="POSF11b" sourceRef="POS_T_S4b"  targetRef="POS_GW_SM"/>
+    <bpmn:sequenceFlow id="POSF12"  sourceRef="POS_GW_SM"  targetRef="POS_T_S5"/>
+    <bpmn:sequenceFlow id="POSF13"  sourceRef="POS_T_S5"   targetRef="POS_T_K4"/>
+    <bpmn:sequenceFlow id="POSF14"  sourceRef="POS_T_K4"   targetRef="POS_T_PT"/>
+    <bpmn:sequenceFlow id="POSF15"  sourceRef="POS_T_PT"   targetRef="POS_EE"/>
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="Diagram_TBPOS">
+    <bpmndi:BPMNPlane id="Plane_TBPOS" bpmnElement="Collab_TBPOS">
+
+      <bpmndi:BPMNShape id="Part_TBPOS_di" bpmnElement="Part_TBPOS" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="2080" height="640"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="POS_Lane_Pembeli_di" bpmnElement="POS_Lane_Pembeli" isHorizontal="true">
+        <dc:Bounds x="190" y="80" width="2050" height="200"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="POS_Lane_Kasir_di" bpmnElement="POS_Lane_Kasir" isHorizontal="true">
+        <dc:Bounds x="190" y="280" width="2050" height="200"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="POS_Lane_Sistem_di" bpmnElement="POS_Lane_Sistem" isHorizontal="true">
+        <dc:Bounds x="190" y="480" width="2050" height="240"/>
+      </bpmndi:BPMNShape>
+
+      <!-- Pembeli (y-center=180) -->
+      <bpmndi:BPMNShape id="POS_SE_di" bpmnElement="POS_SE">
+        <dc:Bounds x="222" y="162" width="36" height="36"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="196" y="205" width="90" height="27"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="POS_T_PB_di" bpmnElement="POS_T_PB">
+        <dc:Bounds x="1080" y="140" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="POS_T_PT_di" bpmnElement="POS_T_PT">
+        <dc:Bounds x="2010" y="140" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="POS_EE_di" bpmnElement="POS_EE">
+        <dc:Bounds x="2172" y="162" width="36" height="36"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="2150" y="205" width="80" height="27"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Kasir (y-center=380) -->
+      <bpmndi:BPMNShape id="POS_T_K1_di" bpmnElement="POS_T_K1">
+        <dc:Bounds x="310" y="340" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="POS_T_K2_di" bpmnElement="POS_T_K2">
+        <dc:Bounds x="620" y="340" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="POS_T_K3_di" bpmnElement="POS_T_K3">
+        <dc:Bounds x="930" y="340" width="120" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="POS_T_K4_di" bpmnElement="POS_T_K4">
+        <dc:Bounds x="1840" y="340" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <!-- Sistem (y-center=600) -->
+      <bpmndi:BPMNShape id="POS_T_S1_di" bpmnElement="POS_T_S1">
+        <dc:Bounds x="470" y="560" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="POS_T_S2_di" bpmnElement="POS_T_S2">
+        <dc:Bounds x="780" y="560" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="POS_T_S3_di" bpmnElement="POS_T_S3">
+        <dc:Bounds x="1240" y="560" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="POS_GW_S_di" bpmnElement="POS_GW_S" isMarkerVisible="true">
+        <dc:Bounds x="1410" y="575" width="50" height="50"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="1394" y="545" width="84" height="14"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="POS_T_S4a_di" bpmnElement="POS_T_S4a">
+        <dc:Bounds x="1490" y="495" width="180" height="70"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="POS_T_S4b_di" bpmnElement="POS_T_S4b">
+        <dc:Bounds x="1490" y="640" width="180" height="70"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="POS_GW_SM_di" bpmnElement="POS_GW_SM" isMarkerVisible="true">
+        <dc:Bounds x="1700" y="575" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="POS_T_S5_di" bpmnElement="POS_T_S5">
+        <dc:Bounds x="1780" y="560" width="160" height="80"/>
+      </bpmndi:BPMNShape>
+
+      <!-- Edges -->
+      <!-- SE (pembeli, y=180) → T_K1 (kasir, y=380): straight down at x=240 then right -->
+      <bpmndi:BPMNEdge id="POSF1_di" bpmnElement="POSF1">
+        <di:waypoint x="240" y="198"/><di:waypoint x="240" y="380"/><di:waypoint x="310" y="380"/>
+      </bpmndi:BPMNEdge>
+      <!-- T_K1 → T_S1 (cross-down kasir→sistem) -->
+      <bpmndi:BPMNEdge id="POSF2_di" bpmnElement="POSF2">
+        <di:waypoint x="380" y="420"/><di:waypoint x="380" y="600"/><di:waypoint x="470" y="600"/>
+      </bpmndi:BPMNEdge>
+      <!-- T_S1 → T_K2 (cross-up sistem→kasir) -->
+      <bpmndi:BPMNEdge id="POSF3_di" bpmnElement="POSF3">
+        <di:waypoint x="610" y="600"/><di:waypoint x="690" y="600"/><di:waypoint x="690" y="420"/>
+      </bpmndi:BPMNEdge>
+      <!-- T_K2 → T_S2 (cross-down) -->
+      <bpmndi:BPMNEdge id="POSF4_di" bpmnElement="POSF4">
+        <di:waypoint x="760" y="380"/><di:waypoint x="850" y="380"/><di:waypoint x="850" y="560"/>
+      </bpmndi:BPMNEdge>
+      <!-- T_S2 → T_K3 (cross-up) -->
+      <bpmndi:BPMNEdge id="POSF5_di" bpmnElement="POSF5">
+        <di:waypoint x="920" y="600"/><di:waypoint x="990" y="600"/><di:waypoint x="990" y="420"/>
+      </bpmndi:BPMNEdge>
+      <!-- T_K3 → T_PB (cross-up kasir→pembeli) -->
+      <bpmndi:BPMNEdge id="POSF7_di" bpmnElement="POSF7">
+        <di:waypoint x="1050" y="380"/><di:waypoint x="1150" y="380"/><di:waypoint x="1150" y="220"/>
+      </bpmndi:BPMNEdge>
+      <!-- T_PB → T_S3 (cross-down-down pembeli→sistem, skip kasir) -->
+      <bpmndi:BPMNEdge id="POSF8_di" bpmnElement="POSF8">
+        <di:waypoint x="1220" y="180"/><di:waypoint x="1310" y="180"/><di:waypoint x="1310" y="560"/>
+      </bpmndi:BPMNEdge>
+      <!-- T_S3 → GW_S -->
+      <bpmndi:BPMNEdge id="POSF9_di" bpmnElement="POSF9">
+        <di:waypoint x="1380" y="600"/><di:waypoint x="1410" y="600"/>
+      </bpmndi:BPMNEdge>
+      <!-- GW_S → T_S4a (upper "Anggota") -->
+      <bpmndi:BPMNEdge id="POSF10a_di" bpmnElement="POSF10a">
+        <di:waypoint x="1435" y="575"/><di:waypoint x="1435" y="530"/><di:waypoint x="1490" y="530"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="1442" y="538" width="90" height="14"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <!-- GW_S → T_S4b (lower "Walk-In") -->
+      <bpmndi:BPMNEdge id="POSF10b_di" bpmnElement="POSF10b">
+        <di:waypoint x="1435" y="625"/><di:waypoint x="1435" y="675"/><di:waypoint x="1490" y="675"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="1442" y="658" width="120" height="14"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <!-- T_S4a → GW_SM (merge upper) -->
+      <bpmndi:BPMNEdge id="POSF11a_di" bpmnElement="POSF11a">
+        <di:waypoint x="1670" y="530"/><di:waypoint x="1725" y="530"/><di:waypoint x="1725" y="575"/>
+      </bpmndi:BPMNEdge>
+      <!-- T_S4b → GW_SM (merge lower) -->
+      <bpmndi:BPMNEdge id="POSF11b_di" bpmnElement="POSF11b">
+        <di:waypoint x="1670" y="675"/><di:waypoint x="1725" y="675"/><di:waypoint x="1725" y="625"/>
+      </bpmndi:BPMNEdge>
+      <!-- GW_SM → T_S5 -->
+      <bpmndi:BPMNEdge id="POSF12_di" bpmnElement="POSF12">
+        <di:waypoint x="1750" y="600"/><di:waypoint x="1780" y="600"/>
+      </bpmndi:BPMNEdge>
+      <!-- T_S5 → T_K4 (cross-up sistem→kasir) -->
+      <bpmndi:BPMNEdge id="POSF13_di" bpmnElement="POSF13">
+        <di:waypoint x="1860" y="560"/><di:waypoint x="1860" y="480"/><di:waypoint x="1910" y="480"/><di:waypoint x="1910" y="420"/>
+      </bpmndi:BPMNEdge>
+      <!-- T_K4 → T_PT (cross-up kasir→pembeli) -->
+      <bpmndi:BPMNEdge id="POSF14_di" bpmnElement="POSF14">
+        <di:waypoint x="1980" y="380"/><di:waypoint x="2070" y="380"/><di:waypoint x="2070" y="220"/>
+      </bpmndi:BPMNEdge>
+      <!-- T_PT → EE -->
+      <bpmndi:BPMNEdge id="POSF15_di" bpmnElement="POSF15">
+        <di:waypoint x="2130" y="180"/><di:waypoint x="2172" y="180"/>
+      </bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
