@@ -6,3 +6,11 @@ planning/
 
 # References
 refrensi/
+
+/laporan
+
+.claude-cli/
+
+.mcp.json
+
+.claude

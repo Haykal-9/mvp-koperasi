@@ -1,0 +1,81 @@
+<mxfile host="app.diagrams.net" modified="2026-05-24T00:00:00.000Z" agent="SmartMart-BAB3" version="22.0.0" type="device">
+  <diagram name="Use Case Diagram - Administrator" id="usecase-admin">
+    <mxGraphModel dx="1422" dy="757" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="826" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="title" value="Use Case Diagram — Administrator (Modul Admin SmartMart)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=16;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="240" y="20" width="700" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="actor" value="Administrator&#10;(Pengurus Koperasi)" style="shape=umlActor;verticalLabelPosition=bottom;labelBackgroundColor=#ffffff;verticalAlign=top;html=1;outlineConnect=0;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="80" y="380" width="60" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="boundary" value="Sistem SmartMart — Modul Admin" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;dashed=0;verticalAlign=top;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="240" y="80" width="800" height="700" as="geometry" />
+        </mxCell>
+
+        <mxCell id="uc-login" value="Login Sistem" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="320" y="120" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-dashboard" value="Lihat Dashboard KPI" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="320" y="200" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-analytics" value="Lihat Analytics &amp; Laporan Kinerja" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="320" y="280" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-approve-seller" value="Approve / Reject Seller" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366" vertex="1" parent="1">
+          <mxGeometry x="320" y="360" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-approve-product" value="Approve / Reject Produk" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366" vertex="1" parent="1">
+          <mxGeometry x="320" y="440" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-create-voucher" value="Buat Voucher Diskon" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656" vertex="1" parent="1">
+          <mxGeometry x="600" y="120" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-toggle-voucher" value="Toggle Status Voucher" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656" vertex="1" parent="1">
+          <mxGeometry x="600" y="200" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-orders" value="Pantau Daftar Order" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00" vertex="1" parent="1">
+          <mxGeometry x="600" y="280" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-members" value="Pantau Daftar Member" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00" vertex="1" parent="1">
+          <mxGeometry x="600" y="360" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-points" value="Pantau Poin Loyalitas" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6" vertex="1" parent="1">
+          <mxGeometry x="600" y="440" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-audit" value="Lihat Audit Log" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6" vertex="1" parent="1">
+          <mxGeometry x="600" y="520" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-log-action" value="Catat Audit Log" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450" vertex="1" parent="1">
+          <mxGeometry x="850" y="440" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-rbac" value="Validasi Role ADMIN&#10;(RBAC)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450" vertex="1" parent="1">
+          <mxGeometry x="850" y="120" width="160" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="a1" style="endArrow=none;html=1;" edge="1" parent="1" source="actor" target="uc-login"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a2" style="endArrow=none;html=1;" edge="1" parent="1" source="actor" target="uc-dashboard"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a3" style="endArrow=none;html=1;" edge="1" parent="1" source="actor" target="uc-analytics"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a4" style="endArrow=none;html=1;" edge="1" parent="1" source="actor" target="uc-approve-seller"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a5" style="endArrow=none;html=1;" edge="1" parent="1" source="actor" target="uc-approve-product"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a6" style="endArrow=none;html=1;" edge="1" parent="1" source="actor" target="uc-create-voucher"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a7" style="endArrow=none;html=1;" edge="1" parent="1" source="actor" target="uc-toggle-voucher"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a8" style="endArrow=none;html=1;" edge="1" parent="1" source="actor" target="uc-orders"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a9" style="endArrow=none;html=1;" edge="1" parent="1" source="actor" target="uc-members"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a10" style="endArrow=none;html=1;" edge="1" parent="1" source="actor" target="uc-points"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a11" style="endArrow=none;html=1;" edge="1" parent="1" source="actor" target="uc-audit"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="inc1" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;html=1;dashed=1;fontSize=10" edge="1" parent="1" source="uc-approve-seller" target="uc-log-action"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="inc2" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;html=1;dashed=1;fontSize=10" edge="1" parent="1" source="uc-approve-product" target="uc-log-action"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="inc3" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;html=1;dashed=1;fontSize=10" edge="1" parent="1" source="uc-create-voucher" target="uc-log-action"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="inc4" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;html=1;dashed=1;fontSize=10" edge="1" parent="1" source="uc-toggle-voucher" target="uc-log-action"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="inc5" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;html=1;dashed=1;fontSize=10" edge="1" parent="1" source="uc-login" target="uc-rbac"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

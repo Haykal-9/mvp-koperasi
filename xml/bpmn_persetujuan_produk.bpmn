@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  id="Definitions_PersetujuanProduk"
+                  targetNamespace="http://smartmart.koperasi/bpmn">
+  <bpmn:collaboration id="Collaboration_1">
+    <bpmn:participant id="Participant_Admin" name="Dashboard Admin SmartMart — Alur Persetujuan Produk" processRef="Process_PersetujuanProduk" />
+  </bpmn:collaboration>
+
+  <bpmn:process id="Process_PersetujuanProduk" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="Lane_Seller" name="Penjual (Seller)">
+        <bpmn:flowNodeRef>StartEvent_1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_UploadProduk</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_Rejected</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_System" name="Sistem SmartMart">
+        <bpmn:flowNodeRef>Task_SetStatusPending</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_UpdateStatusApproved</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_UpdateStatusRejected</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_LogAudit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_TampilKatalog</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_Published</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Admin" name="Administrator (Pengurus)">
+        <bpmn:flowNodeRef>Task_BukaReview</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_TinjauDetail</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Keputusan</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <bpmn:startEvent id="StartEvent_1" name="Penjual ingin&#10;upload produk">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="Task_UploadProduk" name="Upload produk via /ecommerce/seller/products/create">
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_SetStatusPending" name="Set Status produk = PENDING_APPROVAL">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_BukaReview" name="Buka halaman /ecommerce/admin/products">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_TinjauDetail" name="Tinjau detail produk&#10;(nama, harga, foto, deskripsi, stok)">
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_Keputusan" name="Layak disetujui?">
+      <bpmn:incoming>Flow_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_Approve</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Reject</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_UpdateStatusApproved" name="POST /products/:id/approve&#10;Status = APPROVED">
+      <bpmn:incoming>Flow_Approve</bpmn:incoming>
+      <bpmn:outgoing>Flow_6</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_UpdateStatusRejected" name="POST /products/:id/reject&#10;Status = REJECTED + alasan">
+      <bpmn:incoming>Flow_Reject</bpmn:incoming>
+      <bpmn:outgoing>Flow_7</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_LogAudit" name="LogAuditAction(APPROVE_PRODUCT / REJECT_PRODUCT)">
+      <bpmn:incoming>Flow_6</bpmn:incoming>
+      <bpmn:incoming>Flow_7</bpmn:incoming>
+      <bpmn:outgoing>Flow_8</bpmn:outgoing>
+      <bpmn:outgoing>Flow_9</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_TampilKatalog" name="Tampilkan di katalog /ecommerce/products">
+      <bpmn:incoming>Flow_8</bpmn:incoming>
+      <bpmn:outgoing>Flow_10</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="EndEvent_Published" name="Produk tampil di&#10;marketplace">
+      <bpmn:incoming>Flow_10</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="EndEvent_Rejected" name="Notifikasi ke penjual&#10;dengan alasan tolak">
+      <bpmn:incoming>Flow_9</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Task_UploadProduk" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_UploadProduk" targetRef="Task_SetStatusPending" />
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Task_SetStatusPending" targetRef="Task_BukaReview" />
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="Task_BukaReview" targetRef="Task_TinjauDetail" />
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="Task_TinjauDetail" targetRef="Gateway_Keputusan" />
+    <bpmn:sequenceFlow id="Flow_Approve" name="Ya, layak" sourceRef="Gateway_Keputusan" targetRef="Task_UpdateStatusApproved" />
+    <bpmn:sequenceFlow id="Flow_Reject" name="Tidak, tolak" sourceRef="Gateway_Keputusan" targetRef="Task_UpdateStatusRejected" />
+    <bpmn:sequenceFlow id="Flow_6" sourceRef="Task_UpdateStatusApproved" targetRef="Task_LogAudit" />
+    <bpmn:sequenceFlow id="Flow_7" sourceRef="Task_UpdateStatusRejected" targetRef="Task_LogAudit" />
+    <bpmn:sequenceFlow id="Flow_8" sourceRef="Task_LogAudit" targetRef="Task_TampilKatalog" />
+    <bpmn:sequenceFlow id="Flow_9" sourceRef="Task_LogAudit" targetRef="EndEvent_Rejected" />
+    <bpmn:sequenceFlow id="Flow_10" sourceRef="Task_TampilKatalog" targetRef="EndEvent_Published" />
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1">
+      <bpmndi:BPMNShape id="Participant_Admin_di" bpmnElement="Participant_Admin" isHorizontal="true">
+        <dc:Bounds x="100" y="80" width="1500" height="540" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Seller_di" bpmnElement="Lane_Seller" isHorizontal="true">
+        <dc:Bounds x="130" y="80" width="1470" height="180" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_System_di" bpmnElement="Lane_System" isHorizontal="true">
+        <dc:Bounds x="130" y="260" width="1470" height="180" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Admin_di" bpmnElement="Lane_Admin" isHorizontal="true">
+        <dc:Bounds x="130" y="440" width="1470" height="180" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
+        <dc:Bounds x="180" y="142" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="160" y="185" width="80" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_UploadProduk_di" bpmnElement="Task_UploadProduk">
+        <dc:Bounds x="270" y="120" width="160" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SetStatusPending_di" bpmnElement="Task_SetStatusPending">
+        <dc:Bounds x="270" y="310" width="160" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_BukaReview_di" bpmnElement="Task_BukaReview">
+        <dc:Bounds x="490" y="490" width="160" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_TinjauDetail_di" bpmnElement="Task_TinjauDetail">
+        <dc:Bounds x="690" y="490" width="160" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Keputusan_di" bpmnElement="Gateway_Keputusan" isMarkerVisible="true">
+        <dc:Bounds x="900" y="505" width="50" height="50" />
+        <bpmndi:BPMNLabel><dc:Bounds x="890" y="560" width="80" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_UpdateStatusApproved_di" bpmnElement="Task_UpdateStatusApproved">
+        <dc:Bounds x="1000" y="310" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_UpdateStatusRejected_di" bpmnElement="Task_UpdateStatusRejected">
+        <dc:Bounds x="1000" y="490" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_LogAudit_di" bpmnElement="Task_LogAudit">
+        <dc:Bounds x="1230" y="400" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_TampilKatalog_di" bpmnElement="Task_TampilKatalog">
+        <dc:Bounds x="1440" y="310" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_Published_di" bpmnElement="EndEvent_Published">
+        <dc:Bounds x="1530" y="160" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1490" y="205" width="120" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_Rejected_di" bpmnElement="EndEvent_Rejected">
+        <dc:Bounds x="1530" y="142" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1490" y="100" width="120" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
+        <di:waypoint x="216" y="160" />
+        <di:waypoint x="270" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_2_di" bpmnElement="Flow_2">
+        <di:waypoint x="350" y="200" />
+        <di:waypoint x="350" y="310" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_3_di" bpmnElement="Flow_3">
+        <di:waypoint x="430" y="350" />
+        <di:waypoint x="570" y="490" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_4_di" bpmnElement="Flow_4">
+        <di:waypoint x="650" y="530" />
+        <di:waypoint x="690" y="530" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_5_di" bpmnElement="Flow_5">
+        <di:waypoint x="850" y="530" />
+        <di:waypoint x="900" y="530" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Approve_di" bpmnElement="Flow_Approve">
+        <di:waypoint x="925" y="505" />
+        <di:waypoint x="925" y="350" />
+        <di:waypoint x="1000" y="350" />
+        <bpmndi:BPMNLabel><dc:Bounds x="935" y="430" width="50" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Reject_di" bpmnElement="Flow_Reject">
+        <di:waypoint x="950" y="530" />
+        <di:waypoint x="1000" y="530" />
+        <bpmndi:BPMNLabel><dc:Bounds x="952" y="510" width="60" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_6_di" bpmnElement="Flow_6">
+        <di:waypoint x="1180" y="350" />
+        <di:waypoint x="1230" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_7_di" bpmnElement="Flow_7">
+        <di:waypoint x="1180" y="530" />
+        <di:waypoint x="1230" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_8_di" bpmnElement="Flow_8">
+        <di:waypoint x="1410" y="430" />
+        <di:waypoint x="1440" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_9_di" bpmnElement="Flow_9">
+        <di:waypoint x="1410" y="450" />
+        <di:waypoint x="1500" y="450" />
+        <di:waypoint x="1500" y="178" />
+        <di:waypoint x="1530" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_10_di" bpmnElement="Flow_10">
+        <di:waypoint x="1510" y="310" />
+        <di:waypoint x="1530" y="196" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
