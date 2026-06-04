@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_AsIsPersProduk" targetNamespace="http://smartmart.koperasi/bpmn" exporter="Camunda Modeler" exporterVersion="5.46.1">
+  <bpmn:collaboration id="Collab_AsIsPersProduk">
+    <bpmn:participant id="Part_AsIsPersProduk" name="Koperasi Konvensional (As-Is) — Persetujuan Produk Titipan Anggota" processRef="Proc_AsIsPersProduk" />
+  </bpmn:collaboration>
+  <bpmn:process id="Proc_AsIsPersProduk" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_AsIsPersProduk">
+      <bpmn:lane id="Lane_AsIsPersProduk_0" name="Anggota Penjual (UMKM)">
+        <bpmn:flowNodeRef>AP_start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AP_bawa</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AP_end_no</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_AsIsPersProduk_1" name="Pengurus Koperasi">
+        <bpmn:flowNodeRef>AP_terima</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AP_cek</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AP_gw</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AP_catat</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AP_pajang</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AP_end_ok</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="AP_start" name="Anggota ingin&#10;titip produk jualan">
+      <bpmn:outgoing>ap1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="AP_bawa" name="Bawa sampel produk&#10;fisik ke koperasi">
+      <bpmn:incoming>ap1</bpmn:incoming>
+      <bpmn:outgoing>ap2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="AP_terima" name="Terima sampel produk">
+      <bpmn:incoming>ap2</bpmn:incoming>
+      <bpmn:outgoing>ap3</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="AP_cek" name="Cek kualitas produk&#10;secara subjektif">
+      <bpmn:incoming>ap3</bpmn:incoming>
+      <bpmn:outgoing>ap4</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="AP_gw" name="Kualitas layak?">
+      <bpmn:incoming>ap4</bpmn:incoming>
+      <bpmn:outgoing>ap5</bpmn:outgoing>
+      <bpmn:outgoing>ap6</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="AP_catat" name="Catat produk &#38; harga jual&#10;ke buku inventaris">
+      <bpmn:incoming>ap5</bpmn:incoming>
+      <bpmn:outgoing>ap7</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="AP_pajang" name="Pajang produk&#10;di kedai koperasi">
+      <bpmn:incoming>ap7</bpmn:incoming>
+      <bpmn:outgoing>ap8</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="AP_end_ok" name="Produk dijual&#10;(tanpa histori keputusan)">
+      <bpmn:incoming>ap8</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="AP_end_no" name="Produk ditolak lisan,&#10;status tidak jelas">
+      <bpmn:incoming>ap6</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="ap1" sourceRef="AP_start" targetRef="AP_bawa" />
+    <bpmn:sequenceFlow id="ap2" sourceRef="AP_bawa" targetRef="AP_terima" />
+    <bpmn:sequenceFlow id="ap3" sourceRef="AP_terima" targetRef="AP_cek" />
+    <bpmn:sequenceFlow id="ap4" sourceRef="AP_cek" targetRef="AP_gw" />
+    <bpmn:sequenceFlow id="ap5" name="Ya, layak" sourceRef="AP_gw" targetRef="AP_catat" />
+    <bpmn:sequenceFlow id="ap6" name="Tidak" sourceRef="AP_gw" targetRef="AP_end_no" />
+    <bpmn:sequenceFlow id="ap7" sourceRef="AP_catat" targetRef="AP_pajang" />
+    <bpmn:sequenceFlow id="ap8" sourceRef="AP_pajang" targetRef="AP_end_ok" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_AsIsPersProduk">
+    <bpmndi:BPMNPlane id="Plane_AsIsPersProduk" bpmnElement="Collab_AsIsPersProduk">
+      <bpmndi:BPMNShape id="Part_AsIsPersProduk_di" bpmnElement="Part_AsIsPersProduk" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="1780" height="340" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_AsIsPersProduk_1_di" bpmnElement="Lane_AsIsPersProduk_1" isHorizontal="true">
+        <dc:Bounds x="190" y="250" width="1750" height="170" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_AsIsPersProduk_0_di" bpmnElement="Lane_AsIsPersProduk_0" isHorizontal="true">
+        <dc:Bounds x="190" y="80" width="1750" height="170" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AP_start_di" bpmnElement="AP_start">
+        <dc:Bounds x="287" y="147" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="255" y="187" width="100" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AP_bawa_di" bpmnElement="AP_bawa">
+        <dc:Bounds x="430" y="125" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AP_terima_di" bpmnElement="AP_terima">
+        <dc:Bounds x="640" y="295" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AP_cek_di" bpmnElement="AP_cek">
+        <dc:Bounds x="850" y="295" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AP_gw_di" bpmnElement="AP_gw" isMarkerVisible="true">
+        <dc:Bounds x="1120" y="310" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1095" y="364" width="100" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AP_catat_di" bpmnElement="AP_catat">
+        <dc:Bounds x="1270" y="295" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AP_pajang_di" bpmnElement="AP_pajang">
+        <dc:Bounds x="1480" y="295" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AP_end_ok_di" bpmnElement="AP_end_ok">
+        <dc:Bounds x="1757" y="317" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1725" y="357" width="100" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AP_end_no_di" bpmnElement="AP_end_no">
+        <dc:Bounds x="1337" y="147" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1305" y="187" width="100" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="ap1_di" bpmnElement="ap1">
+        <di:waypoint x="323" y="165" />
+        <di:waypoint x="430" y="165" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ap2_di" bpmnElement="ap2">
+        <di:waypoint x="600" y="165" />
+        <di:waypoint x="620" y="165" />
+        <di:waypoint x="620" y="335" />
+        <di:waypoint x="640" y="335" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ap3_di" bpmnElement="ap3">
+        <di:waypoint x="810" y="335" />
+        <di:waypoint x="850" y="335" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ap4_di" bpmnElement="ap4">
+        <di:waypoint x="1020" y="335" />
+        <di:waypoint x="1120" y="335" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ap5_di" bpmnElement="ap5">
+        <di:waypoint x="1170" y="335" />
+        <di:waypoint x="1270" y="335" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1176" y="317" width="90" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ap6_di" bpmnElement="ap6">
+        <di:waypoint x="1170" y="335" />
+        <di:waypoint x="1253" y="335" />
+        <di:waypoint x="1253" y="165" />
+        <di:waypoint x="1337" y="165" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1207" y="293" width="28" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ap7_di" bpmnElement="ap7">
+        <di:waypoint x="1440" y="335" />
+        <di:waypoint x="1480" y="335" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ap8_di" bpmnElement="ap8">
+        <di:waypoint x="1650" y="335" />
+        <di:waypoint x="1757" y="335" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

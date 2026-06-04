@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_AsIsRekapKeuangan" targetNamespace="http://smartmart.koperasi/bpmn" exporter="Camunda Modeler" exporterVersion="5.46.1">
+  <bpmn:collaboration id="Collab_AsIsRekapKeuangan">
+    <bpmn:participant id="Part_AsIsRekapKeuangan" name="Koperasi Konvensional (As-Is) — Rekapitulasi Keuangan &#38; Laporan Bulanan" processRef="Proc_AsIsRekapKeuangan" />
+  </bpmn:collaboration>
+  <bpmn:process id="Proc_AsIsRekapKeuangan" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_AsIsRekapKeuangan">
+      <bpmn:lane id="Lane_AsIsRekapKeuangan_0" name="Kasir / Unit Usaha">
+        <bpmn:flowNodeRef>RK_start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>RK_serah</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>RK_end_no</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_AsIsRekapKeuangan_1" name="Pengurus / Bendahara">
+        <bpmn:flowNodeRef>RK_kumpul</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>RK_hitung</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>RK_susun</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>RK_gw</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>RK_final</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>RK_end_ok</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="RK_start" name="Akhir periode bulan">
+      <bpmn:outgoing>rk1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="RK_serah" name="Serahkan buku catatan&#10;harian &#38; nota ke pengurus">
+      <bpmn:incoming>rk1</bpmn:incoming>
+      <bpmn:outgoing>rk2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="RK_kumpul" name="Kumpulkan seluruh buku&#10;catatan &#38; nota terpisah">
+      <bpmn:incoming>rk2</bpmn:incoming>
+      <bpmn:outgoing>rk3</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="RK_hitung" name="Hitung ulang pemasukan &#38;&#10;pengeluaran secara manual">
+      <bpmn:incoming>rk3</bpmn:incoming>
+      <bpmn:outgoing>rk4</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="RK_susun" name="Susun laporan&#10;keuangan di Excel">
+      <bpmn:incoming>rk4</bpmn:incoming>
+      <bpmn:outgoing>rk5</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="RK_gw" name="Angka balance?">
+      <bpmn:incoming>rk5</bpmn:incoming>
+      <bpmn:outgoing>rk6</bpmn:outgoing>
+      <bpmn:outgoing>rk7</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="RK_final" name="Finalisasi laporan&#10;keuangan bulanan">
+      <bpmn:incoming>rk6</bpmn:incoming>
+      <bpmn:outgoing>rk8</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="RK_end_ok" name="Laporan disampaikan di RAT&#10;(sering terlambat)">
+      <bpmn:incoming>rk8</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="RK_end_no" name="Rekap diulang manual,&#10;rentan human error">
+      <bpmn:incoming>rk7</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="rk1" sourceRef="RK_start" targetRef="RK_serah" />
+    <bpmn:sequenceFlow id="rk2" sourceRef="RK_serah" targetRef="RK_kumpul" />
+    <bpmn:sequenceFlow id="rk3" sourceRef="RK_kumpul" targetRef="RK_hitung" />
+    <bpmn:sequenceFlow id="rk4" sourceRef="RK_hitung" targetRef="RK_susun" />
+    <bpmn:sequenceFlow id="rk5" sourceRef="RK_susun" targetRef="RK_gw" />
+    <bpmn:sequenceFlow id="rk6" name="Ya, cocok" sourceRef="RK_gw" targetRef="RK_final" />
+    <bpmn:sequenceFlow id="rk7" name="Tidak, selisih" sourceRef="RK_gw" targetRef="RK_end_no" />
+    <bpmn:sequenceFlow id="rk8" sourceRef="RK_final" targetRef="RK_end_ok" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_AsIsRekapKeuangan">
+    <bpmndi:BPMNPlane id="Plane_AsIsRekapKeuangan" bpmnElement="Collab_AsIsRekapKeuangan">
+      <bpmndi:BPMNShape id="Part_AsIsRekapKeuangan_di" bpmnElement="Part_AsIsRekapKeuangan" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="1780" height="340" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_AsIsRekapKeuangan_1_di" bpmnElement="Lane_AsIsRekapKeuangan_1" isHorizontal="true">
+        <dc:Bounds x="190" y="250" width="1750" height="170" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_AsIsRekapKeuangan_0_di" bpmnElement="Lane_AsIsRekapKeuangan_0" isHorizontal="true">
+        <dc:Bounds x="190" y="80" width="1750" height="170" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="RK_start_di" bpmnElement="RK_start">
+        <dc:Bounds x="287" y="147" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="255" y="187" width="100" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="RK_serah_di" bpmnElement="RK_serah">
+        <dc:Bounds x="430" y="125" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="RK_kumpul_di" bpmnElement="RK_kumpul">
+        <dc:Bounds x="640" y="295" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="RK_hitung_di" bpmnElement="RK_hitung">
+        <dc:Bounds x="850" y="295" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="RK_susun_di" bpmnElement="RK_susun">
+        <dc:Bounds x="1060" y="295" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="RK_gw_di" bpmnElement="RK_gw" isMarkerVisible="true">
+        <dc:Bounds x="1330" y="310" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1305" y="364" width="100" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="RK_final_di" bpmnElement="RK_final">
+        <dc:Bounds x="1480" y="295" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="RK_end_ok_di" bpmnElement="RK_end_ok">
+        <dc:Bounds x="1757" y="317" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1725" y="357" width="100" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="RK_end_no_di" bpmnElement="RK_end_no">
+        <dc:Bounds x="1547" y="147" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1515" y="187" width="100" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="rk1_di" bpmnElement="rk1">
+        <di:waypoint x="323" y="165" />
+        <di:waypoint x="430" y="165" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="rk2_di" bpmnElement="rk2">
+        <di:waypoint x="600" y="165" />
+        <di:waypoint x="620" y="165" />
+        <di:waypoint x="620" y="335" />
+        <di:waypoint x="640" y="335" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="rk3_di" bpmnElement="rk3">
+        <di:waypoint x="810" y="335" />
+        <di:waypoint x="850" y="335" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="rk4_di" bpmnElement="rk4">
+        <di:waypoint x="1020" y="335" />
+        <di:waypoint x="1060" y="335" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="rk5_di" bpmnElement="rk5">
+        <di:waypoint x="1230" y="335" />
+        <di:waypoint x="1330" y="335" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="rk6_di" bpmnElement="rk6">
+        <di:waypoint x="1380" y="335" />
+        <di:waypoint x="1480" y="335" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1386" y="317" width="90" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="rk7_di" bpmnElement="rk7">
+        <di:waypoint x="1380" y="335" />
+        <di:waypoint x="1463" y="335" />
+        <di:waypoint x="1463" y="165" />
+        <di:waypoint x="1547" y="165" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1399" y="293" width="64" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="rk8_di" bpmnElement="rk8">
+        <di:waypoint x="1650" y="335" />
+        <di:waypoint x="1757" y="335" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
