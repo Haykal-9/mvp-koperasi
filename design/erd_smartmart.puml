@@ -1,0 +1,241 @@
+@startuml
+' ============================================================
+' ENTITY RELATIONSHIP DIAGRAM — SmartMart Koperasi Digital
+' Notasi : Crow's Foot (Information Engineering)
+' Cakupan: PENUH (e-commerce + simpan-pinjam + poin + logistik)
+' Target : Basis data relasional MySQL/MariaDB (Laravel)
+' ============================================================
+!theme plain
+skinparam linetype ortho
+skinparam defaultFontName Arial
+skinparam shadowing false
+hide circle
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #555555
+  FontSize 11
+}
+
+title **Entity Relationship Diagram — SmartMart Koperasi Digital**\n(Skema Basis Data Penuh — MySQL)
+
+' ============================================================
+' GRUP: Pengguna & Akses
+' ============================================================
+entity "users" as users {
+  * **id** : BIGINT <<PK>>
+  --
+  name : VARCHAR(255)
+  email : VARCHAR(255) <<UNIQUE>>
+  password : VARCHAR(255)
+  role : ENUM('admin','seller','anggota','delivery')
+  no_hp : VARCHAR(20)
+  created_at : TIMESTAMP
+}
+entity "member_profiles" as member {
+  * **id** : BIGINT <<PK>>
+  --
+  * user_id : BIGINT <<FK, UNIQUE>>
+  nomor_anggota : VARCHAR(30) <<UNIQUE>>
+  nik : VARCHAR(16)
+  alamat : TEXT
+  status : ENUM('pending','aktif','non_aktif')
+  tanggal_masuk : DATE
+}
+entity "addresses" as address {
+  * **id** : BIGINT <<PK>>
+  --
+  * user_id : BIGINT <<FK>>
+  label : VARCHAR(50)
+  penerima : VARCHAR(255)
+  no_hp : VARCHAR(20)
+  alamat : TEXT
+  kota : VARCHAR(100)
+  kode_pos : VARCHAR(10)
+  is_default : TINYINT(1)
+}
+entity "seller_profiles" as seller {
+  * **id** : BIGINT <<PK>>
+  --
+  * user_id : BIGINT <<FK, UNIQUE>>
+  store_name : VARCHAR(255)
+  rating : DECIMAL(2,1)
+  total_sold : INT
+}
+
+' ============================================================
+' GRUP: Produk & Ulasan
+' ============================================================
+entity "categories" as category {
+  * **id** : BIGINT <<PK>>
+  --
+  nama : VARCHAR(100)
+  slug : VARCHAR(120) <<UNIQUE>>
+}
+entity "products" as product {
+  * **id** : BIGINT <<PK>>
+  --
+  * seller_id : BIGINT <<FK>>
+  * category_id : BIGINT <<FK>>
+  nama : VARCHAR(255)
+  deskripsi : TEXT
+  harga : DECIMAL(12,2)
+  stok : INT
+  berat : INT
+  foto_url : VARCHAR(500)
+  rating : DECIMAL(2,1)
+  status : ENUM('pending','approved','rejected')
+  created_at : TIMESTAMP
+}
+entity "product_reviews" as review {
+  * **id** : BIGINT <<PK>>
+  --
+  * product_id : BIGINT <<FK>>
+  * user_id : BIGINT <<FK>>
+  rating : TINYINT
+  komentar : TEXT
+  created_at : TIMESTAMP
+}
+entity "wishlists" as wishlist {
+  * **id** : BIGINT <<PK>>
+  --
+  * user_id : BIGINT <<FK>>
+  * product_id : BIGINT <<FK>>
+}
+
+' ============================================================
+' GRUP: Order & Logistik
+' ============================================================
+entity "orders" as orders {
+  * **id** : BIGINT <<PK>>
+  --
+  nomor_order : VARCHAR(50) <<UNIQUE>>
+  * buyer_id : BIGINT <<FK>>
+  * seller_id : BIGINT <<FK>>
+  * address_id : BIGINT <<FK>>
+  voucher_id : BIGINT <<FK>>
+  subtotal : DECIMAL(12,2)
+  shipping_cost : DECIMAL(10,2)
+  discount : DECIMAL(12,2)
+  points_used : INT
+  total_harga : DECIMAL(12,2)
+  metode_bayar : VARCHAR(50)
+  status : ENUM('pending','dibayar','diproses','dikirim','selesai','batal')
+  created_at : TIMESTAMP
+}
+entity "order_items" as orderitem {
+  * **id** : BIGINT <<PK>>
+  --
+  * order_id : BIGINT <<FK>>
+  * product_id : BIGINT <<FK>>
+  jumlah : INT
+  harga_satuan : DECIMAL(12,2)
+  subtotal : DECIMAL(12,2)
+}
+entity "shipments" as shipment {
+  * **id** : BIGINT <<PK>>
+  --
+  * order_id : BIGINT <<FK, UNIQUE>>
+  courier_id : BIGINT <<FK>>
+  resi : VARCHAR(100)
+  status : ENUM('dikemas','dikirim','transit','sampai')
+  updated_at : TIMESTAMP
+}
+
+' ============================================================
+' GRUP: Pembayaran
+' ============================================================
+entity "payments" as payment {
+  * **id** : BIGINT <<PK>>
+  --
+  * order_id : BIGINT <<FK, UNIQUE>>
+  method : ENUM('transfer','qris','saldo')
+  amount : DECIMAL(12,2)
+  status : ENUM('pending','verified','failed')
+  paid_at : TIMESTAMP
+}
+
+' ============================================================
+' GRUP: Poin & Voucher
+' ============================================================
+entity "user_points" as upoints {
+  * **user_id** : BIGINT <<PK, FK>>
+  --
+  balance : INT
+  total_earned : INT
+  total_redeemed : INT
+}
+entity "point_transactions" as ptx {
+  * **id** : BIGINT <<PK>>
+  --
+  * user_id : BIGINT <<FK>>
+  order_id : BIGINT <<FK>>
+  tipe : ENUM('earn','redeem','convert')
+  amount : INT
+  created_at : TIMESTAMP
+}
+entity "vouchers" as voucher {
+  * **id** : BIGINT <<PK>>
+  --
+  code : VARCHAR(50) <<UNIQUE>>
+  tipe_diskon : ENUM('percent','fixed')
+  nilai_diskon : DECIMAL(12,2)
+  min_pembelian : DECIMAL(12,2)
+  kuota : INT
+  status : ENUM('active','expired','used_up')
+  berlaku_sampai : DATE
+}
+
+' ============================================================
+' GRUP: Simpanan
+' ============================================================
+entity "savings" as saving {
+  * **id** : BIGINT <<PK>>
+  --
+  * member_id : BIGINT <<FK>>
+  jenis : ENUM('pokok','wajib','sukarela')
+  tipe : ENUM('masuk','keluar')
+  nominal : DECIMAL(12,2)
+  created_at : TIMESTAMP
+}
+
+' ============================================================
+' RELASI
+' ============================================================
+users ||--o| member  : "memiliki profil"
+users ||--o| seller  : "memiliki toko"
+users ||--o{ address : "punya alamat"
+users ||--o| upoints : "punya saldo poin"
+users ||--o{ ptx     : "riwayat poin"
+users ||--o{ review  : "menulis"
+users ||--o{ wishlist: "menyimpan"
+users ||--o{ product : "menjual (seller)"
+users ||--o{ orders  : "memesan (buyer)"
+users ||--o{ shipment: "mengantar (courier)"
+
+member ||--o{ saving : "menabung"
+
+category ||--o{ product : "mengklasifikasi"
+product  ||--o{ orderitem : "tercantum di"
+product  ||--o{ review    : "diulas"
+product  ||--o{ wishlist  : "difavoritkan"
+
+orders ||--|{ orderitem : "memuat item"
+orders ||--|| payment   : "memiliki pembayaran"
+orders ||--o| shipment  : "dikirim via"
+orders ||--o{ ptx       : "menghasilkan poin"
+address ||--o{ orders   : "dikirim ke"
+voucher ||--o{ orders   : "dipakai di"
+
+legend bottom left
+  |= Simbol |= Keterangan |
+  | **PK** | Primary Key |
+  | **FK** | Foreign Key |
+  | **UNIQUE** | Constraint Unik |
+  | \|\|--\|\| | One-to-One |
+  | \|\|--o{ | One-to-Many |
+  | \|\|--o\| | One-to-Zero-or-One |
+endlegend
+
+caption Gambar 3.3 Entity Relationship Diagram SmartMart
+footer ERD — SmartMart Koperasi Digital | Skema Basis Data Penuh | Tugas Akhir
+@enduml

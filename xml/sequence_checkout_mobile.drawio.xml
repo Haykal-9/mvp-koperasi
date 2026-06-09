@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <!-- Title -->
+    <mxCell id="title" value="Sequence Diagram — Proses Belanja dan Checkout Pesanan (SmartMart)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="10" width="1080" height="36" as="geometry" />
+    </mxCell>
+
+    <!-- ===== Lifeline Headers ===== -->
+    <mxCell id="actor_buyer" value="Anggota (Pembeli)" style="shape=mxgraph.flowchart.actor;fillColor=#1ba1e2;strokeColor=#006EAF;fontColor=#006EAF;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="55" width="50" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="box_flutter" value="Frontend Flutter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="230" y="60" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="box_api" value="RESTful API Laravel" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="550" y="60" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="box_db" value="Backend Database&lt;br&gt;(MySQL)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="870" y="60" width="160" height="50" as="geometry" />
+    </mxCell>
+
+    <!-- ===== Lifelines (vertical dashed lines) ===== -->
+    <mxCell id="line_buyer" style="edgeStyle=none;html=1;dashed=1;endArrow=none;strokeColor=#1ba1e2;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="85" y="125"/><mxPoint x="85" y="780"/></Array></mxGeometry>
+    </mxCell>
+    <mxCell id="line_flutter" style="edgeStyle=none;html=1;dashed=1;endArrow=none;strokeColor=#6c8ebf;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="310" y="110"/><mxPoint x="310" y="780"/></Array></mxGeometry>
+    </mxCell>
+    <mxCell id="line_api" style="edgeStyle=none;html=1;dashed=1;endArrow=none;strokeColor=#82b366;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="630" y="110"/><mxPoint x="630" y="780"/></Array></mxGeometry>
+    </mxCell>
+    <mxCell id="line_db" style="edgeStyle=none;html=1;dashed=1;endArrow=none;strokeColor=#d6b656;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="950" y="110"/><mxPoint x="950" y="780"/></Array></mxGeometry>
+    </mxCell>
+
+    <!-- ===== Step 1: Buyer presses Checkout ===== -->
+    <mxCell id="s1_label" value="1. Tekan tombol &quot;Checkout&quot;" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=10;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="40" y="148" width="200" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="s1" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#1ba1e2;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="85" y="165"/><mxPoint x="310" y="165"/></Array></mxGeometry>
+    </mxCell>
+    <mxCell id="s1_msg" value="onCheckoutPressed()" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=9;" vertex="1" parent="1">
+      <mxGeometry x="100" y="147" width="150" height="18" as="geometry" />
+    </mxCell>
+
+    <!-- ===== Step 2: Flutter → API HTTP POST ===== -->
+    <mxCell id="s2_label" value="2. HTTP POST /api/v1/checkout {payload JSON}" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=10;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="310" y="188" width="360" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="s2" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#6c8ebf;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="310" y="205"/><mxPoint x="630" y="205"/></Array></mxGeometry>
+    </mxCell>
+    <mxCell id="s2_msg" value="POST /api/v1/checkout" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=9;" vertex="1" parent="1">
+      <mxGeometry x="360" y="187" width="200" height="18" as="geometry" />
+    </mxCell>
+
+    <!-- ===== Step 3: API checks stock in DB ===== -->
+    <mxCell id="s3_label" value="3. SELECT stock FROM products WHERE id = ?" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=10;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="630" y="228" width="360" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="s3" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#82b366;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="630" y="245"/><mxPoint x="950" y="245"/></Array></mxGeometry>
+    </mxCell>
+    <mxCell id="s3_msg" value="SELECT stock FROM products" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=9;" vertex="1" parent="1">
+      <mxGeometry x="660" y="227" width="240" height="18" as="geometry" />
+    </mxCell>
+
+    <!-- ===== Step 4: DB returns stock value ===== -->
+    <mxCell id="s4" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#d6b656;dashed=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="950" y="275"/><mxPoint x="630" y="275"/></Array></mxGeometry>
+    </mxCell>
+    <mxCell id="s4_msg" value="stock = {jumlah}" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=9;" vertex="1" parent="1">
+      <mxGeometry x="680" y="257" width="200" height="18" as="geometry" />
+    </mxCell>
+    <mxCell id="s4_label" value="4. Return nilai stok produk" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=10;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="630" y="278" width="300" height="18" as="geometry" />
+    </mxCell>
+
+    <!-- ===== alt box: stok mencukupi ===== -->
+    <mxCell id="alt_box" value="alt [stok mencukupi]" style="swimlane;startSize=24;fillColor=none;strokeColor=#333333;fontSize=10;fontStyle=1;dashed=1;" vertex="1" parent="1">
+      <mxGeometry x="300" y="305" width="730" height="200" as="geometry" />
+    </mxCell>
+
+    <!-- Step 5: Lock stock + INSERT order -->
+    <mxCell id="s5_label" value="5. INSERT INTO orders (lock inventaris)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=10;fontStyle=2;" vertex="1" parent="alt_box">
+      <mxGeometry x="10" y="35" width="360" height="18" as="geometry" />
+    </mxCell>
+    <mxCell id="s5" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#82b366;" edge="1" parent="alt_box">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="330" y="60"/><mxPoint x="645" y="60"/></Array></mxGeometry>
+    </mxCell>
+    <mxCell id="s5_msg" value="INSERT INTO orders | UPDATE products SET stock = stock - qty" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=9;" vertex="1" parent="alt_box">
+      <mxGeometry x="280" y="42" width="350" height="18" as="geometry" />
+    </mxCell>
+
+    <!-- Step 6: DB confirms success -->
+    <mxCell id="s6" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#d6b656;dashed=1;" edge="1" parent="alt_box">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="645" y="95"/><mxPoint x="330" y="95"/></Array></mxGeometry>
+    </mxCell>
+    <mxCell id="s6_msg" value="Query OK, 1 row affected" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=9;" vertex="1" parent="alt_box">
+      <mxGeometry x="340" y="77" width="240" height="18" as="geometry" />
+    </mxCell>
+    <mxCell id="s6_label" value="6. Konfirmasi penyimpanan sukses" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=10;fontStyle=2;" vertex="1" parent="alt_box">
+      <mxGeometry x="10" y="98" width="300" height="18" as="geometry" />
+    </mxCell>
+
+    <!-- Step 7: API returns invoice to Flutter -->
+    <mxCell id="s7" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#6c8ebf;dashed=1;" edge="1" parent="alt_box">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="330" y="135"/><mxPoint x="10" y="135"/></Array></mxGeometry>
+    </mxCell>
+    <mxCell id="s7_msg" value="HTTP 201 Created — {invoice: {...}, order_id: 99}" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=9;" vertex="1" parent="alt_box">
+      <mxGeometry x="15" y="117" width="300" height="18" as="geometry" />
+    </mxCell>
+    <mxCell id="s7_label" value="7. Kirim respons sukses + Invoice JSON ke Flutter" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=10;fontStyle=2;" vertex="1" parent="alt_box">
+      <mxGeometry x="10" y="158" width="360" height="18" as="geometry" />
+    </mxCell>
+
+  </root>
+</mxGraphModel>

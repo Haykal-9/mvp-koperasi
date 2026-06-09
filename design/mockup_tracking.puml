@@ -1,0 +1,22 @@
+@startsalt
+{+
+{ < Kembali | Lacak Pengiriman | . }
+== Pesanan ORD-1042 ==
+{ Kurir: SiCepat | Resi: SCP123456789 }
+{
+.
+   [ Peta Posisi Kurir (Google Maps SDK) ]
+   Estimasi tiba: 14:30 WIB
+.
+}
+== Status Pengiriman ==
+{
+(X) Dikemas - 09:10
+(X) Dikirim - 10:25
+(X) Transit (Gudang Bandung) - 12:40
+( ) Tiba di Tujuan
+}
+--
+{ [ Hubungi Kurir ] | [ Konfirmasi Diterima ] }
+}
+@endsalt
