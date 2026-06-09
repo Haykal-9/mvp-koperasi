@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_ToBeAnalytics" targetNamespace="http://smartmart.koperasi/bpmn" exporter="Camunda Modeler" exporterVersion="5.46.1">
+  <bpmn:collaboration id="Collab_ToBeAnalytics">
+    <bpmn:participant id="Part_ToBeAnalytics" name="Dashboard Admin SmartMart (To-Be) — Pemantauan Kinerja &#38; Analytics" processRef="Proc_ToBeAnalytics" />
+  </bpmn:collaboration>
+  <bpmn:process id="Proc_ToBeAnalytics" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_ToBeAnalytics">
+      <bpmn:lane id="Lane_ToBeAnalytics_0" name="Sistem SmartMart">
+        <bpmn:flowNodeRef>AN_start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AN_agg</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AN_kpi1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AN_kpi2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AN_render</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AN_end_no</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_ToBeAnalytics_1" name="Administrator (Pengurus)">
+        <bpmn:flowNodeRef>AN_buka</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AN_analisis</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AN_gw</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AN_putus</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AN_end_ok</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="AN_start" name="Order berstatus&#10;SELESAI tercatat">
+      <bpmn:outgoing>an1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="AN_agg" name="Agregasi otomatis&#10;data transaksi">
+      <bpmn:incoming>an1</bpmn:incoming>
+      <bpmn:outgoing>an2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="AN_kpi1" name="Hitung Total Revenue,&#10;Total Order, Status Breakdown">
+      <bpmn:incoming>an2</bpmn:incoming>
+      <bpmn:outgoing>an3</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="AN_kpi2" name="Hitung Top Products &#38;&#10;Seller Performance">
+      <bpmn:incoming>an3</bpmn:incoming>
+      <bpmn:outgoing>an4</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="AN_buka" name="Buka halaman&#10;/ecommerce/admin/analytics">
+      <bpmn:incoming>an4</bpmn:incoming>
+      <bpmn:outgoing>an5</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="AN_render" name="Render kartu ringkasan,&#10;tabel seller, produk terlaris">
+      <bpmn:incoming>an5</bpmn:incoming>
+      <bpmn:outgoing>an6</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="AN_analisis" name="Analisis metrik&#10;secara real-time">
+      <bpmn:incoming>an6</bpmn:incoming>
+      <bpmn:outgoing>an7</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="AN_gw" name="Perlu tindakan&#10;strategis?">
+      <bpmn:incoming>an7</bpmn:incoming>
+      <bpmn:outgoing>an8</bpmn:outgoing>
+      <bpmn:outgoing>an10</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="AN_putus" name="Ambil keputusan: insentif&#10;seller / promosi produk">
+      <bpmn:incoming>an8</bpmn:incoming>
+      <bpmn:outgoing>an9</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="AN_end_ok" name="Keputusan berbasis&#10;data diambil">
+      <bpmn:incoming>an9</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="AN_end_no" name="Monitoring selesai">
+      <bpmn:incoming>an10</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="an1" sourceRef="AN_start" targetRef="AN_agg" />
+    <bpmn:sequenceFlow id="an2" sourceRef="AN_agg" targetRef="AN_kpi1" />
+    <bpmn:sequenceFlow id="an3" sourceRef="AN_kpi1" targetRef="AN_kpi2" />
+    <bpmn:sequenceFlow id="an4" sourceRef="AN_kpi2" targetRef="AN_buka" />
+    <bpmn:sequenceFlow id="an5" sourceRef="AN_buka" targetRef="AN_render" />
+    <bpmn:sequenceFlow id="an6" sourceRef="AN_render" targetRef="AN_analisis" />
+    <bpmn:sequenceFlow id="an7" sourceRef="AN_analisis" targetRef="AN_gw" />
+    <bpmn:sequenceFlow id="an8" name="Ya" sourceRef="AN_gw" targetRef="AN_putus" />
+    <bpmn:sequenceFlow id="an9" sourceRef="AN_putus" targetRef="AN_end_ok" />
+    <bpmn:sequenceFlow id="an10" name="Tidak" sourceRef="AN_gw" targetRef="AN_end_no" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_ToBeAnalytics">
+    <bpmndi:BPMNPlane id="Plane_ToBeAnalytics" bpmnElement="Collab_ToBeAnalytics">
+      <bpmndi:BPMNShape id="Part_ToBeAnalytics_di" bpmnElement="Part_ToBeAnalytics" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="2200" height="340" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_ToBeAnalytics_1_di" bpmnElement="Lane_ToBeAnalytics_1" isHorizontal="true">
+        <dc:Bounds x="190" y="250" width="2170" height="170" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_ToBeAnalytics_0_di" bpmnElement="Lane_ToBeAnalytics_0" isHorizontal="true">
+        <dc:Bounds x="190" y="80" width="2170" height="170" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AN_start_di" bpmnElement="AN_start">
+        <dc:Bounds x="287" y="147" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="255" y="187" width="100" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AN_agg_di" bpmnElement="AN_agg">
+        <dc:Bounds x="430" y="125" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AN_kpi1_di" bpmnElement="AN_kpi1">
+        <dc:Bounds x="640" y="125" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AN_kpi2_di" bpmnElement="AN_kpi2">
+        <dc:Bounds x="850" y="125" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AN_buka_di" bpmnElement="AN_buka">
+        <dc:Bounds x="1060" y="295" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AN_render_di" bpmnElement="AN_render">
+        <dc:Bounds x="1270" y="125" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AN_analisis_di" bpmnElement="AN_analisis">
+        <dc:Bounds x="1480" y="295" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AN_gw_di" bpmnElement="AN_gw" isMarkerVisible="true">
+        <dc:Bounds x="1750" y="310" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1725" y="364" width="100" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AN_putus_di" bpmnElement="AN_putus">
+        <dc:Bounds x="1900" y="295" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AN_end_ok_di" bpmnElement="AN_end_ok">
+        <dc:Bounds x="2177" y="317" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2145" y="357" width="100" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AN_end_no_di" bpmnElement="AN_end_no">
+        <dc:Bounds x="1967" y="147" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1935" y="187" width="100" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="an1_di" bpmnElement="an1">
+        <di:waypoint x="323" y="165" />
+        <di:waypoint x="430" y="165" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="an2_di" bpmnElement="an2">
+        <di:waypoint x="600" y="165" />
+        <di:waypoint x="640" y="165" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="an3_di" bpmnElement="an3">
+        <di:waypoint x="810" y="165" />
+        <di:waypoint x="850" y="165" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="an4_di" bpmnElement="an4">
+        <di:waypoint x="1020" y="165" />
+        <di:waypoint x="1040" y="165" />
+        <di:waypoint x="1040" y="335" />
+        <di:waypoint x="1060" y="335" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="an5_di" bpmnElement="an5">
+        <di:waypoint x="1230" y="335" />
+        <di:waypoint x="1250" y="335" />
+        <di:waypoint x="1250" y="165" />
+        <di:waypoint x="1270" y="165" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="an6_di" bpmnElement="an6">
+        <di:waypoint x="1440" y="165" />
+        <di:waypoint x="1460" y="165" />
+        <di:waypoint x="1460" y="335" />
+        <di:waypoint x="1480" y="335" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="an7_di" bpmnElement="an7">
+        <di:waypoint x="1650" y="335" />
+        <di:waypoint x="1750" y="335" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="an8_di" bpmnElement="an8">
+        <di:waypoint x="1800" y="335" />
+        <di:waypoint x="1900" y="335" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1806" y="317" width="90" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="an9_di" bpmnElement="an9">
+        <di:waypoint x="2070" y="335" />
+        <di:waypoint x="2177" y="335" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="an10_di" bpmnElement="an10">
+        <di:waypoint x="1800" y="335" />
+        <di:waypoint x="1883" y="335" />
+        <di:waypoint x="1883" y="165" />
+        <di:waypoint x="1967" y="165" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1846" y="283" width="28" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
