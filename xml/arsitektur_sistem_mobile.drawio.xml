@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <!-- Title -->
+    <mxCell id="title" value="Arsitektur Sistem SmartMart — Platform Mobile (Three-Tier Architecture)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="20" width="1050" height="40" as="geometry" />
+    </mxCell>
+
+    <!-- ===== LAYER 1: PRESENTATION LAYER ===== -->
+    <mxCell id="layer1_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;opacity=30;" vertex="1" parent="1">
+      <mxGeometry x="60" y="80" width="1050" height="180" as="geometry" />
+    </mxCell>
+    <mxCell id="layer1_label" value="PRESENTATION LAYER — Aplikasi Mobile Flutter" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=12;fontStyle=1;fontColor=#006EAF;" vertex="1" parent="1">
+      <mxGeometry x="75" y="88" width="500" height="24" as="geometry" />
+    </mxCell>
+
+    <!-- Flutter App (Pembeli) -->
+    <mxCell id="app_buyer" value="&lt;b&gt;Flutter App&lt;/b&gt;&lt;br&gt;Anggota (Pembeli)&lt;br&gt;&lt;i&gt;Katalog, Keranjang,&lt;br&gt;Checkout, Poin&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1ba1e2;strokeColor=#006EAF;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="100" y="120" width="200" height="120" as="geometry" />
+    </mxCell>
+
+    <!-- Flutter App (Penjual) -->
+    <mxCell id="app_seller" value="&lt;b&gt;Flutter App&lt;/b&gt;&lt;br&gt;Anggota (Penjual)&lt;br&gt;&lt;i&gt;Kelola Produk,&lt;br&gt;Konfirmasi Pesanan&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1ba1e2;strokeColor=#006EAF;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="480" y="120" width="200" height="120" as="geometry" />
+    </mxCell>
+
+    <!-- Flutter App (Kurir) -->
+    <mxCell id="app_courier" value="&lt;b&gt;Flutter App&lt;/b&gt;&lt;br&gt;Kurir Koperasi&lt;br&gt;&lt;i&gt;Manifes Distribusi,&lt;br&gt;Update Pengiriman&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1ba1e2;strokeColor=#006EAF;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="860" y="120" width="200" height="120" as="geometry" />
+    </mxCell>
+
+    <!-- ===== ARROWS LAYER 1 → LAYER 2 ===== -->
+    <mxCell id="arrow1" value="HTTP REST&lt;br&gt;JSON" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;strokeColor=#6c8ebf;fontColor=#006EAF;fontSize=10;" edge="1" parent="1" source="app_buyer" target="api_layer">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="arrow2" value="HTTP REST&lt;br&gt;JSON" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#6c8ebf;fontColor=#006EAF;fontSize=10;" edge="1" parent="1" source="app_seller" target="api_layer">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="arrow3" value="HTTP REST&lt;br&gt;JSON" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;strokeColor=#6c8ebf;fontColor=#006EAF;fontSize=10;" edge="1" parent="1" source="app_courier" target="api_layer">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- ===== LAYER 2: APPLICATION LAYER ===== -->
+    <mxCell id="layer2_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;opacity=30;" vertex="1" parent="1">
+      <mxGeometry x="60" y="310" width="1050" height="200" as="geometry" />
+    </mxCell>
+    <mxCell id="layer2_label" value="APPLICATION LAYER — Laravel Web Service / RESTful API" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=12;fontStyle=1;fontColor=#274E13;" vertex="1" parent="1">
+      <mxGeometry x="75" y="318" width="600" height="24" as="geometry" />
+    </mxCell>
+
+    <!-- API Gateway / Router -->
+    <mxCell id="api_layer" value="&lt;b&gt;RESTful API Router&lt;/b&gt;&lt;br&gt;/api/v1/...&lt;br&gt;JWT Auth Middleware&lt;br&gt;Sanctum Token Guard" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#82b366;strokeColor=#274E13;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="100" y="350" width="200" height="120" as="geometry" />
+    </mxCell>
+
+    <!-- Controllers -->
+    <mxCell id="controllers" value="&lt;b&gt;Business Logic Controllers&lt;/b&gt;&lt;br&gt;AuthController | ProductController&lt;br&gt;OrderController | RewardController&lt;br&gt;AIController (LLM Gateway)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#82b366;strokeColor=#274E13;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="380" y="350" width="320" height="120" as="geometry" />
+    </mxCell>
+
+    <!-- Services -->
+    <mxCell id="services" value="&lt;b&gt;Services / Business Rules&lt;/b&gt;&lt;br&gt;Split Payment (Komisi 3%)&lt;br&gt;Point Rewards (1% Belanja)&lt;br&gt;Ongkir Calculation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#82b366;strokeColor=#274E13;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="780" y="350" width="280" height="120" as="geometry" />
+    </mxCell>
+
+    <!-- Arrow Controller to API -->
+    <mxCell id="arrow4" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=0;strokeColor=#274E13;" edge="1" parent="1" source="api_layer" target="controllers">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="arrow5" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=0;strokeColor=#274E13;" edge="1" parent="1" source="controllers" target="services">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- ARROWS LAYER 2 → LAYER 3 -->
+    <mxCell id="arrow6" value="SQL Queries" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;strokeColor=#82b366;fontColor=#274E13;fontSize=10;" edge="1" parent="1" source="controllers" target="db_layer">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="arrow7" value="SQL Queries" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;strokeColor=#82b366;fontColor=#274E13;fontSize=10;" edge="1" parent="1" source="services" target="db_layer">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- ===== LAYER 3: DATA LAYER ===== -->
+    <mxCell id="layer3_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;opacity=30;" vertex="1" parent="1">
+      <mxGeometry x="60" y="560" width="1050" height="180" as="geometry" />
+    </mxCell>
+    <mxCell id="layer3_label" value="DATA LAYER — MySQL Database (Dedicated Single-Tenant Cloud)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=12;fontStyle=1;fontColor=#7d4f00;" vertex="1" parent="1">
+      <mxGeometry x="75" y="568" width="700" height="24" as="geometry" />
+    </mxCell>
+
+    <!-- DB Tables -->
+    <mxCell id="db_layer" value="&lt;b&gt;MySQL Database&lt;/b&gt;&lt;br&gt;users | products | orders&lt;br&gt;order_items | payments&lt;br&gt;point_histories" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#d6b656;strokeColor=#7d4f00;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="200" y="600" width="200" height="120" as="geometry" />
+    </mxCell>
+
+    <!-- LLM External -->
+    <mxCell id="llm_ext" value="&lt;b&gt;LLM External API&lt;/b&gt;&lt;br&gt;(Asisten AI SmartMart)&lt;br&gt;Natural Language Processing&lt;br&gt;Konsultasi Pengguna" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="700" y="600" width="280" height="120" as="geometry" />
+    </mxCell>
+
+    <!-- Arrow AIController to LLM -->
+    <mxCell id="arrow8" value="API Call&lt;br&gt;(HTTPS)" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#b85450;fontColor=#b85450;fontSize=10;dashed=1;" edge="1" parent="1" source="controllers" target="llm_ext">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Cloud Badge -->
+    <mxCell id="cloud_badge" value="☁ Cloud Dedicated&lt;br&gt;Single-Tenant VPS&lt;br&gt;Ubuntu Server&lt;br&gt;PHP 8.2+ | MySQL 8.0+" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="950" y="610" width="140" height="100" as="geometry" />
+    </mxCell>
+
+  </root>
+</mxGraphModel>

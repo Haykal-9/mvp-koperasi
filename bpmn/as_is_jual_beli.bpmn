@@ -1,17 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions
-  xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
-  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
-  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
-  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
-  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
-  targetNamespace="http://bpmn.io/schema/bpmn"
-  id="Defs_AIJB">
-
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Defs_AIJB" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.46.1">
   <bpmn:collaboration id="Collab_AIJB">
-    <bpmn:participant id="Part_AIJB" name="As-Is: Jual Beli Barang Koperasi" processRef="Proc_AIJB"/>
+    <bpmn:participant id="Part_AIJB" name="As-Is: Jual Beli Barang Koperasi" processRef="Proc_AIJB" />
   </bpmn:collaboration>
-
   <bpmn:process id="Proc_AIJB" name="As-Is: Jual Beli Barang Koperasi" isExecutable="false">
     <bpmn:laneSet id="LS_AIJB">
       <bpmn:lane id="Lane_Pembeli" name="Pembeli (Anggota / Non-Anggota)">
@@ -37,8 +28,6 @@
         <bpmn:flowNodeRef>GW_JB_AM</bpmn:flowNodeRef>
       </bpmn:lane>
     </bpmn:laneSet>
-
-    <!-- Pembeli lane -->
     <bpmn:startEvent id="SE_JB" name="Ingin Membeli Barang">
       <bpmn:outgoing>FJB1</bpmn:outgoing>
     </bpmn:startEvent>
@@ -46,17 +35,17 @@
       <bpmn:incoming>FJB1</bpmn:incoming>
       <bpmn:outgoing>FJB2</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:userTask id="T_JB_TK" name="Tanya Ketersediaan, Harga &amp; Lokasi">
+    <bpmn:userTask id="T_JB_TK" name="Tanya Ketersediaan, Harga &#38; Lokasi">
       <bpmn:incoming>FJB2</bpmn:incoming>
       <bpmn:incoming>FJB_back</bpmn:incoming>
       <bpmn:outgoing>FJB3</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:exclusiveGateway id="GW_JB_S" name="Barang Tersedia?">
-      <bpmn:incoming>FJB5</bpmn:incoming>
+      <bpmn:incoming>Flow_0xcrbav</bpmn:incoming>
       <bpmn:outgoing>FJB6</bpmn:outgoing>
-      <bpmn:outgoing>FJB_NA</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1dpg7jg</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:userTask id="T_JB_SH" name="Sepakat Harga &amp; Waktu Temu">
+    <bpmn:userTask id="T_JB_SH" name="Sepakat Harga &#38; Waktu Temu">
       <bpmn:incoming>FJB6</bpmn:incoming>
       <bpmn:outgoing>FJB7</bpmn:outgoing>
     </bpmn:userTask>
@@ -68,36 +57,28 @@
       <bpmn:incoming>FJB8</bpmn:incoming>
       <bpmn:outgoing>FJB9</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:userTask id="T_JB_TB" name="Terima &amp; Periksa Barang">
+    <bpmn:userTask id="T_JB_TB" name="Terima &#38; Periksa Barang">
       <bpmn:incoming>FJB11</bpmn:incoming>
       <bpmn:outgoing>FJB12</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:endEvent id="EE_JB_OK" name="Transaksi Selesai">
       <bpmn:incoming>FJB12</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:endEvent id="EE_JB_BT" name="Transaksi Batal (Barang Tidak Ada)">
-      <bpmn:incoming>FJB_NA</bpmn:incoming>
-    </bpmn:endEvent>
-
-    <!-- Penjual lane -->
     <bpmn:userTask id="T_JB_TC" name="Terima Pesan / Chat dari Pembeli">
       <bpmn:incoming>FJB3</bpmn:incoming>
       <bpmn:outgoing>FJB4</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:userTask id="T_JB_CS" name="Cek Stok Barang Secara Fisik">
       <bpmn:incoming>FJB4</bpmn:incoming>
-      <bpmn:outgoing>FJB5</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0xcrbav</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:userTask id="T_JB_KS" name="Konfirmasi Ketersediaan ke Pembeli">
-      <bpmn:incoming>FJB6b</bpmn:incoming>
       <bpmn:outgoing>FJB_back</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:userTask id="T_JB_SB" name="Siapkan Barang">
       <bpmn:incoming>FJB9</bpmn:incoming>
       <bpmn:outgoing>FJB10</bpmn:outgoing>
     </bpmn:userTask>
-
-    <!-- NEW: gateway differentiate anggota vs non-anggota recording -->
     <bpmn:exclusiveGateway id="GW_JB_A" name="Pembeli Anggota?">
       <bpmn:incoming>FJB10</bpmn:incoming>
       <bpmn:outgoing>FJB10a</bpmn:outgoing>
@@ -116,163 +97,197 @@
       <bpmn:incoming>FJB10d</bpmn:incoming>
       <bpmn:outgoing>FJB11</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-
-    <bpmn:sequenceFlow id="FJB1"  sourceRef="SE_JB"    targetRef="T_JB_HWA"/>
-    <bpmn:sequenceFlow id="FJB2"  sourceRef="T_JB_HWA" targetRef="T_JB_TK"/>
-    <bpmn:sequenceFlow id="FJB3"  sourceRef="T_JB_TK"  targetRef="T_JB_TC"/>
-    <bpmn:sequenceFlow id="FJB4"  sourceRef="T_JB_TC"  targetRef="T_JB_CS"/>
-    <bpmn:sequenceFlow id="FJB5"  sourceRef="T_JB_CS"  targetRef="GW_JB_S"/>
-    <bpmn:sequenceFlow id="FJB6"  name="Ya"    sourceRef="GW_JB_S" targetRef="T_JB_SH"/>
-    <bpmn:sequenceFlow id="FJB_NA" name="Tidak" sourceRef="GW_JB_S" targetRef="EE_JB_BT"/>
-    <bpmn:sequenceFlow id="FJB6b" sourceRef="GW_JB_S" targetRef="T_JB_KS"/>
-    <bpmn:sequenceFlow id="FJB_back" sourceRef="T_JB_KS" targetRef="T_JB_TK"/>
-    <bpmn:sequenceFlow id="FJB7"  sourceRef="T_JB_SH"  targetRef="T_JB_DTM"/>
-    <bpmn:sequenceFlow id="FJB8"  sourceRef="T_JB_DTM" targetRef="T_JB_BT"/>
-    <bpmn:sequenceFlow id="FJB9"  sourceRef="T_JB_BT"  targetRef="T_JB_SB"/>
-    <bpmn:sequenceFlow id="FJB10" sourceRef="T_JB_SB"  targetRef="GW_JB_A"/>
-    <bpmn:sequenceFlow id="FJB10a" name="Ya, Anggota"      sourceRef="GW_JB_A" targetRef="T_JB_CBB"/>
-    <bpmn:sequenceFlow id="FJB10b" name="Tidak, Non-Anggota" sourceRef="GW_JB_A" targetRef="T_JB_COH"/>
-    <bpmn:sequenceFlow id="FJB10c" sourceRef="T_JB_CBB" targetRef="GW_JB_AM"/>
-    <bpmn:sequenceFlow id="FJB10d" sourceRef="T_JB_COH" targetRef="GW_JB_AM"/>
-    <bpmn:sequenceFlow id="FJB11" sourceRef="GW_JB_AM" targetRef="T_JB_TB"/>
-    <bpmn:sequenceFlow id="FJB12" sourceRef="T_JB_TB"  targetRef="EE_JB_OK"/>
+    <bpmn:sequenceFlow id="FJB1" sourceRef="SE_JB" targetRef="T_JB_HWA" />
+    <bpmn:sequenceFlow id="FJB2" sourceRef="T_JB_HWA" targetRef="T_JB_TK" />
+    <bpmn:sequenceFlow id="FJB3" sourceRef="T_JB_TK" targetRef="T_JB_TC" />
+    <bpmn:sequenceFlow id="FJB4" sourceRef="T_JB_TC" targetRef="T_JB_CS" />
+    <bpmn:sequenceFlow id="FJB6" name="Ya" sourceRef="GW_JB_S" targetRef="T_JB_SH" />
+    <bpmn:sequenceFlow id="FJB_back" sourceRef="T_JB_KS" targetRef="T_JB_TK" />
+    <bpmn:sequenceFlow id="FJB7" sourceRef="T_JB_SH" targetRef="T_JB_DTM" />
+    <bpmn:sequenceFlow id="FJB8" sourceRef="T_JB_DTM" targetRef="T_JB_BT" />
+    <bpmn:sequenceFlow id="FJB9" sourceRef="T_JB_BT" targetRef="T_JB_SB" />
+    <bpmn:sequenceFlow id="FJB10" sourceRef="T_JB_SB" targetRef="GW_JB_A" />
+    <bpmn:sequenceFlow id="FJB10a" name="Ya, Anggota" sourceRef="GW_JB_A" targetRef="T_JB_CBB" />
+    <bpmn:sequenceFlow id="FJB10b" name="Tidak, Non-Anggota" sourceRef="GW_JB_A" targetRef="T_JB_COH" />
+    <bpmn:sequenceFlow id="FJB10c" sourceRef="T_JB_CBB" targetRef="GW_JB_AM" />
+    <bpmn:sequenceFlow id="FJB10d" sourceRef="T_JB_COH" targetRef="GW_JB_AM" />
+    <bpmn:sequenceFlow id="FJB11" sourceRef="GW_JB_AM" targetRef="T_JB_TB" />
+    <bpmn:sequenceFlow id="FJB12" sourceRef="T_JB_TB" targetRef="EE_JB_OK" />
+    <bpmn:endEvent id="EE_JB_BT" name="Transaksi Batal (Barang Tidak Ada)">
+      <bpmn:incoming>Flow_1dpg7jg</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1dpg7jg" sourceRef="GW_JB_S" targetRef="EE_JB_BT" />
+    <bpmn:sequenceFlow id="Flow_0xcrbav" sourceRef="T_JB_CS" targetRef="GW_JB_S" />
   </bpmn:process>
-
   <bpmndi:BPMNDiagram id="Diagram_AIJB">
     <bpmndi:BPMNPlane id="Plane_AIJB" bpmnElement="Collab_AIJB">
-
       <bpmndi:BPMNShape id="Part_AIJB_di" bpmnElement="Part_AIJB" isHorizontal="true">
-        <dc:Bounds x="160" y="80" width="1740" height="460"/>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Lane_Pembeli_di" bpmnElement="Lane_Pembeli" isHorizontal="true">
-        <dc:Bounds x="190" y="80" width="1710" height="230"/>
+        <dc:Bounds x="160" y="80" width="1740" height="460" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Lane_Penjual_di" bpmnElement="Lane_Penjual" isHorizontal="true">
-        <dc:Bounds x="190" y="310" width="1710" height="230"/>
+        <dc:Bounds x="190" y="310" width="1710" height="230" />
       </bpmndi:BPMNShape>
-
-      <!-- Pembeli lane -->
+      <bpmndi:BPMNShape id="Lane_Pembeli_di" bpmnElement="Lane_Pembeli" isHorizontal="true">
+        <dc:Bounds x="190" y="80" width="1710" height="230" />
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="SE_JB_di" bpmnElement="SE_JB">
-        <dc:Bounds x="222" y="177" width="36" height="36"/>
-        <bpmndi:BPMNLabel><dc:Bounds x="200" y="220" width="80" height="27"/></bpmndi:BPMNLabel>
+        <dc:Bounds x="222" y="177" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="215" y="220" width="69" height="27" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="T_JB_HWA_di" bpmnElement="T_JB_HWA">
-        <dc:Bounds x="310" y="155" width="100" height="80"/>
+        <dc:Bounds x="310" y="155" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="T_JB_TK_di" bpmnElement="T_JB_TK">
-        <dc:Bounds x="460" y="155" width="100" height="80"/>
+        <dc:Bounds x="460" y="155" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="GW_JB_S_di" bpmnElement="GW_JB_S" isMarkerVisible="true">
-        <dc:Bounds x="665" y="170" width="50" height="50"/>
-        <bpmndi:BPMNLabel><dc:Bounds x="650" y="146" width="80" height="14"/></bpmndi:BPMNLabel>
+        <dc:Bounds x="665" y="170" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="650" y="146" width="80" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="T_JB_SH_di" bpmnElement="T_JB_SH">
-        <dc:Bounds x="770" y="155" width="100" height="80"/>
+        <dc:Bounds x="770" y="155" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="T_JB_DTM_di" bpmnElement="T_JB_DTM">
-        <dc:Bounds x="920" y="155" width="100" height="80"/>
+        <dc:Bounds x="920" y="155" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="T_JB_BT_di" bpmnElement="T_JB_BT">
-        <dc:Bounds x="1070" y="155" width="100" height="80"/>
+        <dc:Bounds x="1070" y="155" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="T_JB_TB_di" bpmnElement="T_JB_TB">
-        <dc:Bounds x="1540" y="155" width="100" height="80"/>
+        <dc:Bounds x="1540" y="155" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="EE_JB_OK_di" bpmnElement="EE_JB_OK">
-        <dc:Bounds x="1702" y="177" width="36" height="36"/>
-        <bpmndi:BPMNLabel><dc:Bounds x="1678" y="220" width="84" height="27"/></bpmndi:BPMNLabel>
+        <dc:Bounds x="1702" y="177" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1678" y="220" width="84" height="27" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="EE_JB_BT_di" bpmnElement="EE_JB_BT">
-        <dc:Bounds x="690" y="252" width="36" height="36"/>
-        <bpmndi:BPMNLabel><dc:Bounds x="660" y="295" width="96" height="40"/></bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-
-      <!-- Penjual lane -->
       <bpmndi:BPMNShape id="T_JB_TC_di" bpmnElement="T_JB_TC">
-        <dc:Bounds x="460" y="385" width="100" height="80"/>
+        <dc:Bounds x="460" y="385" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="T_JB_CS_di" bpmnElement="T_JB_CS">
-        <dc:Bounds x="610" y="385" width="100" height="80"/>
+        <dc:Bounds x="610" y="385" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="T_JB_KS_di" bpmnElement="T_JB_KS">
-        <dc:Bounds x="760" y="385" width="100" height="80"/>
+        <dc:Bounds x="760" y="385" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="T_JB_SB_di" bpmnElement="T_JB_SB">
-        <dc:Bounds x="1070" y="385" width="100" height="80"/>
+        <dc:Bounds x="1070" y="385" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="GW_JB_A_di" bpmnElement="GW_JB_A" isMarkerVisible="true">
-        <dc:Bounds x="1220" y="400" width="50" height="50"/>
-        <bpmndi:BPMNLabel><dc:Bounds x="1206" y="370" width="80" height="14"/></bpmndi:BPMNLabel>
+        <dc:Bounds x="1220" y="400" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1201" y="383" width="90" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="T_JB_CBB_di" bpmnElement="T_JB_CBB">
-        <dc:Bounds x="1320" y="325" width="120" height="60"/>
+        <dc:Bounds x="1320" y="325" width="120" height="60" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="T_JB_COH_di" bpmnElement="T_JB_COH">
-        <dc:Bounds x="1320" y="465" width="120" height="60"/>
+        <dc:Bounds x="1320" y="465" width="120" height="60" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="GW_JB_AM_di" bpmnElement="GW_JB_AM" isMarkerVisible="true">
-        <dc:Bounds x="1490" y="400" width="50" height="50"/>
+        <dc:Bounds x="1490" y="400" width="50" height="50" />
       </bpmndi:BPMNShape>
-
-      <!-- Edges -->
-      <bpmndi:BPMNEdge id="FJB1_di"  bpmnElement="FJB1"><di:waypoint x="258" y="195"/><di:waypoint x="310" y="195"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="FJB2_di"  bpmnElement="FJB2"><di:waypoint x="410" y="195"/><di:waypoint x="460" y="195"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="FJB3_di"  bpmnElement="FJB3">
-        <di:waypoint x="510" y="235"/><di:waypoint x="510" y="385"/>
+      <bpmndi:BPMNShape id="EE_JB_BT_di" bpmnElement="EE_JB_BT">
+        <dc:Bounds x="672" y="272" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="652" y="315" width="76" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="FJB1_di" bpmnElement="FJB1">
+        <di:waypoint x="258" y="195" />
+        <di:waypoint x="310" y="195" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="FJB4_di"  bpmnElement="FJB4"><di:waypoint x="560" y="425"/><di:waypoint x="610" y="425"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="FJB5_di"  bpmnElement="FJB5">
-        <di:waypoint x="660" y="385"/><di:waypoint x="660" y="235"/>
-        <di:waypoint x="665" y="195"/>
+      <bpmndi:BPMNEdge id="FJB2_di" bpmnElement="FJB2">
+        <di:waypoint x="410" y="195" />
+        <di:waypoint x="460" y="195" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="FJB6_di"  bpmnElement="FJB6">
-        <di:waypoint x="715" y="195"/><di:waypoint x="770" y="195"/>
-        <bpmndi:BPMNLabel><dc:Bounds x="731" y="178" width="16" height="14"/></bpmndi:BPMNLabel>
+      <bpmndi:BPMNEdge id="FJB3_di" bpmnElement="FJB3">
+        <di:waypoint x="510" y="235" />
+        <di:waypoint x="510" y="385" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="FJB_NA_di" bpmnElement="FJB_NA">
-        <di:waypoint x="690" y="220"/><di:waypoint x="690" y="252"/>
-        <bpmndi:BPMNLabel><dc:Bounds x="698" y="232" width="30" height="14"/></bpmndi:BPMNLabel>
+      <bpmndi:BPMNEdge id="FJB4_di" bpmnElement="FJB4">
+        <di:waypoint x="560" y="425" />
+        <di:waypoint x="610" y="425" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="FJB6b_di" bpmnElement="FJB6b">
-        <di:waypoint x="690" y="220"/><di:waypoint x="690" y="312"/><di:waypoint x="810" y="312"/><di:waypoint x="810" y="385"/>
+      <bpmndi:BPMNEdge id="FJB6_di" bpmnElement="FJB6">
+        <di:waypoint x="715" y="195" />
+        <di:waypoint x="770" y="195" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="731" y="178" width="16" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="FJB_back_di" bpmnElement="FJB_back">
-        <di:waypoint x="810" y="385"/><di:waypoint x="810" y="312"/><di:waypoint x="510" y="312"/><di:waypoint x="510" y="235"/>
+        <di:waypoint x="810" y="385" />
+        <di:waypoint x="810" y="312" />
+        <di:waypoint x="510" y="312" />
+        <di:waypoint x="510" y="235" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="FJB7_di"  bpmnElement="FJB7"><di:waypoint x="870" y="195"/><di:waypoint x="920" y="195"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="FJB8_di"  bpmnElement="FJB8"><di:waypoint x="1020" y="195"/><di:waypoint x="1070" y="195"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="FJB9_di"  bpmnElement="FJB9">
-        <di:waypoint x="1120" y="235"/><di:waypoint x="1120" y="385"/>
+      <bpmndi:BPMNEdge id="FJB7_di" bpmnElement="FJB7">
+        <di:waypoint x="870" y="195" />
+        <di:waypoint x="920" y="195" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FJB8_di" bpmnElement="FJB8">
+        <di:waypoint x="1020" y="195" />
+        <di:waypoint x="1070" y="195" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="FJB9_di" bpmnElement="FJB9">
+        <di:waypoint x="1120" y="235" />
+        <di:waypoint x="1120" y="385" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="FJB10_di" bpmnElement="FJB10">
-        <di:waypoint x="1170" y="425"/><di:waypoint x="1220" y="425"/>
+        <di:waypoint x="1170" y="425" />
+        <di:waypoint x="1220" y="425" />
       </bpmndi:BPMNEdge>
-      <!-- Gateway split → upper "Ya, Anggota" → Catat Buku Besar -->
       <bpmndi:BPMNEdge id="FJB10a_di" bpmnElement="FJB10a">
-        <di:waypoint x="1245" y="400"/><di:waypoint x="1245" y="355"/><di:waypoint x="1320" y="355"/>
-        <bpmndi:BPMNLabel><dc:Bounds x="1252" y="362" width="68" height="14"/></bpmndi:BPMNLabel>
+        <di:waypoint x="1245" y="400" />
+        <di:waypoint x="1245" y="355" />
+        <di:waypoint x="1320" y="355" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1252" y="362" width="68" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
-      <!-- Gateway split → lower "Tidak, Non-Anggota" → Catat Omzet Harian -->
       <bpmndi:BPMNEdge id="FJB10b_di" bpmnElement="FJB10b">
-        <di:waypoint x="1245" y="450"/><di:waypoint x="1245" y="495"/><di:waypoint x="1320" y="495"/>
-        <bpmndi:BPMNLabel><dc:Bounds x="1252" y="478" width="92" height="14"/></bpmndi:BPMNLabel>
+        <di:waypoint x="1245" y="450" />
+        <di:waypoint x="1245" y="495" />
+        <di:waypoint x="1320" y="495" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1251" y="456" width="57" height="27" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
-      <!-- Upper join: Catat Buku Besar → merge gateway -->
       <bpmndi:BPMNEdge id="FJB10c_di" bpmnElement="FJB10c">
-        <di:waypoint x="1440" y="355"/><di:waypoint x="1515" y="355"/><di:waypoint x="1515" y="400"/>
+        <di:waypoint x="1440" y="355" />
+        <di:waypoint x="1515" y="355" />
+        <di:waypoint x="1515" y="400" />
       </bpmndi:BPMNEdge>
-      <!-- Lower join: Catat Omzet → merge gateway -->
       <bpmndi:BPMNEdge id="FJB10d_di" bpmnElement="FJB10d">
-        <di:waypoint x="1440" y="495"/><di:waypoint x="1515" y="495"/><di:waypoint x="1515" y="450"/>
+        <di:waypoint x="1440" y="495" />
+        <di:waypoint x="1515" y="495" />
+        <di:waypoint x="1515" y="450" />
       </bpmndi:BPMNEdge>
-      <!-- Merge → cross-lane up to Terima Barang -->
       <bpmndi:BPMNEdge id="FJB11_di" bpmnElement="FJB11">
-        <di:waypoint x="1540" y="425"/><di:waypoint x="1590" y="425"/><di:waypoint x="1590" y="235"/>
+        <di:waypoint x="1540" y="425" />
+        <di:waypoint x="1590" y="425" />
+        <di:waypoint x="1590" y="235" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="FJB12_di" bpmnElement="FJB12">
-        <di:waypoint x="1640" y="195"/><di:waypoint x="1702" y="195"/>
+        <di:waypoint x="1640" y="195" />
+        <di:waypoint x="1702" y="195" />
       </bpmndi:BPMNEdge>
-
+      <bpmndi:BPMNEdge id="Flow_1dpg7jg_di" bpmnElement="Flow_1dpg7jg">
+        <di:waypoint x="690" y="220" />
+        <di:waypoint x="690" y="272" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0xcrbav_di" bpmnElement="Flow_0xcrbav">
+        <di:waypoint x="620" y="385" />
+        <di:waypoint x="620" y="195" />
+        <di:waypoint x="665" y="195" />
+      </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
 </bpmn:definitions>

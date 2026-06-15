@@ -1,0 +1,74 @@
+@startuml
+' ============================================================
+' ARSITEKTUR SISTEM — SmartMart Koperasi Digital
+' Pola: Client-Server 3 Lapisan berbasis RESTful API
+' Stack: Flutter (Client) + Laravel (Backend/API) + MySQL (Data)
+' ============================================================
+!theme plain
+skinparam defaultFontName Arial
+skinparam shadowing false
+skinparam ArrowThickness 1.1
+skinparam componentStyle rectangle
+skinparam rectangle {
+  BorderColor #555555
+  FontSize 12
+}
+skinparam component {
+  BackgroundColor #FFFFFF
+  BorderColor #666666
+}
+
+title **Arsitektur Sistem — SmartMart Koperasi Digital**\n(Arsitektur Client-Server 3 Lapisan berbasis RESTful API)
+
+' ---------- LAPISAN KLIEN ----------
+rectangle "**Lapisan Klien (Frontend)**\n<size:10>Aplikasi lintas platform berbasis Flutter & Web</size>" as L1 #DAE8FC {
+  [User App\n(Anggota / Pengguna)]   as UserApp
+  [Seller App\n(Penjual)]            as SellerApp
+  [Delivery App\n(Kurir)]            as DeliveryApp
+  [Web Admin Dashboard\n(Pengurus)]  as WebAdmin
+}
+
+' ---------- LAPISAN CLOUD SERVER (BACKEND) ----------
+rectangle "**Lapisan Cloud Server (Backend — Laravel)**\n<size:10>Single Source of Truth, memaparkan layanan RESTful API</size>" as L2 #D5E8D4 {
+  [RESTful API Endpoint\n(Routing /api)]        as API
+  [Middleware\nAuth & RBAC (Sanctum)]           as MW
+  [Controllers\n(Auth, Produk, Order, Poin)]    as CTRL
+  [Business Logic / Services\n(Checkout, Split Payment, Poin)] as SVC
+  [Eloquent ORM\n(Models)]                      as ORM
+}
+
+' ---------- LAPISAN DATA ----------
+rectangle "**Lapisan Data**" as L3 #FFE6CC {
+  database "MySQL / MariaDB\n(users, products, orders, payments,\npoints, simpanan, pinjaman, dll.)" as DB
+}
+
+' ---------- LAYANAN EKSTERNAL ----------
+rectangle "**Layanan Eksternal**" as L4 #F8CECC {
+  [Payment Gateway\n(QRIS / Transfer / VA)] as PG
+}
+
+' ---------- ALUR KOMUNIKASI ----------
+UserApp      --> API : "HTTPS · REST API (JSON)"
+SellerApp    --> API
+DeliveryApp  --> API
+WebAdmin     --> API
+
+API   --> MW   : "filter request"
+MW    --> CTRL : "validasi role"
+CTRL  --> SVC  : "panggil logika bisnis"
+SVC   --> ORM
+ORM   --> DB   : "query (SQL)"
+SVC   --> PG   : "request pembayaran"
+PG   ..> SVC   : "callback status bayar"
+
+legend bottom left
+  |= Lapisan |= Keterangan |
+  |<#DAE8FC> | Klien: antarmuka Flutter (mobile) & Web Admin |
+  |<#D5E8D4> | Backend Laravel: REST API, RBAC, logika bisnis, ORM |
+  |<#FFE6CC> | Data: basis data relasional MySQL/MariaDB |
+  |<#F8CECC> | Layanan pihak ketiga (payment gateway) |
+endlegend
+
+caption Gambar 3.1 Arsitektur Sistem SmartMart
+footer Arsitektur Sistem — SmartMart Koperasi Digital | Modul Pengguna & Dashboard | Tugas Akhir
+@enduml

@@ -1,0 +1,296 @@
+@startuml
+' ============================================================
+' USE CASE DIAGRAM — SmartMart Koperasi Digital
+' Layout: PORTRAIT (2x3 Package Grid to fit comfortably under 4096px)
+' ============================================================
+
+left to right direction
+
+!theme plain
+skinparam usecase {
+  BackgroundColor      #FFFDE7
+  BorderColor          #555555
+  ArrowColor           #444444
+  ActorBackgroundColor #FFFFFF
+  ActorBorderColor     #333333
+  FontSize             11
+}
+skinparam packageStyle   rectangle
+skinparam defaultFontName Arial
+skinparam ArrowThickness  1.2
+skinparam NoteBackgroundColor #FFFFF0
+skinparam NoteBorderColor     #AAAAAA
+skinparam shadowing false
+
+title **Use Case Diagram — Platform SmartMart**\nSistem Informasi Koperasi Digital
+
+' ============================================================
+' AKTOR KIRI — Mobile Users
+' ============================================================
+actor "Anggota\n(Pembeli)" as Pembeli
+actor "Anggota\n(Penjual)" as Penjual
+actor "Kurir\nKoperasi"    as Kurir
+
+' ============================================================
+' SYSTEM BOUNDARY
+' ============================================================
+rectangle "<<system>>\nPlatform SmartMart" as SYS {
+
+  ' PACKAGE 1: AUTENTIKASI
+  package "Autentikasi" as PKG_AUTH #DAE8FC {
+    usecase "Login\nAkun"             as UC_LOGIN
+    usecase "Registrasi\nAkun"        as UC_REGISTER
+    usecase "Lupa\nPassword"          as UC_FORGOT
+    usecase "Validasi Role\n(RBAC)"   as UC_RBAC
+    
+    ' 2-Column Layout
+    UC_LOGIN -[hidden]right-> UC_REGISTER
+    UC_FORGOT -[hidden]right-> UC_RBAC
+    UC_LOGIN -[hidden]down-> UC_FORGOT
+  }
+
+  ' PACKAGE 2: E-COMMERCE NIAGA
+  package "E-Commerce Niaga" as PKG_ECOM #D5E8D4 {
+    usecase "Melihat Katalog\nProduk"        as UC_CATALOG
+    usecase "Mencari &\nFilter Produk"       as UC_SEARCH
+    usecase "Melihat Detail\nProduk"         as UC_DETAIL
+    usecase "Mengelola Keranjang\nBelanja"   as UC_CART
+    usecase "Melakukan Checkout\nPesanan"    as UC_CHECKOUT
+    usecase "Memilih Opsi\nPengiriman"       as UC_SHIPPING
+    usecase "Memakai Voucher\nDiskon"        as UC_USE_VOUCHER
+    usecase "Konfirmasi Pembayaran\nDigital" as UC_PAYMENT
+    usecase "Konfirmasi Pesanan\nDiterima"   as UC_CONFIRM
+    usecase "Pelacakan Logistik\nReal-time"  as UC_TRACKING
+    usecase "Menulis Review\nProduk"         as UC_REVIEW
+    usecase "Kelola Wishlist\n(Favorit)"     as UC_WISHLIST
+    
+    ' 2-Column Layout
+    UC_CATALOG -[hidden]right-> UC_SEARCH
+    UC_SEARCH -[hidden]right-> UC_DETAIL
+    UC_DETAIL -[hidden]right-> UC_CART
+    UC_CART -[hidden]right-> UC_CHECKOUT
+    UC_CHECKOUT -[hidden]right-> UC_SHIPPING
+    
+    UC_USE_VOUCHER -[hidden]right-> UC_PAYMENT
+    UC_PAYMENT -[hidden]right-> UC_CONFIRM
+    UC_CONFIRM -[hidden]right-> UC_TRACKING
+    UC_TRACKING -[hidden]right-> UC_REVIEW
+    UC_REVIEW -[hidden]right-> UC_WISHLIST
+    
+    UC_CATALOG -[hidden]down-> UC_USE_VOUCHER
+  }
+
+  ' PACKAGE 3: LOYALITAS & SALDO
+  package "Loyalitas & Saldo" as PKG_LOYALTY #E1D5E7 {
+    usecase "Melihat Histori\nSaldo & Poin" as UC_POINTS_VIEW
+    usecase "Menerima Reward\nPoin (1%)"    as UC_EARN_POINTS
+    usecase "Menukarkan Poin\n(Redeem)"     as UC_REDEEM
+    usecase "Konsultasi\nAsisten AI"        as UC_AI
+    
+    ' 2-Column Layout
+    UC_POINTS_VIEW -[hidden]right-> UC_EARN_POINTS
+    UC_REDEEM -[hidden]right-> UC_AI
+    UC_POINTS_VIEW -[hidden]down-> UC_REDEEM
+  }
+
+  ' PACKAGE 4: MANAJEMEN UMKM PENJUAL
+  package "Manajemen UMKM Penjual" as PKG_SELLER #FFF2CC {
+    usecase "Tambah Produk\nDagangan"         as UC_ADD_PRODUCT
+    usecase "Edit / Hapus\nProduk"            as UC_EDIT_PRODUCT
+    usecase "Kelola Stok\nProduk"             as UC_STOCK
+    usecase "Konfirmasi Resi\nPengiriman"     as UC_RESI
+    usecase "Lihat Grafik\nPendapatan Bulanan" as UC_INCOME
+    usecase "Kelola Profil\nToko"             as UC_STORE_PROFILE
+    
+    ' 2-Column Layout
+    UC_ADD_PRODUCT -[hidden]right-> UC_EDIT_PRODUCT
+    UC_EDIT_PRODUCT -[hidden]right-> UC_STOCK
+    
+    UC_RESI -[hidden]right-> UC_INCOME
+    UC_INCOME -[hidden]right-> UC_STORE_PROFILE
+    
+    UC_ADD_PRODUCT -[hidden]down-> UC_RESI
+  }
+
+  ' PACKAGE 5: LOGISTIK KURIR
+  package "Logistik Kurir" as PKG_COURIER #F8CECC {
+    usecase "Terima Manifes\nDistribusi"    as UC_MANIFEST
+    usecase "Pembaruan Status\nPengiriman"  as UC_DELIVERY
+    usecase "Catat Event\nPengiriman"       as UC_SHIP_EVENT
+    
+    ' Strict vertical layout
+    UC_MANIFEST -[hidden]right-> UC_DELIVERY
+    UC_DELIVERY -[hidden]right-> UC_SHIP_EVENT
+  }
+
+  ' PACKAGE 6: MODUL ADMIN
+  package "Modul Admin" as PKG_ADMIN #FFE0CC {
+    package "Dashboard & Analitik" as PKG_ADMIN_DASH #FFE0B2 {
+      usecase "Lihat Dashboard\nKPI"               as UC_DASHBOARD
+      usecase "Lihat Analytics &\nLaporan Kinerja" as UC_ANALYTICS
+      UC_DASHBOARD -[hidden]right-> UC_ANALYTICS
+    }
+    package "Moderasi Konten" as PKG_ADMIN_MOD #C8E6C9 {
+      usecase "Approve / Reject\nSeller" as UC_APPROVE_SELLER
+      usecase "Approve / Reject\nProduk" as UC_APPROVE_PRODUCT
+      UC_APPROVE_SELLER -[hidden]right-> UC_APPROVE_PRODUCT
+    }
+    package "Manajemen Voucher" as PKG_ADMIN_VOUCH #FFF9C4 {
+      usecase "Buat Voucher\nDiskon"   as UC_CREATE_VOUCHER
+      usecase "Toggle Status\nVoucher" as UC_TOGGLE_VOUCHER
+      UC_CREATE_VOUCHER -[hidden]right-> UC_TOGGLE_VOUCHER
+    }
+    package "Pemantauan Sistem" as PKG_ADMIN_MON #E8EAF6 {
+      usecase "Pantau Daftar\nOrder"   as UC_ADMIN_ORDERS
+      usecase "Pantau Daftar\nMember"  as UC_ADMIN_MEMBERS
+      usecase "Pantau Poin\nLoyalitas" as UC_ADMIN_POINTS
+      UC_ADMIN_ORDERS -[hidden]right-> UC_ADMIN_MEMBERS
+      UC_ADMIN_MEMBERS -[hidden]right-> UC_ADMIN_POINTS
+    }
+    package "Keamanan & Audit" as PKG_ADMIN_SEC #FFCDD2 {
+      usecase "Lihat Audit\nLog" as UC_AUDIT_VIEW
+      usecase "Catat Audit\nLog" as UC_LOG_ACTION
+      UC_AUDIT_VIEW -[hidden]right-> UC_LOG_ACTION
+    }
+    
+    ' Arrange admin packages in 2 columns
+    PKG_ADMIN_DASH -[hidden]right-> PKG_ADMIN_MOD
+    PKG_ADMIN_MOD -[hidden]right-> PKG_ADMIN_MON
+    PKG_ADMIN_VOUCH -[hidden]right-> PKG_ADMIN_SEC
+    PKG_ADMIN_DASH -[hidden]down-> PKG_ADMIN_VOUCH
+  }
+}
+
+' ============================================================
+' AKTOR KANAN — Admin & Eksternal
+' ============================================================
+actor "Administrator\n(Pengurus)"  as Admin
+actor "Sistem AI\n(LLM Eksternal)" as AI_System
+
+' ============================================================
+' LAYOUT HINTS (2-Column Package Grid under LTR mode)
+' ============================================================
+' Column 1: Left
+PKG_AUTH -[hidden]right-> PKG_ECOM
+PKG_ECOM -[hidden]right-> PKG_LOYALTY
+
+' Column 2: Right
+PKG_SELLER -[hidden]right-> PKG_COURIER
+PKG_COURIER -[hidden]right-> PKG_ADMIN
+
+' Link Column 1 to Column 2 horizontally
+PKG_AUTH -[hidden]down-> PKG_SELLER
+
+' ============================================================
+' ASSOCIATION — Pembeli (kiri)
+' ============================================================
+Pembeli --> UC_LOGIN
+Pembeli --> UC_REGISTER
+Pembeli --> UC_FORGOT
+Pembeli --> UC_CATALOG
+Pembeli --> UC_SEARCH
+Pembeli --> UC_DETAIL
+Pembeli --> UC_CART
+Pembeli --> UC_CHECKOUT
+Pembeli --> UC_PAYMENT
+Pembeli --> UC_CONFIRM
+Pembeli --> UC_TRACKING
+Pembeli --> UC_REVIEW
+Pembeli --> UC_WISHLIST
+Pembeli --> UC_POINTS_VIEW
+Pembeli --> UC_REDEEM
+Pembeli --> UC_AI
+
+' ============================================================
+' ASSOCIATION — Penjual (kiri)
+' ============================================================
+Penjual --> UC_LOGIN
+Penjual --> UC_ADD_PRODUCT
+Penjual --> UC_EDIT_PRODUCT
+Penjual --> UC_STOCK
+Penjual --> UC_RESI
+Penjual --> UC_INCOME
+Penjual --> UC_STORE_PROFILE
+Penjual --> UC_POINTS_VIEW
+
+' ============================================================
+' ASSOCIATION — Kurir (kiri)
+' ============================================================
+Kurir --> UC_LOGIN
+Kurir --> UC_MANIFEST
+Kurir --> UC_DELIVERY
+
+' ============================================================
+' ASSOCIATION — Administrator (kanan)
+' ============================================================
+UC_DASHBOARD      <-- Admin
+UC_ANALYTICS      <-- Admin
+UC_APPROVE_SELLER <-- Admin
+UC_APPROVE_PRODUCT <-- Admin
+UC_CREATE_VOUCHER <-- Admin
+UC_TOGGLE_VOUCHER <-- Admin
+UC_ADMIN_ORDERS   <-- Admin
+UC_ADMIN_MEMBERS  <-- Admin
+UC_ADMIN_POINTS   <-- Admin
+UC_AUDIT_VIEW     <-- Admin
+UC_LOGIN          <-- Admin
+
+' ============================================================
+' ASSOCIATION — Sistem AI (kanan)
+' ============================================================
+UC_AI <-- AI_System
+
+' ============================================================
+' <<include>>
+' ============================================================
+UC_CHECKOUT  .> UC_SHIPPING     : <<include>>
+UC_CHECKOUT  .> UC_PAYMENT      : <<include>>
+UC_CONFIRM   .> UC_EARN_POINTS  : <<include>>
+UC_LOGIN     .> UC_RBAC         : <<include>>
+UC_DELIVERY  .> UC_SHIP_EVENT   : <<include>>
+UC_ADD_PRODUCT .> UC_STOCK      : <<include>>
+
+UC_APPROVE_SELLER   .> UC_LOG_ACTION : <<include>>
+UC_APPROVE_PRODUCT  .> UC_LOG_ACTION : <<include>>
+UC_CREATE_VOUCHER   .> UC_LOG_ACTION : <<include>>
+UC_TOGGLE_VOUCHER   .> UC_LOG_ACTION : <<include>>
+
+' ============================================================
+' <<extend>>
+' ============================================================
+UC_SEARCH       .> UC_CATALOG  : <<extend>>
+UC_USE_VOUCHER  .> UC_CHECKOUT : <<extend>>
+UC_REDEEM       .> UC_CHECKOUT : <<extend>>
+UC_REVIEW       .> UC_CONFIRM  : <<extend>>
+UC_EDIT_PRODUCT .> UC_ADD_PRODUCT : <<extend>>
+
+' ============================================================
+' NOTES
+' ============================================================
+note bottom of UC_EARN_POINTS
+  Sistem otomatis memberi
+  **1% poin reward** dari
+  total belanja terverifikasi
+end note
+
+note bottom of UC_CHECKOUT
+  **Komisi Koperasi 3%**
+  dipotong otomatis dari
+  pendapatan penjual
+end note
+
+note bottom of UC_RBAC
+  Middleware RBAC:
+  BUYER | SELLER
+  ADMIN | KASIR
+end note
+
+note bottom of UC_LOG_ACTION
+  Setiap aksi moderasi
+  otomatis masuk ke
+  tabel **audit_log**
+end note
+
+footer Use Case Diagram — SmartMart Koperasi Digital | Modul Mobile + Admin | Tugas Akhir
+
+@enduml

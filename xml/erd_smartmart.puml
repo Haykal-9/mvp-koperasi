@@ -1,0 +1,306 @@
+@startuml
+!theme plain
+title **Entity Relationship Diagram — SmartMart Koperasi Digital**\n(Gabungan Modul Mobile & Admin)
+
+skinparam linetype ortho
+skinparam class {
+  BackgroundColor<<pk>> #FCEABB
+  BackgroundColor #FFFFFF
+  BorderColor #555555
+  FontSize 12
+}
+
+' ============================================================
+' ENTITAS: ecommerce_user
+' ============================================================
+entity "ecommerce_user" as ecommerce_user #DAE8FC {
+  * **id** : INT <<PK>>
+  --
+  username : VARCHAR(255)
+  email : VARCHAR(255) <<UNIQUE>>
+  password : VARCHAR(255)
+  role : ENUM('BUYER','SELLER','ADMIN','KASIR')
+  is_seller_active : TINYINT(1)
+  seller_rating : FLOAT
+  linked_koperasi_member_id : INT <<FK>>
+  created_at : TIMESTAMP
+}
+
+' ============================================================
+' ENTITAS: seller_profile
+' ============================================================
+entity "seller_profile" as seller_profile #DAE8FC {
+  * **seller_id** : INT <<PK, FK>>
+  --
+  store_name : VARCHAR(255)
+  description : TEXT
+  rating : FLOAT
+  response_time : VARCHAR(50)
+  total_sold : INT
+  joined_at : TIMESTAMP
+}
+
+' ============================================================
+' ENTITAS: ec_address
+' ============================================================
+entity "ec_address" as ec_address #DAE8FC {
+  * **id** : INT <<PK>>
+  --
+  * user_id : INT <<FK>>
+  label : VARCHAR(50)
+  penerima : VARCHAR(255)
+  no_hp : VARCHAR(20)
+  alamat : TEXT
+  kota : VARCHAR(100)
+  provinsi : VARCHAR(100)
+  kode_pos : VARCHAR(10)
+  is_default : TINYINT(1)
+}
+
+' ============================================================
+' ENTITAS: ec_product
+' ============================================================
+entity "ec_product" as ec_product #D5E8D4 {
+  * **id** : INT <<PK>>
+  --
+  * seller_id : INT <<FK>>
+  seller_name : VARCHAR(255)
+  nama : VARCHAR(255)
+  deskripsi : TEXT
+  kategori : VARCHAR(100)
+  harga : DECIMAL(12,2)
+  stok : INT
+  berat : INT
+  foto_url : VARCHAR(500)
+  rating : FLOAT
+  total_review : INT
+  total_sold : INT
+  status : ENUM('PENDING_APPROVAL','APPROVED','REJECTED','ARCHIVED')
+  created_at : TIMESTAMP
+}
+
+' ============================================================
+' ENTITAS: ec_order
+' ============================================================
+entity "ec_order" as ec_order #FFE6CC {
+  * **id** : INT <<PK>>
+  --
+  nomor_order : VARCHAR(50) <<UNIQUE>>
+  * buyer_id : INT <<FK>>
+  buyer_name : VARCHAR(255)
+  * seller_id : INT <<FK>>
+  seller_name : VARCHAR(255)
+  alamat_pengiriman : TEXT
+  shipping_option : VARCHAR(100)
+  shipping_cost : DECIMAL(8,2)
+  subtotal : DECIMAL(12,2)
+  discount : DECIMAL(12,2)
+  points_used : DECIMAL(12,2)
+  total_harga : DECIMAL(12,2)
+  voucher_code : VARCHAR(50) <<FK>>
+  metode_bayar : VARCHAR(50)
+  status : ENUM('PENDING','DIBAYAR','DIPROSES','DIKIRIM','SELESAI','BATAL')
+  resi_pengiriman : VARCHAR(100)
+  points_earned : DECIMAL(12,2)
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+' ============================================================
+' ENTITAS: ec_order_item
+' ============================================================
+entity "ec_order_item" as ec_order_item #FFE6CC {
+  * **id** : INT <<PK>>
+  --
+  * order_id : INT <<FK>>
+  * product_id : INT <<FK>>
+  seller_id : INT <<FK>>
+  product_nama : VARCHAR(255)
+  jumlah : INT
+  harga_satuan : DECIMAL(12,2)
+  subtotal : DECIMAL(12,2)
+}
+
+' ============================================================
+' ENTITAS: payments
+' ============================================================
+entity "payments" as payments #F8CECC {
+  * **id** : INT <<PK>>
+  --
+  * order_id : INT <<FK, UNIQUE>>
+  method : ENUM('transfer','ewallet','cash')
+  amount : DECIMAL(12,2)
+  status : ENUM('pending','verified','failed')
+  proof_url : VARCHAR(500)
+  paid_at : TIMESTAMP
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+' ============================================================
+' ENTITAS: product_review
+' ============================================================
+entity "product_review" as product_review #D5E8D4 {
+  * **id** : INT <<PK>>
+  --
+  * product_id : INT <<FK>>
+  * user_id : INT <<FK>>
+  username : VARCHAR(255)
+  rating : INT
+  komentar : TEXT
+  created_at : TIMESTAMP
+}
+
+' ============================================================
+' ENTITAS: wishlist
+' ============================================================
+entity "wishlist" as wishlist #D5E8D4 {
+  * **id** : INT <<PK>>
+  --
+  * user_id : INT <<FK>>
+  * product_id : INT <<FK>>
+  created_at : TIMESTAMP
+}
+
+' ============================================================
+' ENTITAS: shipping_option
+' ============================================================
+entity "shipping_option" as shipping_option #DEEBF7 {
+  * **id** : INT <<PK>>
+  --
+  nama : VARCHAR(100)
+  provider : VARCHAR(100)
+  estimasi : VARCHAR(50)
+  harga : DECIMAL(8,2)
+}
+
+' ============================================================
+' ENTITAS: shipment_event
+' ============================================================
+entity "shipment_event" as shipment_event #DEEBF7 {
+  * **id** : INT <<PK>>
+  --
+  * order_id : INT <<FK>>
+  status : ENUM('DIKEMAS','DIKIRIM','TRANSIT','SAMPAI')
+  lokasi : VARCHAR(255)
+  keterangan : TEXT
+  created_at : TIMESTAMP
+}
+
+' ============================================================
+' ENTITAS: voucher
+' ============================================================
+entity "voucher" as voucher #FFF2CC {
+  * **id** : INT <<PK>>
+  --
+  code : VARCHAR(50) <<UNIQUE>>
+  deskripsi : TEXT
+  tipe_diskon : ENUM('PERCENT','FIXED')
+  nilai_diskon : DECIMAL(12,2)
+  min_pembelian : DECIMAL(12,2)
+  maks_diskon : DECIMAL(12,2)
+  kuota : INT
+  status : ENUM('ACTIVE','EXPIRED','USED_UP')
+  berlaku_sampai : TIMESTAMP
+}
+
+' ============================================================
+' ENTITAS: user_points
+' ============================================================
+entity "user_points" as user_points #E1D5E7 {
+  * **user_id** : INT <<PK, FK>>
+  --
+  balance : DECIMAL(12,2)
+  total_earned : DECIMAL(12,2)
+  total_redeemed : DECIMAL(12,2)
+}
+
+' ============================================================
+' ENTITAS: points_transaction
+' ============================================================
+entity "points_transaction" as points_transaction #E1D5E7 {
+  * **id** : INT <<PK>>
+  --
+  * user_id : INT <<FK>>
+  tipe : ENUM('EARN_PURCHASE','REDEEM_VOUCHER','REDEEM_DISCOUNT','CONVERT_SIMPANAN')
+  amount : DECIMAL(12,2)
+  order_id : INT <<FK>>
+  keterangan : VARCHAR(255)
+  created_at : TIMESTAMP
+}
+
+' ============================================================
+' ENTITAS: audit_log
+' ============================================================
+entity "audit_log" as audit_log #F8CECC {
+  * **id** : INT <<PK>>
+  --
+  * user_id : INT <<FK>>
+  username : VARCHAR(255)
+  action : ENUM('APPROVE_PRODUCT','REJECT_PRODUCT','APPROVE_SELLER','REJECT_SELLER','CREATE_VOUCHER','ACTIVATE_VOUCHER','DEACTIVATE_VOUCHER','LINK_MEMBER')
+  resource : VARCHAR(255)
+  details : TEXT
+  created_at : TIMESTAMP
+}
+
+' ============================================================
+' RELASI — Ecommerce User sebagai pusat
+' ============================================================
+
+ecommerce_user ||--o| seller_profile : "1..1\nmemiliki profil toko"
+ecommerce_user ||--o{ ec_address : "1..N\nmemiliki alamat"
+ecommerce_user ||--o{ ec_product : "1..N\nmenjual (seller_id)"
+ecommerce_user ||--o{ ec_order : "1..N\nmemesan (buyer_id)"
+ecommerce_user ||--o| user_points : "1..1\nmemiliki saldo poin"
+ecommerce_user ||--o{ points_transaction : "1..N\nriwayat poin"
+ecommerce_user ||--o{ audit_log : "1..N\nmencatat aksi admin"
+ecommerce_user ||--o{ product_review : "1..N\nmenulis review"
+ecommerce_user ||--o{ wishlist : "1..N\nmenyimpan favorit"
+
+' ============================================================
+' RELASI — Produk
+' ============================================================
+
+ec_product ||--o{ ec_order_item : "1..N\nitem detail"
+ec_product ||--o{ product_review : "1..N\ndi-review"
+ec_product ||--o{ wishlist : "1..N\ndi-wishlist"
+
+' ============================================================
+' RELASI — Order
+' ============================================================
+
+ec_order ||--|{ ec_order_item : "1..N\nmemuat item"
+ec_order ||--|| payments : "1..1\nmemiliki pembayaran"
+ec_order ||--o{ shipment_event : "1..N\ntracking pengiriman"
+ec_order ||--o{ points_transaction : "0..N\nmenghasilkan/memakai poin"
+
+' ============================================================
+' RELASI — Voucher ke Order
+' ============================================================
+
+voucher ||--o{ ec_order : "0..N\ndipakai di order"
+
+' ============================================================
+' KETERANGAN / LEGEND
+' ============================================================
+
+legend bottom left
+  |= Simbol |= Keterangan |
+  | **PK** | Primary Key |
+  | **FK** | Foreign Key |
+  | **UNIQUE** | Constraint Unik |
+  | \|\|--\|\| | One-to-One |
+  | \|\|--o{ | One-to-Many |
+  | \|\|--o\| | One-to-Zero-or-One |
+  |<#DAE8FC> | Entitas User & Profil |
+  |<#D5E8D4> | Entitas Produk & Review |
+  |<#FFE6CC> | Entitas Order & Item |
+  |<#FFF2CC> | Entitas Voucher |
+  |<#E1D5E7> | Entitas Poin Loyalitas |
+  |<#F8CECC> | Entitas Pembayaran & Audit |
+  |<#DEEBF7> | Entitas Pengiriman |
+endlegend
+
+footer \nERD SmartMart — Koperasi Digital (Modul Mobile + Admin)\nDibuat untuk keperluan akademik Tugas Akhir — Proyek Sistem Informasi
+
+@enduml
