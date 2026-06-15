@@ -1,11 +1,11 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 
-	"koperasi-frontend/core/mock"
-	"koperasi-frontend/core/model"
+	"koperasi-frontend/core/service"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -17,10 +17,19 @@ type Renderer func(c *gin.Context, layout, page string, data gin.H)
 
 type AuthHandler struct {
 	Render Renderer
+	Svc    *service.AuthService
 }
 
-func NewAuthHandler(render Renderer) *AuthHandler {
-	return &AuthHandler{Render: render}
+func NewAuthHandler(render Renderer, svc *service.AuthService) *AuthHandler {
+	return &AuthHandler{Render: render, Svc: svc}
+}
+
+func (h *AuthHandler) ready(c *gin.Context) bool {
+	if h.Svc == nil {
+		c.String(http.StatusServiceUnavailable, "Autentikasi sementara tidak tersedia (database tidak terhubung).")
+		return false
+	}
+	return true
 }
 
 // ===== GET /login =====
@@ -47,6 +56,9 @@ func (h *AuthHandler) ShowLogin(c *gin.Context) {
 
 // ===== POST /login =====
 func (h *AuthHandler) DoLogin(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	email := strings.TrimSpace(c.PostForm("email"))
 	password := c.PostForm("password")
 
@@ -57,8 +69,13 @@ func (h *AuthHandler) DoLogin(c *gin.Context) {
 		return
 	}
 
-	user := mock.FindUserByEmail(email)
-	if user == nil || user.Password != password {
+	user, err := h.Svc.Authenticate(c.Request.Context(), email, password)
+	if err != nil {
+		SetFlash(c, "error", "Kesalahan server. Coba lagi.")
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+	if user == nil {
 		SetFlash(c, "error", "Email atau password salah.")
 		SetFlash(c, "form_email", email)
 		c.Redirect(http.StatusFound, "/login")
@@ -70,15 +87,6 @@ func (h *AuthHandler) DoLogin(c *gin.Context) {
 	sess.Set("user_email", user.Email)
 	sess.Set("user_nama", user.Nama)
 	sess.Set("user_role", user.Role)
-
-	// SSO: also set EC session so all roles can access e-commerce without re-login
-	if ecUser := mock.FindECommerceUserByEmail(user.Email); ecUser != nil {
-		sess.Set("ec_user_id", ecUser.ID)
-		sess.Set("ec_username", ecUser.Username)
-		sess.Set("ec_email", ecUser.Email)
-		sess.Set("ec_role", ecUser.Role)
-		sess.Set("ec_is_seller", ecUser.IsSellerActive)
-	}
 
 	if err := sess.Save(); err != nil {
 		SetFlash(c, "error", "Gagal menyimpan sesi. Coba lagi.")
@@ -111,6 +119,9 @@ func (h *AuthHandler) ShowRegister(c *gin.Context) {
 
 // ===== POST /register =====
 func (h *AuthHandler) DoRegister(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	nama := strings.TrimSpace(c.PostForm("nama"))
 	email := strings.TrimSpace(c.PostForm("email"))
 	password := c.PostForm("password")
@@ -132,22 +143,16 @@ func (h *AuthHandler) DoRegister(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/register")
 		return
 	}
-	if mock.FindUserByEmail(email) != nil {
-		SetFlash(c, "error", "Email sudah terdaftar.")
+	if _, err := h.Svc.Register(c.Request.Context(), nama, email, password); err != nil {
+		if errors.Is(err, service.ErrEmailAlreadyRegistered) {
+			SetFlash(c, "error", "Email sudah terdaftar.")
+		} else {
+			SetFlash(c, "error", "Registrasi gagal. Coba lagi.")
+		}
 		preserve()
 		c.Redirect(http.StatusFound, "/register")
 		return
 	}
-
-	// append to in-memory mock data
-	newID := nextUserID()
-	mock.Users = append(mock.Users, model.User{
-		ID:       newID,
-		Email:    email,
-		Password: password,
-		Nama:     nama,
-		Role:     "ANGGOTA",
-	})
 
 	SetFlash(c, "success", "Registrasi berhasil. Silakan login.")
 	SetFlash(c, "form_email", email)
@@ -161,16 +166,6 @@ func (h *AuthHandler) DoLogout(c *gin.Context) {
 	_ = sess.Save()
 	SetFlash(c, "success", "Anda telah keluar.")
 	c.Redirect(http.StatusFound, "/login")
-}
-
-func nextUserID() int {
-	max := 0
-	for _, u := range mock.Users {
-		if u.ID > max {
-			max = u.ID
-		}
-	}
-	return max + 1
 }
 
 // ===== AuthRequired middleware =====

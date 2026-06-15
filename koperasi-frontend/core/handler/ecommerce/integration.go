@@ -6,27 +6,37 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"koperasi-frontend/core/mock"
+	"koperasi-frontend/core/service"
 )
 
-// IntegrationHandler provides mock JSON API endpoints that simulate
-// a separate koperasi backend service for member lookup, linking, and simpanan.
-type IntegrationHandler struct{}
+// IntegrationHandler provides JSON API endpoints for koperasi member lookup,
+// linking, and points→simpanan conversion (integrasi M1↔M5).
+type IntegrationHandler struct {
+	Svc *service.ECAccountService
+}
 
-func NewIntegrationHandler() *IntegrationHandler {
-	return &IntegrationHandler{}
+func NewIntegrationHandler(svc *service.ECAccountService) *IntegrationHandler {
+	return &IntegrationHandler{Svc: svc}
 }
 
 // GetKoperasiMember returns koperasi member data as JSON.
 // GET /ecommerce/api/koperasi/member/:id
 func (h *IntegrationHandler) GetKoperasiMember(c *gin.Context) {
+	if h.Svc == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Database tidak terhubung"})
+		return
+	}
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil || id <= 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "ID tidak valid"})
 		return
 	}
 
-	m := mock.FindMemberByID(id)
+	m, err := h.Svc.MemberByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Kesalahan database"})
+		return
+	}
 	if m == nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Member tidak ditemukan"})
 		return
@@ -47,6 +57,10 @@ func (h *IntegrationHandler) GetKoperasiMember(c *gin.Context) {
 // POST /ecommerce/api/koperasi/link
 // Form: member_id int
 func (h *IntegrationHandler) LinkToKoperasi(c *gin.Context) {
+	if h.Svc == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Database tidak terhubung"})
+		return
+	}
 	ecUserID := GetECUserID(c)
 	if ecUserID == 0 {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
@@ -59,31 +73,17 @@ func (h *IntegrationHandler) LinkToKoperasi(c *gin.Context) {
 		return
 	}
 
-	for _, u := range mock.ECommerceUsers {
-		if u.LinkedKoperasiMemberID == memberID && u.ID != ecUserID {
-			c.JSON(http.StatusConflict, gin.H{
-				"success": false,
-				"error":   "Member ini sudah di-link ke akun lain",
-			})
-			return
-		}
-	}
-
-	if !mock.LinkToKoperasiMember(ecUserID, memberID) {
-		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Gagal link member"})
+	m, linkErr := h.Svc.LinkMember(c.Request.Context(), ecUserID, memberID)
+	if linkErr != nil {
+		c.JSON(http.StatusConflict, gin.H{"success": false, "error": linkErr.Error()})
 		return
 	}
 
-	m := mock.FindMemberByID(memberID)
-	nama := "member"
-	if m != nil {
-		nama = m.Nama
-	}
 	c.JSON(http.StatusOK, gin.H{
 		"success":     true,
-		"message":     "Berhasil link dengan " + nama,
+		"message":     "Berhasil link dengan " + m.Nama,
 		"member_id":   memberID,
-		"member_nama": nama,
+		"member_nama": m.Nama,
 	})
 }
 
@@ -91,6 +91,10 @@ func (h *IntegrationHandler) LinkToKoperasi(c *gin.Context) {
 // POST /ecommerce/api/koperasi/simpanan/add
 // Form: points float
 func (h *IntegrationHandler) AddToSimpanan(c *gin.Context) {
+	if h.Svc == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Database tidak terhubung"})
+		return
+	}
 	ecUserID := GetECUserID(c)
 	if ecUserID == 0 {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
@@ -103,23 +107,17 @@ func (h *IntegrationHandler) AddToSimpanan(c *gin.Context) {
 		return
 	}
 
-	ok, msg := mock.ConvertPointsToKoperasiSimpanan(ecUserID, points)
-	if !ok {
-		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": msg})
+	msg, rupiah, newSukarela, convErr := h.Svc.ConvertToSimpanan(c.Request.Context(), ecUserID, points)
+	if convErr != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": convErr.Error()})
 		return
 	}
 
-	resp := gin.H{
-		"success":      true,
-		"message":      msg,
-		"points_used":  points,
-		"rupiah_added": points * 100,
-	}
-	u := mock.FindECommerceUserByID(ecUserID)
-	if u != nil && u.LinkedKoperasiMemberID != 0 {
-		if m := mock.FindMemberByID(u.LinkedKoperasiMemberID); m != nil {
-			resp["new_simpanan_sukarela"] = m.SimpananSukarela
-		}
-	}
-	c.JSON(http.StatusOK, resp)
+	c.JSON(http.StatusOK, gin.H{
+		"success":               true,
+		"message":               msg,
+		"points_used":           points,
+		"rupiah_added":          rupiah,
+		"new_simpanan_sukarela": newSukarela,
+	})
 }

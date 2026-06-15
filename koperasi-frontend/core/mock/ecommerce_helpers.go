@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"koperasi-frontend/core/model"
+	"koperasi-frontend/core/security"
+	"koperasi-frontend/core/service"
 )
 
 // ============================================================
@@ -44,7 +46,7 @@ func FindECommerceUserByID(id int) *model.ECommerceUser {
 func AuthenticateECommerceUser(email, password string) (*model.ECommerceUser, bool) {
 	// Validate against koperasi user credentials
 	kUser := FindUserByEmail(email)
-	if kUser == nil || kUser.Password != password {
+	if kUser == nil || !security.VerifyPassword(kUser.Password, password) {
 		return nil, false
 	}
 	// Find the corresponding EC user
@@ -59,8 +61,12 @@ func CreateECommerceUser(username, email, password string) *model.ECommerceUser 
 			nextID = u.ID
 		}
 	}
+	hash, err := security.HashPassword(password)
+	if err != nil {
+		return nil
+	}
 	newUser := model.ECommerceUser{
-		ID: nextID + 1, Username: username, Email: email, Password: password,
+		ID: nextID + 1, Username: username, Email: email, Password: hash,
 		Role: "BUYER", IsSellerActive: false, CreatedAt: time.Now().Format("2006-01-02"),
 	}
 	ECommerceUsers = append(ECommerceUsers, newUser)
@@ -326,8 +332,8 @@ func CreateECOrder(buyerID int, items []model.ECOrderItem, alamat, shippingOpt, 
 		UpdatedAt: time.Now().Format("2006-01-02 15:04"),
 	}
 	ECOrders = append(ECOrders, order)
-	// Earn points (1 point per Rp 1000 spent)
-	earned := float64(int(subtotal / 1000))
+	// Earn points (aturan di service.PricingService)
+	earned := service.NewPricingService().PointsEarned(subtotal)
 	if earned > 0 {
 		ECOrders[len(ECOrders)-1].PointsEarned = earned
 		AddECPoints(buyerID, earned, "EARN_PURCHASE", order.ID, "Pembelian order "+nomorOrder)
@@ -462,8 +468,8 @@ func ConvertPointsToKoperasiSimpanan(ecUserID int, points float64) (bool, string
 	if up == nil || up.Balance < points {
 		return false, "Poin tidak cukup"
 	}
-	// Convert: 1 poin = Rp 100
-	rupiah := points * 100
+	// Convert: 1 poin = Rp 1, sama dengan nilai redeem diskon.
+	rupiah := points
 	m := FindMemberByID(u.LinkedKoperasiMemberID)
 	if m == nil {
 		return false, "Member koperasi tidak ditemukan"
@@ -535,13 +541,27 @@ func CreateECAddress(userID int, addr model.ECAddress) *model.ECAddress {
 func UpdateECAddress(addressID int, update model.ECAddress) bool {
 	for i := range ECAddresses {
 		if ECAddresses[i].ID == addressID {
-			if update.Label != "" { ECAddresses[i].Label = update.Label }
-			if update.Penerima != "" { ECAddresses[i].Penerima = update.Penerima }
-			if update.NoHP != "" { ECAddresses[i].NoHP = update.NoHP }
-			if update.Alamat != "" { ECAddresses[i].Alamat = update.Alamat }
-			if update.Kota != "" { ECAddresses[i].Kota = update.Kota }
-			if update.Provinsi != "" { ECAddresses[i].Provinsi = update.Provinsi }
-			if update.KodePos != "" { ECAddresses[i].KodePos = update.KodePos }
+			if update.Label != "" {
+				ECAddresses[i].Label = update.Label
+			}
+			if update.Penerima != "" {
+				ECAddresses[i].Penerima = update.Penerima
+			}
+			if update.NoHP != "" {
+				ECAddresses[i].NoHP = update.NoHP
+			}
+			if update.Alamat != "" {
+				ECAddresses[i].Alamat = update.Alamat
+			}
+			if update.Kota != "" {
+				ECAddresses[i].Kota = update.Kota
+			}
+			if update.Provinsi != "" {
+				ECAddresses[i].Provinsi = update.Provinsi
+			}
+			if update.KodePos != "" {
+				ECAddresses[i].KodePos = update.KodePos
+			}
 			return true
 		}
 	}
@@ -615,29 +635,8 @@ func FindECVoucherByCode(code string) *model.Voucher {
 }
 
 func ValidateECVoucher(code string, totalPrice float64) (float64, string) {
-	v := FindECVoucherByCode(code)
-	if v == nil {
-		return 0, "Voucher tidak ditemukan"
-	}
-	if v.Status != "ACTIVE" {
-		return 0, "Voucher sudah tidak berlaku"
-	}
-	if v.Kuota <= 0 {
-		return 0, "Kuota voucher sudah habis"
-	}
-	if totalPrice < v.MinPembelian {
-		return 0, fmt.Sprintf("Minimum pembelian Rp %.0f", v.MinPembelian)
-	}
-	discount := 0.0
-	if v.TipeDiskon == "PERCENT" {
-		discount = totalPrice * v.NilaiDiskon / 100
-		if discount > v.MaksDiskon {
-			discount = v.MaksDiskon
-		}
-	} else {
-		discount = v.NilaiDiskon
-	}
-	return discount, "Voucher valid"
+	// Aturan diskon dipusatkan di service.PricingService; mock hanya melakukan lookup.
+	return service.NewPricingService().VoucherDiscount(FindECVoucherByCode(code), totalPrice)
 }
 
 func GetECShippingOptions() []model.ShippingOption {
@@ -645,16 +644,15 @@ func GetECShippingOptions() []model.ShippingOption {
 }
 
 func CalculateECShippingCost(shipOptionID int, weightGrams int) float64 {
-	for _, s := range ECShippingOptions {
-		if s.ID == shipOptionID {
-			kg := float64(weightGrams) / 1000.0
-			if kg < 1 {
-				kg = 1
-			}
-			return s.Harga * kg
+	// Aturan ongkir dipusatkan di service.PricingService; mock hanya melakukan lookup.
+	var opt *model.ShippingOption
+	for i := range ECShippingOptions {
+		if ECShippingOptions[i].ID == shipOptionID {
+			opt = &ECShippingOptions[i]
+			break
 		}
 	}
-	return 0
+	return service.NewPricingService().ShippingCost(opt, weightGrams)
 }
 
 // ============================================================
@@ -754,4 +752,3 @@ func FindECommerceUserByMemberName(nama string) *model.ECommerceUser {
 	}
 	return nil
 }
-

@@ -10,9 +10,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"koperasi-frontend/core/handler"
-	"koperasi-frontend/core/mock"
+	"koperasi-frontend/core/service"
 )
-
 
 // ECRenderer is the function the e-commerce handlers use to render templates.
 type ECRenderer func(c *gin.Context, layout, page string, data gin.H)
@@ -20,11 +19,21 @@ type ECRenderer func(c *gin.Context, layout, page string, data gin.H)
 // AuthHandler handles e-commerce authentication (login, signup, logout).
 type AuthHandler struct {
 	Render ECRenderer
+	Svc    *service.ECAccountService
 }
 
 // NewAuthHandler creates a new e-commerce auth handler.
-func NewAuthHandler(render ECRenderer) *AuthHandler {
-	return &AuthHandler{Render: render}
+func NewAuthHandler(render ECRenderer, svc *service.ECAccountService) *AuthHandler {
+	return &AuthHandler{Render: render, Svc: svc}
+}
+
+// ready memastikan service (DB) tersedia.
+func (h *AuthHandler) ready(c *gin.Context) bool {
+	if h.Svc == nil {
+		c.String(http.StatusServiceUnavailable, "E-Commerce sementara tidak tersedia (database tidak terhubung).")
+		return false
+	}
+	return true
 }
 
 // Login renders the e-commerce login page.
@@ -39,10 +48,10 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	// SSO: auto-login for any koperasi role if a matching EC account exists
-	if sess.Get("user_id") != nil {
+	if sess.Get("user_id") != nil && h.Svc != nil {
 		userEmail, _ := sess.Get("user_email").(string)
 		if userEmail != "" {
-			ecUser := mock.FindECommerceUserByEmail(userEmail)
+			ecUser, _ := h.Svc.UserByEmail(c.Request.Context(), userEmail)
 			if ecUser != nil {
 				if err := SetECSession(c, ecUser.ID, ecUser.Username, ecUser.Email, ecUser.Role, ecUser.IsSellerActive); err == nil {
 					handler.SetFlash(c, "ec_success", fmt.Sprintf("Selamat datang, %s! Anda login otomatis melalui akun Koperasi.", ecUser.Username))
@@ -68,6 +77,9 @@ func (h *AuthHandler) Login(c *gin.Context) {
 // DoLogin processes the e-commerce login form.
 // POST /ecommerce/login
 func (h *AuthHandler) DoLogin(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	email := strings.TrimSpace(c.PostForm("email"))
 	password := c.PostForm("password")
 
@@ -78,8 +90,13 @@ func (h *AuthHandler) DoLogin(c *gin.Context) {
 		return
 	}
 
-	user, ok := mock.AuthenticateECommerceUser(email, password)
-	if !ok {
+	user, err := h.Svc.Authenticate(c.Request.Context(), email, password)
+	if err != nil {
+		handler.SetFlash(c, "ec_error", "Kesalahan server. Coba lagi.")
+		c.Redirect(http.StatusFound, "/ecommerce/login")
+		return
+	}
+	if user == nil {
 		handler.SetFlash(c, "ec_error", "Email atau password salah.")
 		handler.SetFlash(c, "ec_form_email", email)
 		c.Redirect(http.StatusFound, "/ecommerce/login")
@@ -95,7 +112,7 @@ func (h *AuthHandler) DoLogin(c *gin.Context) {
 
 	// Flash message based on koperasi link status
 	if user.LinkedKoperasiMemberID > 0 {
-		m := mock.FindMemberByID(user.LinkedKoperasiMemberID)
+		m, _ := h.Svc.MemberByID(c.Request.Context(), user.LinkedKoperasiMemberID)
 		if m != nil {
 			handler.SetFlash(c, "ec_success", fmt.Sprintf("Selamat datang, %s! Akun Koperasi Anda (%s) sudah linked. Poin bisa dikonversi ke Simpanan.", user.Username, m.Nama))
 		}
@@ -131,7 +148,7 @@ func (h *AuthHandler) Signup(c *gin.Context) {
 	h.Render(c, "ec_auth", "ecommerce/auth/signup", gin.H{
 		"Title":        "Daftar E-Commerce",
 		"FlashError":   flashErr,
-		"FormUsername":  prefillUsername,
+		"FormUsername": prefillUsername,
 		"FormEmail":    prefillEmail,
 	})
 }
@@ -139,6 +156,9 @@ func (h *AuthHandler) Signup(c *gin.Context) {
 // DoSignup processes the e-commerce signup form.
 // POST /ecommerce/signup
 func (h *AuthHandler) DoSignup(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	username := strings.TrimSpace(c.PostForm("username"))
 	email := strings.TrimSpace(c.PostForm("email"))
 	password := c.PostForm("password")
@@ -169,25 +189,21 @@ func (h *AuthHandler) DoSignup(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/ecommerce/signup")
 		return
 	}
-	if mock.FindECommerceUserByUsername(username) != nil {
-		handler.SetFlash(c, "ec_error", "Username sudah digunakan.")
+	// Create user (service memvalidasi keunikan username/email)
+	newUser, err := h.Svc.Signup(c.Request.Context(), username, email, password)
+	if err != nil {
+		handler.SetFlash(c, "ec_error", err.Error())
 		preserve()
 		c.Redirect(http.StatusFound, "/ecommerce/signup")
 		return
 	}
 
-	// Create user
-	newUser := mock.CreateECommerceUser(username, email, password)
-
 	// Optional: Link to koperasi member
 	if koperasiMemberIDStr != "" {
-		memberID, err := strconv.Atoi(koperasiMemberIDStr)
-		if err == nil && memberID > 0 {
-			if mock.LinkToKoperasiMember(newUser.ID, memberID) {
-				m := mock.FindMemberByID(memberID)
-				if m != nil {
-					handler.SetFlash(c, "ec_success", fmt.Sprintf("Akun berhasil dibuat & linked dengan member %s (%s). Poin siap dikonversi ke Simpanan!", m.Nama, m.NomorAnggota))
-				}
+		memberID, atoiErr := strconv.Atoi(koperasiMemberIDStr)
+		if atoiErr == nil && memberID > 0 {
+			if m, linkErr := h.Svc.LinkMember(c.Request.Context(), newUser.ID, memberID); linkErr == nil && m != nil {
+				handler.SetFlash(c, "ec_success", fmt.Sprintf("Akun berhasil dibuat & linked dengan member %s (%s). Poin siap dikonversi ke Simpanan!", m.Nama, m.NomorAnggota))
 			}
 		}
 	}
@@ -209,13 +225,17 @@ func (h *AuthHandler) DoSignup(c *gin.Context) {
 // SearchKoperasiMember returns JSON search results for koperasi members.
 // GET /ecommerce/api/members/search?q=...
 func (h *AuthHandler) SearchKoperasiMember(c *gin.Context) {
+	if h.Svc == nil {
+		c.JSON(http.StatusOK, gin.H{"results": []gin.H{}})
+		return
+	}
 	q := strings.TrimSpace(c.Query("q"))
 	if q == "" {
 		c.JSON(http.StatusOK, []gin.H{})
 		return
 	}
 
-	members := mock.SearchKoperasiMembers(q)
+	members, _ := h.Svc.SearchMembers(c.Request.Context(), q)
 	results := make([]gin.H, 0, len(members))
 	for _, m := range members {
 		results = append(results, gin.H{
@@ -231,6 +251,9 @@ func (h *AuthHandler) SearchKoperasiMember(c *gin.Context) {
 // LinkKoperasiMember links the current EC user to a koperasi member.
 // POST /ecommerce/link-member
 func (h *AuthHandler) LinkKoperasiMember(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	ecUserID := GetECUserID(c)
 	if ecUserID == 0 {
 		handler.SetFlash(c, "ec_error", "Silakan login terlebih dahulu.")
@@ -246,50 +269,34 @@ func (h *AuthHandler) LinkKoperasiMember(c *gin.Context) {
 		return
 	}
 
-	// Check if member is already linked to another EC user
-	for _, u := range mock.ECommerceUsers {
-		if u.LinkedKoperasiMemberID == memberID && u.ID != ecUserID {
-			handler.SetFlash(c, "ec_error", "Member koperasi ini sudah di-link ke akun E-Commerce lain.")
-			c.Redirect(http.StatusFound, "/ecommerce/points")
-			return
-		}
-	}
-
-	if !mock.LinkToKoperasiMember(ecUserID, memberID) {
-		handler.SetFlash(c, "ec_error", "Gagal link ke member koperasi. Pastikan member valid.")
+	m, linkErr := h.Svc.LinkMember(c.Request.Context(), ecUserID, memberID)
+	if linkErr != nil {
+		handler.SetFlash(c, "ec_error", linkErr.Error())
 		c.Redirect(http.StatusFound, "/ecommerce/points")
 		return
 	}
 
-	m := mock.FindMemberByID(memberID)
-	name := "member"
-	if m != nil {
-		name = m.Nama
-	}
-	handler.SetFlash(c, "ec_success", fmt.Sprintf("Berhasil link dengan member %s. Simpanan siap menerima poin konversi!", name))
+	handler.SetFlash(c, "ec_success", fmt.Sprintf("Berhasil link dengan member %s. Simpanan siap menerima poin konversi!", m.Nama))
 	c.Redirect(http.StatusFound, "/ecommerce/points")
 }
 
 // UnlinkKoperasiMember removes the koperasi member link from the current EC user.
 // POST /ecommerce/unlink-member
 func (h *AuthHandler) UnlinkKoperasiMember(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	ecUserID := GetECUserID(c)
 	if ecUserID == 0 {
 		c.Redirect(http.StatusFound, "/ecommerce/login")
 		return
 	}
 
-	u := mock.FindECommerceUserByID(ecUserID)
-	if u == nil {
-		c.Redirect(http.StatusFound, "/ecommerce/login")
+	if err := h.Svc.UnlinkMember(c.Request.Context(), ecUserID); err != nil {
+		handler.SetFlash(c, "ec_error", "Gagal unlink dari member koperasi.")
+		c.Redirect(http.StatusFound, "/ecommerce/points")
 		return
 	}
-
-	oldMemberID := u.LinkedKoperasiMemberID
-	u.LinkedKoperasiMemberID = 0
-
-	mock.LogAuditAction("UNLINK_KOPERASI", ecUserID, u.Username,
-		fmt.Sprintf("member:%d", oldMemberID), "Unlinked from koperasi member")
 
 	handler.SetFlash(c, "ec_success", "Berhasil unlink dari member koperasi. Konversi poin dinonaktifkan.")
 	c.Redirect(http.StatusFound, "/ecommerce/points")

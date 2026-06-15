@@ -13,19 +13,19 @@ Aplikasi dibangun mengikuti pendekatan **monolith server-rendered**: seluruh log
 Secara teknis, arsitektur ini terdiri atas tiga lapisan utama:
 
 1. **Client Layer (Administrator)** — Peramban modern (Chrome, Firefox, Edge) yang diakses oleh pengurus koperasi melalui koneksi HTTPS dengan *cookie session* sebagai pembawa identitas.
-2. **Server Layer (Vercel Serverless / Standalone `:8080`)** — *Router* Gin yang memuat *middleware* berlapis (`RequireECommerceAuth()` lalu `RequireECommerceAdmin()`), *handler* admin di [admin.go](koperasi-frontend/core/handler/ecommerce/admin.go), *engine* templat `html/template`, dan *session store* berbasis Gorilla sessions (`gin-contrib/sessions`).
+2. **Server Layer (Vercel Serverless / Standalone `:8080`)** — *Router* Gin yang memuat *middleware* berlapis (`RequireECommerceAuth()` → `RequireECommerceAdminArea()`, dengan guard tambahan *adminOnly* `RequireECommerceAdmin()` pada rute sensitif), *handler* admin di [admin.go](koperasi-frontend/core/handler/ecommerce/admin.go), *engine* templat `html/template`, dan *session store* berbasis Gorilla sessions (`gin-contrib/sessions`).
 3. **Embedded Asset Layer (`//go:embed`)** — Direktori [api/templates/](koperasi-frontend/api/templates/) dan [api/static/](koperasi-frontend/api/static/) yang di-*embed* secara *build-time* ke dalam *binary* sehingga *deployment* tetap satu *file*.
 
-Sebagaimana dijelaskan pada Bab 2, seluruh rute admin (`/ecommerce/admin/...`) hanya bisa diakses oleh pengguna dengan *role* `ADMIN`. Hal ini ditegakkan melalui *middleware* `RequireECommerceAdmin()` di [server.go:448](koperasi-frontend/core/server/server.go#L448) yang memeriksa nilai `ec_role` pada *session* dan menolak permintaan apabila *role* bukan `ADMIN`. Untuk memberikan pengalaman *Single Sign-On*, *middleware* `RequireECommerceAuth()` juga melakukan fallback otomatis dari *session* Koperasi induk ke *session* e-commerce apabila pengguna sudah masuk di sistem koperasi.
+Sebagaimana dijelaskan pada Bab 2, area admin (`/ecommerce/admin/...`) dijaga oleh **middleware berlapis**. Lapisan pertama, *middleware* `RequireECommerceAdminArea()` di [server.go:449](koperasi-frontend/core/server/server.go#L449), mengizinkan dua *role* untuk masuk ke area admin: **`ADMIN`** (otoritas penuh) dan **`PENGURUS`** (moderator operasional). Lapisan kedua, guard *adminOnly* (`RequireECommerceAdmin()`), menjaga rute paling sensitif — manajemen *voucher*, manajemen *member*, dan *audit log* — agar tetap **eksklusif** bagi *role* `ADMIN`; permintaan dari `PENGURUS` ke rute tersebut ditolak dengan **HTTP 403**. Kedua *middleware* memeriksa nilai `ec_role` pada *session*. Untuk memberikan pengalaman *Single Sign-On*, *middleware* `RequireECommerceAuth()` juga melakukan fallback otomatis dari *session* Koperasi induk ke *session* e-commerce apabila pengguna sudah masuk di sistem koperasi.
 
 [Gambar 3-1: Diagram Arsitektur Sistem SmartMart — Modul Admin & Dashboard]
-Sumber diagram: [xml/arsitektur_sistem.drawio.xml](xml/arsitektur_sistem.drawio.xml)
+Sumber diagram: [xml/shared/arsitektur_sistem.drawio.xml](xml/shared/arsitektur_sistem.drawio.xml)
 
 ---
 
 ### 3.2 Pemodelan Sistem dan Data
 
-Pemodelan sistem dalam Proyek Sistem Informasi ini bertujuan untuk mendeskripsikan struktur, komponen, dan interaksi berbagai elemen di dalam Modul Admin SmartMart agar seluruh bagian berfungsi secara harmonis. Notasi yang digunakan mengikuti standar **Unified Modeling Language (UML)** untuk pemodelan berorientasi objek, mencakup *use case diagram*, *class diagram*, dan *sequence diagram*. Untuk pemodelan alur proses bisnis, digunakan notasi **Business Process Model and Notation (BPMN 2.0)** yang dapat dieksekusi dan divisualisasikan langsung di *tool* Camunda Modeler. Untuk pemodelan struktur data, digunakan **Entity Relationship Diagram (ERD)** yang menggambarkan entitas, atribut, dan relasi antar entitas pada lapisan basis data.
+Pemodelan sistem dalam Proyek Sistem Informasi ini bertujuan untuk mendeskripsikan struktur, komponen, dan interaksi berbagai elemen di dalam Modul Admin SmartMart agar seluruh bagian berfungsi secara harmonis. Notasi yang digunakan mengikuti standar **Unified Modeling Language (UML)** untuk pemodelan berorientasi objek, mencakup *use case diagram*, *class diagram*, *sequence diagram*, dan *activity diagram* (dengan *swimlane*). Untuk pemodelan struktur data, digunakan **Entity Relationship Diagram (ERD)** yang menggambarkan entitas, atribut, dan relasi antar entitas pada lapisan basis data.
 
 #### 3.2.1 Use Case Diagram (Administrator)
 
@@ -49,7 +49,7 @@ Pemodelan sistem dalam Proyek Sistem Informasi ini bertujuan untuk mendeskripsik
 11. **Lihat Audit Log** — Administrator menelusuri riwayat seluruh tindakan administratif di `/ecommerce/admin/audit` dengan filter berdasarkan jenis aksi.
 
 [Gambar 3-2: Use Case Diagram Administrator SmartMart]
-Sumber diagram: [xml/use_case_admin.drawio.xml](xml/use_case_admin.drawio.xml)
+Sumber diagram: [xml/admin/use_case_admin.drawio.xml](xml/admin/use_case_admin.drawio.xml)
 
 #### 3.2.2 Class Diagram
 
@@ -57,7 +57,7 @@ Sumber diagram: [xml/use_case_admin.drawio.xml](xml/use_case_admin.drawio.xml)
 
 **Kelas yang divisualisasikan:**
 
-- **`ECommerceUser`** — Representasi akun pengguna e-commerce dengan atribut `ID`, `Username`, `Email`, `Password`, `Role`, `IsSellerActive`, `SellerRating`, `LinkedKoperasiMemberID`, dan `CreatedAt`. *Role* ini menentukan otorisasi RBAC (`BUYER`, `SELLER`, `ADMIN`, `KASIR`).
+- **`ECommerceUser`** — Representasi akun pengguna e-commerce dengan atribut `ID`, `Username`, `Email`, `Password`, `Role`, `IsSellerActive`, `SellerRating`, `LinkedKoperasiMemberID`, dan `CreatedAt`. *Role* ini menentukan otorisasi RBAC (`BUYER`, `SELLER`, `ADMIN`, `PENGURUS`, `KASIR`).
 - **`SellerProfile`** — Profil tambahan untuk pengguna dengan `IsSellerActive = true`. Memiliki relasi *one-to-one* dengan `ECommerceUser`.
 - **`ECProduct`** — Representasi produk pada *marketplace* dengan atribut `Status` yang menentukan apakah produk masih `PENDING_APPROVAL`, sudah `APPROVED`, `REJECTED`, atau `ARCHIVED`. Atribut ini menjadi dasar moderasi pada halaman *Review Produk*.
 - **`ECOrder`** — Representasi transaksi pembelian dengan rangkaian status (`PENDING`, `DIBAYAR`, `DIPROSES`, `DIKIRIM`, `SELESAI`, `BATAL`), `Subtotal`, `Discount`, `TotalHarga`, `VoucherCode`, dan `PointsEarned`. Mengagregasi `ECOrderItem` melalui *composition*.
@@ -81,7 +81,7 @@ Sumber diagram: [xml/use_case_admin.drawio.xml](xml/use_case_admin.drawio.xml)
 | ECommerceUser | AuditLog | 1..N | Association |
 
 [Gambar 3-3: Class Diagram Modul Admin SmartMart]
-Sumber diagram: [xml/class_diagram_admin.drawio.xml](xml/class_diagram_admin.drawio.xml)
+Sumber diagram: [xml/admin/class_diagram_admin.drawio.xml](xml/admin/class_diagram_admin.drawio.xml)
 
 #### 3.2.3 Sequence Diagram
 
@@ -94,22 +94,22 @@ Diagram ini memvisualisasikan urutan pemanggilan antar objek ketika Administrato
 Pemanggilan kritis berada pada langkah ke-7 (`SetProductStatus(id, "APPROVED")`) yang memperbarui status produk pada lapisan data, dan langkah ke-9 (`LogAuditAction(APPROVE_PRODUCT, ...)`) yang menjamin setiap keputusan moderasi tercatat secara permanen di *Audit Log*.
 
 [Gambar 3-4: Sequence Diagram Approve Product]
-Sumber diagram: [xml/sequence_approve_product.drawio.xml](xml/sequence_approve_product.drawio.xml)
+Sumber diagram: [xml/admin/sequence_approve_product.drawio.xml](xml/admin/sequence_approve_product.drawio.xml)
 
 **B. Sequence Diagram — Create Voucher**
 
 Diagram ini memvisualisasikan urutan pemanggilan ketika Administrator mengirim *form* pembuatan *voucher* baru. Aliran melewati 5 objek: *Web Browser*, *Gin Router*, *AdminHandler.CreateVoucher*, *mock.AddVoucher*, dan *mock.LogAuditAction*. Validasi *form* (langkah 4–6) dilakukan di sisi *handler* mencakup pemeriksaan keunikan `Code`, validitas `TipeDiskon`, nilai diskon harus positif, dan penetapan tanggal berlaku default (+3 bulan dari saat pembuatan).
 
 [Gambar 3-5: Sequence Diagram Create Voucher]
-Sumber diagram: [xml/sequence_create_voucher.drawio.xml](xml/sequence_create_voucher.drawio.xml)
+Sumber diagram: [xml/admin/sequence_create_voucher.drawio.xml](xml/admin/sequence_create_voucher.drawio.xml)
 
-#### 3.2.4 Activity Diagram (BPMN 2.0)
+#### 3.2.4 Activity Diagram (UML)
 
-Untuk memodelkan alur proses bisnis pada Modul Admin, digunakan notasi **BPMN 2.0** yang merupakan standar industri dan dapat dieksekusi langsung pada *engine* alur kerja seperti Camunda. Dua proses kunci dimodelkan dalam bentuk BPMN:
+Untuk memodelkan alur proses pada Modul Admin, digunakan notasi **Activity Diagram UML** dengan *swimlane* (*partition*) yang memisahkan tanggung jawab tiap aktor/komponen. Dua proses kunci dimodelkan dalam bentuk activity diagram:
 
-**A. BPMN — Alur Persetujuan Produk**
+**A. Activity Diagram — Alur Persetujuan Produk**
 
-Diagram BPMN ini menggambarkan kolaborasi antara tiga *lane* (Penjual, Sistem SmartMart, Administrator) dalam siklus hidup persetujuan produk:
+Diagram ini menggambarkan kolaborasi antara tiga *swimlane* (Penjual, Sistem SmartMart, Administrator) dalam siklus hidup persetujuan produk:
 
 1. **Penjual** menekan tombol *upload* produk pada `/ecommerce/seller/products/create`.
 2. **Sistem** otomatis menetapkan `Status = PENDING_APPROVAL` dan menyimpan produk ke lapisan data.
@@ -118,19 +118,19 @@ Diagram BPMN ini menggambarkan kolaborasi antara tiga *lane* (Penjual, Sistem Sm
 5. Jika **Ya**, sistem menjalankan `POST /products/:id/approve` → `Status = APPROVED` → `LogAuditAction(APPROVE_PRODUCT)` → produk tampil di katalog `/ecommerce/products`.
 6. Jika **Tidak**, sistem menjalankan `POST /products/:id/reject` → `Status = REJECTED` (beserta alasan penolakan) → `LogAuditAction(REJECT_PRODUCT)` → notifikasi ke penjual.
 
-[Gambar 3-6: Activity Diagram BPMN Persetujuan Produk]
-Sumber diagram: [xml/bpmn_persetujuan_produk.bpmn](xml/bpmn_persetujuan_produk.bpmn)
+[Gambar 3-6: Activity Diagram Persetujuan Produk]
+Sumber diagram: [xml/admin/activity_persetujuan_produk.drawio.xml](xml/admin/activity_persetujuan_produk.drawio.xml)
 
-**B. BPMN — Alur Pembuatan Voucher**
+**B. Activity Diagram — Alur Pembuatan Voucher**
 
-Diagram BPMN ini menggambarkan kolaborasi antara dua *lane* (Administrator dan Sistem SmartMart) dalam alur pembuatan *voucher* baru:
+Diagram ini menggambarkan kolaborasi antara dua *swimlane* (Administrator dan Sistem SmartMart) dalam alur pembuatan *voucher* baru:
 
 1. **Administrator** membuka halaman `/ecommerce/admin/vouchers` dan mengisi *form* dengan parameter `Code`, `TipeDiskon`, `NilaiDiskon`, `Kuota`, dan `MinPembelian`.
 2. **Sistem** menjalankan validasi: keunikan `Code`, nilai diskon harus > 0, dan `TipeDiskon` harus `PERCENT` atau `FIXED`.
 3. *Exclusive Gateway* **Valid?**: bila *valid*, sistem memanggil `AddVoucher(...)`, menetapkan `Status = ACTIVE` dan `BerlakuSampai = now + 3 bulan`, lalu mencatat `LogAuditAction(CREATE_VOUCHER, voucher:<code>)`. Bila tidak *valid*, sistem me-*render* ulang *form* dengan *error message*.
 
-[Gambar 3-7: Activity Diagram BPMN Pembuatan Voucher]
-Sumber diagram: [xml/bpmn_pembuatan_voucher.bpmn](xml/bpmn_pembuatan_voucher.bpmn)
+[Gambar 3-7: Activity Diagram Pembuatan Voucher]
+Sumber diagram: [xml/admin/activity_pembuatan_voucher.drawio.xml](xml/admin/activity_pembuatan_voucher.drawio.xml)
 
 #### 3.2.5 Entity Relationship Diagram (ERD)
 
@@ -166,13 +166,52 @@ Pemodelan data pada Modul Admin SmartMart difokuskan pada struktur dan hubungan 
 | `voucher` | `ec_order` | 0..N | *Voucher* opsional pada *order* |
 
 [Gambar 3-8: Entity Relationship Diagram Modul Admin SmartMart]
-Sumber diagram: [xml/erd_admin.drawio.xml](xml/erd_admin.drawio.xml)
+Sumber diagram: [xml/shared/erd_smartmart.drawio.xml](xml/shared/erd_smartmart.drawio.xml)
+
+#### 3.2.6 Pemodelan Role Pengurus (Moderator Operasional)
+
+Selain Administrator, Modul Admin SmartMart memperkenalkan *role* kedua pada area admin, yaitu **Pengurus** — moderator operasional yang berada satu tingkat di bawah Administrator. Penambahan *role* ini menerapkan prinsip *separation of duties* dan *least privilege*: Pengurus membantu meringankan beban moderasi harian, sementara fungsi paling sensitif (manajemen *voucher*, manajemen *member*, dan *audit log*) tetap eksklusif Administrator. Pemodelan berikut melengkapi diagram pada §3.2.1–§3.2.5 dengan sudut pandang khusus *role* Pengurus.
+
+**A. Use Case Diagram — Pengurus**
+
+Aktor **Pengurus (Moderator Operasional)** dapat melakukan *Login Sistem* (meng-`<<include>>` *Validasi Role PENGURUS*), *Lihat Dashboard KPI*, *Lihat Analytics & Laporan Kinerja*, *Approve/Reject Seller*, *Approve/Reject Produk* (keduanya meng-`<<include>>` *Catat Audit Log*), *Pantau Daftar Order*, dan *Pantau Poin Loyalitas*. Sebaliknya, *Buat/Toggle Voucher*, *Kelola Member*, dan *Lihat Audit Log* berada **di luar wewenang** Pengurus (eksklusif Administrator, ditolak `HTTP 403`).
+
+[Gambar 3-18: Use Case Diagram Pengurus SmartMart]
+Sumber diagram: [xml/pengurus/use_case_pengurus.drawio.xml](xml/pengurus/use_case_pengurus.drawio.xml)
+
+**B. Class Diagram — Role Pengurus**
+
+Struktur data identik dengan §3.2.2, dengan dua penegasan: atribut `Role` pada `ECommerceUser` mencakup nilai **`PENGURUS`** (`BUYER|SELLER|ADMIN|PENGURUS|KASIR`), dan kelas «control» `AdminHandler` menandai operasi yang **diizinkan** bagi Pengurus (`Dashboard`, `Analytics`, `SellerApprovals`, `ApproveSeller`/`RejectSeller`, `ProductApprovals`, `ApproveProduct`/`RejectProduct`, `OrderManagement`, `PointsMonitoring`) serta operasi yang **ditolak** (`VoucherManagement`, `MemberManagement`, `AuditLog`).
+
+[Gambar 3-19: Class Diagram Role Pengurus SmartMart]
+Sumber diagram: [xml/pengurus/class_diagram_pengurus.drawio.xml](xml/pengurus/class_diagram_pengurus.drawio.xml)
+
+**C. Sequence Diagram — Pengurus Approve Seller (alur diizinkan)**
+
+Diagram ini menggambarkan urutan ketika Pengurus menyetujui aktivasi *seller*. Aliran: *Web Browser* → *Gin Router* → *middleware* `RequireECommerceAdminArea` (memeriksa `role ∈ {ADMIN, PENGURUS}` → lolos) → `AdminHandler.ApproveSeller` → `mock.FindECommerceUserByID` & `mock.ActivateSellerAccount` → `mock.LogAuditAction(APPROVE_SELLER, …)` → *redirect* `HTTP 302` ke `/ecommerce/admin/sellers`. Diagram ini menegaskan bahwa tindakan moderasi oleh Pengurus tetap menghasilkan jejak audit.
+
+[Gambar 3-20: Sequence Diagram Pengurus Approve Seller]
+Sumber diagram: [xml/pengurus/sequence_pengurus_approve_seller.drawio.xml](xml/pengurus/sequence_pengurus_approve_seller.drawio.xml)
+
+**D. Sequence Diagram — Pengurus Akses Voucher Ditolak (alur RBAC 403)**
+
+Diagram ini menggambarkan penegakan *least privilege*. Pengurus mengakses `GET /ecommerce/admin/vouchers`; permintaan lolos `RequireECommerceAdminArea` (Pengurus boleh masuk area admin), namun **gagal** pada guard *adminOnly* (`RequireECommerceAdmin`, syarat `role == ADMIN`). Akibatnya `c.Abort()` dipanggil, *handler* `VoucherManagement` **tidak pernah dieksekusi**, dan sistem mengembalikan **`HTTP 403`** — "Akses ditolak: role PENGURUS tidak diizinkan."
+
+[Gambar 3-21: Sequence Diagram Pengurus Akses Voucher Ditolak (HTTP 403)]
+Sumber diagram: [xml/pengurus/sequence_pengurus_akses_ditolak_voucher.drawio.xml](xml/pengurus/sequence_pengurus_akses_ditolak_voucher.drawio.xml)
+
+**E. Activity Diagram — Pengurus Moderasi Produk**
+
+Diagram ini memakai dua *swimlane* (Pengurus dan Sistem SmartMart). Setelah *login*, sistem memeriksa *Exclusive Gateway* "Role ADMIN/PENGURUS?" (bila tidak → `HTTP 403`). Bila lolos, Pengurus membuka `/ecommerce/admin/products`, meninjau produk berstatus `PENDING_APPROVAL`, lalu melewati *Gateway* "Produk layak disetujui?": cabang **Ya** → `SetProductStatus(id, APPROVED)` → `LogAuditAction(APPROVE_PRODUCT)` → produk tampil di katalog publik; cabang **Tidak** → isi alasan penolakan → `SetProductStatus(id, REJECTED)` → `LogAuditAction(REJECT_PRODUCT)` → notifikasi penjual.
+
+[Gambar 3-22: Activity Diagram Pengurus Moderasi Produk]
+Sumber diagram: [xml/pengurus/activity_pengurus_moderasi_produk.drawio.xml](xml/pengurus/activity_pengurus_moderasi_produk.drawio.xml)
 
 ---
 
 ### 3.3 Perancangan Antarmuka Pengguna
 
-Perancangan antarmuka pengguna pada Modul Admin SmartMart difokuskan pada satu *role* utama, yaitu **Administrator (Pengurus Koperasi)**. Seluruh antarmuka dirancang dengan prinsip kesederhanaan visual, *single-screen overview*, dan aksesibilitas tinggi mengingat target pengguna memiliki literasi teknologi tingkat menengah (lihat *User Persona* Pak Hendra pada Bab 2). Total terdapat **sembilan halaman utama** yang dapat diakses oleh Administrator setelah berhasil *login* dan lolos pemeriksaan *middleware* `RequireECommerceAdmin()`.
+Perancangan antarmuka pengguna pada Modul Admin SmartMart difokuskan terutama pada *role* **Administrator (Pengurus Koperasi)** sebagai pengguna utama. Seluruh antarmuka dirancang dengan prinsip kesederhanaan visual, *single-screen overview*, dan aksesibilitas tinggi mengingat target pengguna memiliki literasi teknologi tingkat menengah (lihat *User Persona* Pak Hendra pada Bab 2). Total terdapat **sembilan halaman utama** yang dapat diakses oleh Administrator setelah berhasil *login* dan lolos pemeriksaan *middleware* area admin (`RequireECommerceAdminArea()`). Adapun *role* **Pengurus (Moderator Operasional)** mengakses **enam dari sembilan halaman** tersebut — Dashboard, Analytics, Manajemen Seller, Review Produk, Manajemen Order, dan Monitoring Poin — sedangkan halaman Manajemen Voucher, Manajemen Member, dan Audit Log bersifat eksklusif Administrator (dijaga guard *adminOnly*; lihat §3.2.6).
 
 #### 3.3.1 Halaman Dashboard
 
@@ -367,4 +406,4 @@ Spesifikasi perangkat keras dan perangkat lunak minimum yang dibutuhkan untuk me
 
 ### 3.5 Subbab Tambahan
 
-Tidak diperlukan subbab tambahan untuk Modul Admin & Dashboard SmartMart pada Bab 3. Seluruh aspek pemodelan sistem (arsitektur, *use case*, *class diagram*, *sequence diagram*, BPMN, ERD), perancangan antarmuka, serta kebutuhan perangkat telah dijabarkan secara komprehensif pada subbab-subbab di atas.
+Tidak diperlukan subbab tambahan untuk Modul Admin & Dashboard SmartMart pada Bab 3. Seluruh aspek pemodelan sistem (arsitektur, *use case*, *class diagram*, *sequence diagram*, *activity diagram*, ERD), perancangan antarmuka, serta kebutuhan perangkat telah dijabarkan secara komprehensif pada subbab-subbab di atas.

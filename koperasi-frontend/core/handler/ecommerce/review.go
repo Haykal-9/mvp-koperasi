@@ -8,26 +8,41 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"koperasi-frontend/core/handler"
-	"koperasi-frontend/core/mock"
+	"koperasi-frontend/core/service"
 )
 
 // ReviewHandler handles product reviews after order completion.
 type ReviewHandler struct {
 	Render ECRenderer
+	Svc    *service.ECShopService
 }
 
-func NewReviewHandler(render ECRenderer) *ReviewHandler {
-	return &ReviewHandler{Render: render}
+func NewReviewHandler(render ECRenderer, svc *service.ECShopService) *ReviewHandler {
+	return &ReviewHandler{Render: render, Svc: svc}
+}
+
+func (h *ReviewHandler) ready(c *gin.Context) bool {
+	if h.Svc == nil {
+		c.String(http.StatusServiceUnavailable, "E-Commerce sementara tidak tersedia (database tidak terhubung).")
+		return false
+	}
+	return true
 }
 
 // ShowReview renders the review form for a completed order.
 // GET /ecommerce/order/:id/review
 func (h *ReviewHandler) ShowReview(c *gin.Context) {
-	var orderID int
-	fmt.Sscanf(c.Param("id"), "%d", &orderID)
+	if !h.ready(c) {
+		return
+	}
+	orderID, _ := strconv.Atoi(c.Param("id"))
 	ecUserID := GetECUserID(c)
 
-	order := mock.FindECOrderByID(orderID)
+	order, err := h.Svc.OrderByID(c.Request.Context(), orderID)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
 	if order == nil || order.BuyerID != ecUserID {
 		handler.SetFlash(c, "ec_error", "Pesanan tidak ditemukan.")
 		c.Redirect(http.StatusFound, "/ecommerce/orders")
@@ -47,7 +62,7 @@ func (h *ReviewHandler) ShowReview(c *gin.Context) {
 	}
 	var items []ItemReviewStatus
 	for _, item := range order.Items {
-		hasReview := mock.HasECReviewed(ecUserID, item.ProductID)
+		hasReview, _ := h.Svc.HasReviewed(c.Request.Context(), ecUserID, item.ProductID)
 		items = append(items, ItemReviewStatus{
 			ProductID:   item.ProductID,
 			ProductNama: item.ProductNama,
@@ -66,11 +81,18 @@ func (h *ReviewHandler) ShowReview(c *gin.Context) {
 // DoReview processes the submitted review form.
 // POST /ecommerce/order/:id/review
 func (h *ReviewHandler) DoReview(c *gin.Context) {
-	var orderID int
-	fmt.Sscanf(c.Param("id"), "%d", &orderID)
+	if !h.ready(c) {
+		return
+	}
+	orderID, _ := strconv.Atoi(c.Param("id"))
 	ecUserID := GetECUserID(c)
+	username := GetECUsername(c)
 
-	order := mock.FindECOrderByID(orderID)
+	order, err := h.Svc.OrderByID(c.Request.Context(), orderID)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
 	if order == nil || order.BuyerID != ecUserID || order.Status != "SELESAI" {
 		handler.SetFlash(c, "ec_error", "Tidak dapat memberikan ulasan.")
 		c.Redirect(http.StatusFound, "/ecommerce/orders")
@@ -79,26 +101,22 @@ func (h *ReviewHandler) DoReview(c *gin.Context) {
 
 	submitted := 0
 	for _, item := range order.Items {
-		ratingKey := fmt.Sprintf("rating_%d", item.ProductID)
-		komentarKey := fmt.Sprintf("komentar_%d", item.ProductID)
-
-		ratingStr := c.PostForm(ratingKey)
-		komentar := c.PostForm(komentarKey)
+		ratingStr := c.PostForm(fmt.Sprintf("rating_%d", item.ProductID))
+		komentar := c.PostForm(fmt.Sprintf("komentar_%d", item.ProductID))
 
 		if ratingStr == "" {
 			continue // user skipped this product
 		}
-
 		rating, err := strconv.Atoi(ratingStr)
 		if err != nil || rating < 1 || rating > 5 {
 			continue
 		}
-
-		if mock.HasECReviewed(ecUserID, item.ProductID) {
+		if has, _ := h.Svc.HasReviewed(c.Request.Context(), ecUserID, item.ProductID); has {
 			continue // already reviewed
 		}
-
-		mock.SubmitECReview(ecUserID, item.ProductID, rating, komentar)
+		if err := h.Svc.SubmitReview(c.Request.Context(), ecUserID, item.ProductID, rating, komentar, username); err != nil {
+			continue
+		}
 		submitted++
 	}
 

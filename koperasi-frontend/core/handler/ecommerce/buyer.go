@@ -1,64 +1,54 @@
 package ecommerce
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 
-	"koperasi-frontend/core/mock"
+	"koperasi-frontend/core/service"
 )
 
 // BuyerHandler handles buyer dashboard pages.
 type BuyerHandler struct {
 	Render ECRenderer
+	Svc    *service.ECAccountService
 }
 
-func NewBuyerHandler(render ECRenderer) *BuyerHandler {
-	return &BuyerHandler{Render: render}
+func NewBuyerHandler(render ECRenderer, svc *service.ECAccountService) *BuyerHandler {
+	return &BuyerHandler{Render: render, Svc: svc}
+}
+
+func (h *BuyerHandler) ready(c *gin.Context) bool {
+	if h.Svc == nil {
+		c.String(http.StatusServiceUnavailable, "E-Commerce sementara tidak tersedia (database tidak terhubung).")
+		return false
+	}
+	return true
 }
 
 // Dashboard shows the buyer's main dashboard.
 // GET /ecommerce/buyer
 func (h *BuyerHandler) Dashboard(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	ecUserID := GetECUserID(c)
 
-	recentOrders := mock.GetECUserOrders(ecUserID)
-	if len(recentOrders) > 5 {
-		recentOrders = recentOrders[:5]
-	}
-
-	points := mock.GetECUserPoints(ecUserID)
-	pointsBalance := 0.0
-	if points != nil {
-		pointsBalance = points.Balance
-	}
-
-	addresses := mock.GetECUserAddresses(ecUserID)
-	wishlist := mock.GetECUserWishlist(ecUserID)
-
-	// Recommended products (mock: just show featured)
-	recommended := mock.GetAllApprovedECProducts()
-	if len(recommended) > 4 {
-		recommended = recommended[:4]
-	}
-
-	// Check koperasi link
-	user := mock.FindECommerceUserByID(ecUserID)
-	linkedMember := ""
-	if user != nil && user.LinkedKoperasiMemberID > 0 {
-		m := mock.FindMemberByID(user.LinkedKoperasiMemberID)
-		if m != nil {
-			linkedMember = m.Nama + " (" + m.NomorAnggota + ")"
-		}
+	d, err := h.Svc.BuyerDashboard(c.Request.Context(), ecUserID)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
 	}
 
 	h.Render(c, "ec_base", "ecommerce/buyer/dashboard", gin.H{
-		"Title":          "Dashboard Buyer",
-		"Active":         "buyer",
-		"RecentOrders":   recentOrders,
-		"PointsBalance":  pointsBalance,
-		"Addresses":      addresses,
-		"WishlistCount":  len(wishlist),
-		"Recommended":    recommended,
-		"LinkedMember":   linkedMember,
-		"OrderCount":     len(mock.GetECUserOrders(ecUserID)),
+		"Title":         "Dashboard Buyer",
+		"Active":        "buyer",
+		"RecentOrders":  d.RecentOrders,
+		"PointsBalance": d.PointsBalance,
+		"Addresses":     d.Addresses,
+		"WishlistCount": d.WishlistCount,
+		"Recommended":   d.Recommended,
+		"LinkedMember":  d.LinkedMember,
+		"OrderCount":    d.OrderCount,
 	})
 }

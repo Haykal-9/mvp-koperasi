@@ -5,7 +5,7 @@ import (
 
 	"koperasi-frontend/core/handler"
 	echandler "koperasi-frontend/core/handler/ecommerce"
-	"koperasi-frontend/core/mock"
+	"koperasi-frontend/core/service"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -13,8 +13,9 @@ import (
 
 // RequireECommerceAuth checks that the user has a valid e-commerce session.
 // If the user is logged into koperasi management and has a linked e-commerce account,
-// they are auto-logged in (SSO). Otherwise redirects to /ecommerce/login.
-func RequireECommerceAuth() gin.HandlerFunc {
+// they are auto-logged in (SSO via acct). Otherwise redirects to /ecommerce/login.
+// acct boleh nil (DB tidak terhubung) — SSO fallback dilewati.
+func RequireECommerceAuth(acct *service.ECAccountService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		sess := sessions.Default(c)
 
@@ -25,10 +26,10 @@ func RequireECommerceAuth() gin.HandlerFunc {
 		}
 
 		// Auto-login fallback: restore EC session from koperasi session (all roles)
-		if sess.Get("user_id") != nil {
+		if acct != nil && sess.Get("user_id") != nil {
 			userEmail, _ := sess.Get("user_email").(string)
 			if userEmail != "" {
-				ecUser := mock.FindECommerceUserByEmail(userEmail)
+				ecUser, _ := acct.UserByEmail(c.Request.Context(), userEmail)
 				if ecUser != nil {
 					if err := echandler.SetECSession(c, ecUser.ID, ecUser.Username, ecUser.Email, ecUser.Role, ecUser.IsSellerActive); err == nil {
 						c.Next()
@@ -62,8 +63,16 @@ func RequireECommerceRole(roles ...string) gin.HandlerFunc {
 }
 
 // RequireECommerceAdmin is a shorthand for RequireECommerceRole("ADMIN").
+// Dipakai untuk rute admin-only yang sensitif (voucher, member, audit log).
 func RequireECommerceAdmin() gin.HandlerFunc {
 	return RequireECommerceRole("ADMIN")
+}
+
+// RequireECommerceAdminArea mengizinkan ADMIN dan PENGURUS masuk ke area admin.
+// PENGURUS adalah moderator operasional (hierarki di bawah ADMIN): boleh akses
+// dashboard, analytics, review produk, kelola seller, order, dan monitoring poin.
+func RequireECommerceAdminArea() gin.HandlerFunc {
+	return RequireECommerceRole("ADMIN", "PENGURUS")
 }
 
 // RequireECommerceSeller checks that the e-commerce user is an active seller.

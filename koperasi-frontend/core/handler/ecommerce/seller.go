@@ -5,97 +5,71 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 
 	"koperasi-frontend/core/handler"
-	"koperasi-frontend/core/mock"
-	"koperasi-frontend/core/model"
+	"koperasi-frontend/core/service"
 )
 
 // SellerHandler handles seller dashboard and product management.
 type SellerHandler struct {
 	Render ECRenderer
+	Svc    *service.ECSellerService
 }
 
-func NewSellerHandler(render ECRenderer) *SellerHandler {
-	return &SellerHandler{Render: render}
+func NewSellerHandler(render ECRenderer, svc *service.ECSellerService) *SellerHandler {
+	return &SellerHandler{Render: render, Svc: svc}
+}
+
+func (h *SellerHandler) ready(c *gin.Context) bool {
+	if h.Svc == nil {
+		c.String(http.StatusServiceUnavailable, "E-Commerce sementara tidak tersedia (database tidak terhubung).")
+		return false
+	}
+	return true
 }
 
 // Dashboard shows seller metrics and recent activity.
 // GET /ecommerce/seller
 func (h *SellerHandler) Dashboard(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	sellerID := GetECUserID(c)
-	profile := mock.GetSellerProfile(sellerID)
-	products := mock.GetSellerProducts(sellerID)
-	orders := mock.GetECSellerReceivedOrders(sellerID)
-
-	// Metrics
-	totalRevenue := 0.0
-	pendingOrders := 0
-	completedOrders := 0
-	for _, o := range orders {
-		if o.Status == "SELESAI" {
-			totalRevenue += o.Subtotal
-			completedOrders++
-		}
-		if o.Status == "DIBAYAR" || o.Status == "DIPROSES" {
-			pendingOrders++
-		}
-	}
-
-	// Low stock alerts
-	var lowStock []model.ECProduct
-	for _, p := range products {
-		if p.Stok <= 5 && p.Status == "APPROVED" {
-			lowStock = append(lowStock, p)
-		}
-	}
-
-	// Recent orders (max 5)
-	recentOrders := orders
-	if len(recentOrders) > 5 {
-		recentOrders = recentOrders[:5]
-	}
-
-	// Pending approval
-	pendingProducts := 0
-	for _, p := range products {
-		if p.Status == "PENDING_APPROVAL" {
-			pendingProducts++
-		}
+	d, err := h.Svc.Dashboard(c.Request.Context(), sellerID)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
 	}
 
 	h.Render(c, "ec_base", "ecommerce/seller/dashboard", gin.H{
 		"Title":           "Seller Dashboard",
 		"Active":          "seller",
-		"Profile":         profile,
-		"TotalProducts":   len(products),
-		"TotalRevenue":    totalRevenue,
-		"PendingOrders":   pendingOrders,
-		"CompletedOrders": completedOrders,
-		"LowStock":        lowStock,
-		"RecentOrders":    recentOrders,
-		"PendingProducts": pendingProducts,
+		"Profile":         d.Profile,
+		"TotalProducts":   d.TotalProducts,
+		"TotalRevenue":    d.TotalRevenue,
+		"PendingOrders":   d.PendingOrders,
+		"CompletedOrders": d.CompletedOrders,
+		"LowStock":        d.LowStock,
+		"RecentOrders":    d.RecentOrders,
+		"PendingProducts": d.PendingProducts,
 	})
 }
 
 // ProductList shows all products owned by this seller.
 // GET /ecommerce/seller/products
 func (h *SellerHandler) ProductList(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	sellerID := GetECUserID(c)
-	products := mock.GetSellerProducts(sellerID)
-
 	statusFilter := c.Query("status")
-	if statusFilter != "" {
-		var filtered []model.ECProduct
-		for _, p := range products {
-			if p.Status == statusFilter {
-				filtered = append(filtered, p)
-			}
-		}
-		products = filtered
+
+	products, err := h.Svc.Products(c.Request.Context(), sellerID, statusFilter)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
 	}
 
 	h.Render(c, "ec_base", "ecommerce/seller/products", gin.H{
@@ -109,7 +83,14 @@ func (h *SellerHandler) ProductList(c *gin.Context) {
 // CreateProduct shows the product creation form.
 // GET /ecommerce/seller/products/create
 func (h *SellerHandler) CreateProduct(c *gin.Context) {
-	categories := mock.GetECCategories()
+	if !h.ready(c) {
+		return
+	}
+	categories, err := h.Svc.Categories(c.Request.Context())
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
 
 	h.Render(c, "ec_base", "ecommerce/seller/product_form", gin.H{
 		"Title":      "Tambah Produk Baru",
@@ -121,12 +102,10 @@ func (h *SellerHandler) CreateProduct(c *gin.Context) {
 // DoCreateProduct processes the product creation form.
 // POST /ecommerce/seller/products/create
 func (h *SellerHandler) DoCreateProduct(c *gin.Context) {
-	sellerID := GetECUserID(c)
-	seller := mock.GetSellerProfile(sellerID)
-	sellerName := "Seller"
-	if seller != nil {
-		sellerName = seller.StoreName
+	if !h.ready(c) {
+		return
 	}
+	sellerID := GetECUserID(c)
 
 	nama := strings.TrimSpace(c.PostForm("nama"))
 	deskripsi := strings.TrimSpace(c.PostForm("deskripsi"))
@@ -151,22 +130,12 @@ func (h *SellerHandler) DoCreateProduct(c *gin.Context) {
 		return
 	}
 
-	newProduct := model.ECProduct{
-		ID:         mock.NextECProductID(),
-		SellerID:   sellerID,
-		SellerName: sellerName,
-		Nama:       nama,
-		Deskripsi:  deskripsi,
-		Kategori:   kategori,
-		Harga:      harga,
-		Stok:       stok,
-		Berat:      berat,
-		FotoURL:    fmt.Sprintf("https://placehold.co/400x400/2d1b69/e2e8f0?text=%s", strings.ReplaceAll(nama, " ", "+")),
-		Status:     "PENDING_APPROVAL",
-		CreatedAt:  time.Now().Format("2006-01-02"),
+	if err := h.Svc.CreateProduct(c.Request.Context(), sellerID, nama, deskripsi, kategori, harga, stok, berat); err != nil {
+		handler.SetFlash(c, "ec_error", "Gagal menambahkan produk.")
+		c.Redirect(http.StatusFound, "/ecommerce/seller/products/create")
+		return
 	}
 
-	mock.ECProducts = append(mock.ECProducts, newProduct)
 	handler.SetFlash(c, "ec_success", fmt.Sprintf("Produk \"%s\" berhasil ditambahkan. Menunggu approval admin.", nama))
 	c.Redirect(http.StatusFound, "/ecommerce/seller/products")
 }
@@ -174,18 +143,16 @@ func (h *SellerHandler) DoCreateProduct(c *gin.Context) {
 // OrderList shows orders received by this seller.
 // GET /ecommerce/seller/orders
 func (h *SellerHandler) OrderList(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	sellerID := GetECUserID(c)
-	orders := mock.GetECSellerReceivedOrders(sellerID)
-
 	statusFilter := c.Query("status")
-	if statusFilter != "" {
-		var filtered []model.ECOrder
-		for _, o := range orders {
-			if o.Status == statusFilter {
-				filtered = append(filtered, o)
-			}
-		}
-		orders = filtered
+
+	orders, err := h.Svc.Orders(c.Request.Context(), sellerID, statusFilter)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
 	}
 
 	h.Render(c, "ec_base", "ecommerce/seller/orders", gin.H{
@@ -199,34 +166,19 @@ func (h *SellerHandler) OrderList(c *gin.Context) {
 // MarkShipped updates an order to DIKIRIM status.
 // POST /ecommerce/seller/orders/:id/shipped
 func (h *SellerHandler) MarkShipped(c *gin.Context) {
-	var orderID int
-	fmt.Sscanf(c.Param("id"), "%d", &orderID)
-
+	if !h.ready(c) {
+		return
+	}
+	sellerID := GetECUserID(c)
+	orderID, _ := strconv.Atoi(c.Param("id"))
 	resi := strings.TrimSpace(c.PostForm("resi"))
-	order := mock.FindECOrderByID(orderID)
-	if order == nil {
-		handler.SetFlash(c, "ec_error", "Pesanan tidak ditemukan.")
+
+	order, err := h.Svc.MarkShipped(c.Request.Context(), sellerID, orderID, resi)
+	if err != nil {
+		handler.SetFlash(c, "ec_error", err.Error())
 		c.Redirect(http.StatusFound, "/ecommerce/seller/orders")
 		return
 	}
-
-	if order.Status != "DIBAYAR" && order.Status != "DIPROSES" {
-		handler.SetFlash(c, "ec_error", "Pesanan tidak bisa dikirim (status: "+order.Status+").")
-		c.Redirect(http.StatusFound, "/ecommerce/seller/orders")
-		return
-	}
-
-	order.Status = "DIKIRIM"
-	order.ResiPengiriman = resi
-	order.UpdatedAt = time.Now().Format("2006-01-02 15:04")
-
-	sellerName := "Seller"
-	sp := mock.GetSellerProfile(GetECUserID(c))
-	if sp != nil {
-		sellerName = sp.StoreName
-	}
-
-	mock.AddECShipmentEvent(orderID, "DIKIRIM", "Gudang "+sellerName, "Paket diserahkan ke kurir. Resi: "+resi)
 
 	handler.SetFlash(c, "ec_success", fmt.Sprintf("Pesanan %s berhasil dikirim. Resi: %s", order.NomorOrder, resi))
 	c.Redirect(http.StatusFound, "/ecommerce/seller/orders")
@@ -235,28 +187,23 @@ func (h *SellerHandler) MarkShipped(c *gin.Context) {
 // Earnings shows seller revenue and commission breakdown.
 // GET /ecommerce/seller/earnings
 func (h *SellerHandler) Earnings(c *gin.Context) {
-	sellerID := GetECUserID(c)
-	orders := mock.GetECSellerReceivedOrders(sellerID)
-
-	totalRevenue := 0.0
-	totalCommission := 0.0
-	completedCount := 0
-	for _, o := range orders {
-		if o.Status == "SELESAI" {
-			totalRevenue += o.Subtotal
-			totalCommission += o.Subtotal * 0.03 // 3% commission
-			completedCount++
-		}
+	if !h.ready(c) {
+		return
 	}
-	netEarnings := totalRevenue - totalCommission
+	sellerID := GetECUserID(c)
+	e, err := h.Svc.Earnings(c.Request.Context(), sellerID)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
 
 	h.Render(c, "ec_base", "ecommerce/seller/earnings", gin.H{
 		"Title":           "Pendapatan",
 		"Active":          "seller",
-		"TotalRevenue":    totalRevenue,
-		"TotalCommission": totalCommission,
-		"NetEarnings":     netEarnings,
-		"CompletedOrders": completedCount,
-		"Orders":          orders,
+		"TotalRevenue":    e.TotalRevenue,
+		"TotalCommission": e.TotalCommission,
+		"NetEarnings":     e.NetEarnings,
+		"CompletedOrders": e.CompletedOrders,
+		"Orders":          e.Orders,
 	})
 }

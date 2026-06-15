@@ -2,14 +2,13 @@ package handler
 
 import (
 	"fmt"
-	"math"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
-	"koperasi-frontend/core/mock"
 	"koperasi-frontend/core/model"
+	"koperasi-frontend/core/service"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -17,34 +16,36 @@ import (
 
 type LoanHandler struct {
 	Render Renderer
+	Svc    *service.LoanService
 }
 
-func NewLoanHandler(render Renderer) *LoanHandler {
-	return &LoanHandler{Render: render}
+func NewLoanHandler(render Renderer, svc *service.LoanService) *LoanHandler {
+	return &LoanHandler{Render: render, Svc: svc}
+}
+
+// ready memastikan service (DB) tersedia; jika tidak, alihkan dengan pesan.
+func (h *LoanHandler) ready(c *gin.Context) bool {
+	if h.Svc == nil {
+		SetFlash(c, "error", "Fitur pinjaman membutuhkan koneksi database.")
+		c.Redirect(http.StatusFound, "/dashboard")
+		return false
+	}
+	return true
 }
 
 // ===== GET /loans/apply =====
 func (h *LoanHandler) ShowApply(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	sess := sessions.Default(c)
 	userNama, _ := sess.Get("user_nama").(string)
 
-	// credit scoring info — find member
-	var member *model.Member
-	for i := range mock.Members {
-		if mock.Members[i].Nama == userNama {
-			member = &mock.Members[i]
-			break
-		}
-	}
-	totalSimpanan := 0.0
-	tunggakanAktif := 0
-	if member != nil {
-		totalSimpanan = member.SimpananPokok + member.SimpananWajib + member.SimpananSukarela
-	}
-	for _, l := range mock.Loans {
-		if l.MemberNama == userNama && l.Status == "AKTIF" {
-			tunggakanAktif++
-		}
+	// Informasi credit scoring (total simpanan & pinjaman aktif anggota).
+	totalSimpanan, tunggakanAktif, err := h.Svc.CreditInfo(c.Request.Context(), userNama)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
 	}
 
 	h.Render(c, "base", "loan/apply", gin.H{
@@ -57,6 +58,9 @@ func (h *LoanHandler) ShowApply(c *gin.Context) {
 
 // ===== POST /loans/apply =====
 func (h *LoanHandler) DoApply(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	sess := sessions.Default(c)
 	userNama, _ := sess.Get("user_nama").(string)
 	if userNama == "" {
@@ -68,53 +72,40 @@ func (h *LoanHandler) DoApply(c *gin.Context) {
 	tenor, _ := strconv.Atoi(c.PostForm("tenor"))
 	tujuan := strings.TrimSpace(c.PostForm("tujuan"))
 
-	if nominal < 500000 {
-		SetFlash(c, "error", "Nominal pinjaman minimal Rp 500.000.")
+	id, err := h.Svc.Apply(c.Request.Context(), userNama, nominal, tenor, tujuan)
+	if err != nil {
+		SetFlash(c, "error", err.Error())
 		c.Redirect(http.StatusFound, "/loans/apply")
 		return
 	}
-	if tenor < 1 || tenor > 24 {
-		SetFlash(c, "error", "Tenor harus 1-24 bulan.")
-		c.Redirect(http.StatusFound, "/loans/apply")
-		return
-	}
-	if tujuan == "" {
-		SetFlash(c, "error", "Tujuan pinjaman wajib diisi.")
-		c.Redirect(http.StatusFound, "/loans/apply")
-		return
-	}
-
-	loan := model.Loan{
-		MemberNama: userNama,
-		Nominal:    nominal,
-		TenorBulan: tenor,
-		BungaPersen: 1.5,
-		Tujuan:     tujuan,
-		SisaPokok:  nominal,
-		Status:     "PENDING",
-	}
-	saved := mock.AppendLoan(loan)
-	SetFlash(c, "success", fmt.Sprintf("Pengajuan pinjaman berhasil (ID: %d). Menunggu persetujuan.", saved.ID))
-	c.Redirect(http.StatusFound, "/loans/"+strconv.Itoa(saved.ID))
+	SetFlash(c, "success", fmt.Sprintf("Pengajuan pinjaman berhasil (ID: %d). Menunggu persetujuan.", id))
+	c.Redirect(http.StatusFound, "/loans/"+strconv.Itoa(id))
 }
 
 // ===== GET /loans =====
 // ANGGOTA hanya melihat pinjaman miliknya; OWNER/KASIR melihat semua.
 func (h *LoanHandler) List(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	statusFilter := strings.ToUpper(c.Query("status"))
 	role := CurrentUserRole(c)
 	userNama := CurrentUserNama(c)
 	scopeOwn := role == "ANGGOTA"
 
-	out := []model.Loan{}
+	scope := ""
+	if scopeOwn {
+		scope = userNama
+	}
+	loans, err := h.Svc.List(c.Request.Context(), scope)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
+
+	out := make([]model.Loan, 0, len(loans))
 	cnt := map[string]int{}
-	totalAll := 0
-	for i := len(mock.Loans) - 1; i >= 0; i-- {
-		l := mock.Loans[i]
-		if scopeOwn && l.MemberNama != userNama {
-			continue
-		}
-		totalAll++
+	for _, l := range loans {
 		cnt[l.Status]++
 		if statusFilter != "" && statusFilter != "ALL" && l.Status != statusFilter {
 			continue
@@ -126,7 +117,7 @@ func (h *LoanHandler) List(c *gin.Context) {
 		"Active":         "loans",
 		"Loans":          out,
 		"StatusFilter":   statusFilter,
-		"CountAll":       totalAll,
+		"CountAll":       len(loans),
 		"CountPending":   cnt["PENDING"],
 		"CountDisetujui": cnt["DISETUJUI"],
 		"CountAktif":     cnt["AKTIF"],
@@ -139,8 +130,15 @@ func (h *LoanHandler) List(c *gin.Context) {
 // ===== GET /loans/:id =====
 // ANGGOTA hanya boleh akses pinjaman miliknya.
 func (h *LoanHandler) Detail(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	id, _ := strconv.Atoi(c.Param("id"))
-	l := mock.FindLoanByID(id)
+	l, err := h.Svc.FindByID(c.Request.Context(), id)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
 	if l == nil {
 		c.String(http.StatusNotFound, "Pinjaman tidak ditemukan")
 		return
@@ -150,25 +148,9 @@ func (h *LoanHandler) Detail(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/loans")
 		return
 	}
-	progressPct := 0.0
-	if l.Nominal > 0 {
-		progressPct = math.Round((1 - l.SisaPokok/l.Nominal) * 100)
-	}
-	// find next unpaid installment
-	var nextInst *model.Installment
-	for i := range l.Installments {
-		if l.Installments[i].Status == "BELUM" || l.Installments[i].Status == "OVERDUE" {
-			nextInst = &l.Installments[i]
-			break
-		}
-	}
-
-	estAngsuran := 0.0
-	if l.TenorBulan > 0 {
-		pokok := l.Nominal / float64(l.TenorBulan)
-		bunga := l.Nominal * l.BungaPersen / 100
-		estAngsuran = pokok + bunga
-	}
+	progressPct := h.Svc.Progress(l.Nominal, l.SisaPokok)
+	nextInst := h.Svc.NextUnpaid(l.Installments)
+	estAngsuran := h.Svc.EstimateMonthly(l.Nominal, l.BungaPersen, l.TenorBulan)
 
 	h.Render(c, "base", "loan/detail", gin.H{
 		"Title":       "Pinjaman #" + strconv.Itoa(l.ID),
@@ -183,8 +165,15 @@ func (h *LoanHandler) Detail(c *gin.Context) {
 
 // ===== POST /loans/:id/approve =====
 func (h *LoanHandler) Approve(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	id, _ := strconv.Atoi(c.Param("id"))
-	l := mock.FindLoanByID(id)
+	l, err := h.Svc.FindByID(c.Request.Context(), id)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
 	if l == nil {
 		c.String(http.StatusNotFound, "Pinjaman tidak ditemukan")
 		return
@@ -194,15 +183,26 @@ func (h *LoanHandler) Approve(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/loans/"+strconv.Itoa(id))
 		return
 	}
-	l.Status = "DISETUJUI"
+	if err := h.Svc.Approve(c.Request.Context(), id); err != nil {
+		SetFlash(c, "error", "Gagal menyetujui pinjaman.")
+		c.Redirect(http.StatusFound, "/loans/"+strconv.Itoa(id))
+		return
+	}
 	SetFlash(c, "success", "Pinjaman disetujui. Silakan cairkan.")
 	c.Redirect(http.StatusFound, "/loans/"+strconv.Itoa(id))
 }
 
 // ===== POST /loans/:id/reject =====
 func (h *LoanHandler) Reject(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	id, _ := strconv.Atoi(c.Param("id"))
-	l := mock.FindLoanByID(id)
+	l, err := h.Svc.FindByID(c.Request.Context(), id)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
 	if l == nil {
 		c.String(http.StatusNotFound, "Pinjaman tidak ditemukan")
 		return
@@ -212,15 +212,26 @@ func (h *LoanHandler) Reject(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/loans/"+strconv.Itoa(id))
 		return
 	}
-	l.Status = "DITOLAK"
+	if err := h.Svc.Reject(c.Request.Context(), id); err != nil {
+		SetFlash(c, "error", "Gagal menolak pinjaman.")
+		c.Redirect(http.StatusFound, "/loans/"+strconv.Itoa(id))
+		return
+	}
 	SetFlash(c, "success", "Pinjaman ditolak.")
 	c.Redirect(http.StatusFound, "/loans/"+strconv.Itoa(id))
 }
 
 // ===== POST /loans/:id/disburse =====
 func (h *LoanHandler) Disburse(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	id, _ := strconv.Atoi(c.Param("id"))
-	l := mock.FindLoanByID(id)
+	l, err := h.Svc.FindByID(c.Request.Context(), id)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
 	if l == nil {
 		c.String(http.StatusNotFound, "Pinjaman tidak ditemukan")
 		return
@@ -230,13 +241,11 @@ func (h *LoanHandler) Disburse(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/loans/"+strconv.Itoa(id))
 		return
 	}
-	l.Status = "AKTIF"
-	l.TanggalCair = time.Now().Format("2006-01-02")
-	mock.GenerateInstallments(l)
-
-	// auto journal for disbursement
-	mock.AppendJournalEntry("Pencairan pinjaman "+l.MemberNama, "Piutang Anggota", "Kas", l.Nominal, "PINJAMAN", l.TanggalCair)
-
+	if err := h.Svc.Disburse(c.Request.Context(), l); err != nil {
+		SetFlash(c, "error", "Gagal mencairkan pinjaman.")
+		c.Redirect(http.StatusFound, "/loans/"+strconv.Itoa(id))
+		return
+	}
 	SetFlash(c, "success", "Pinjaman dicairkan. Jadwal angsuran dibuat.")
 	c.Redirect(http.StatusFound, "/loans/"+strconv.Itoa(id))
 }
@@ -244,8 +253,15 @@ func (h *LoanHandler) Disburse(c *gin.Context) {
 // ===== POST /loans/:id/pay =====
 // Pemilik pinjaman bisa bayar sendiri; KASIR/OWNER bisa bayar atas nama anggota.
 func (h *LoanHandler) Pay(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	id, _ := strconv.Atoi(c.Param("id"))
-	l := mock.FindLoanByID(id)
+	l, err := h.Svc.FindByID(c.Request.Context(), id)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
 	if l == nil {
 		c.String(http.StatusNotFound, "Pinjaman tidak ditemukan")
 		return
@@ -261,43 +277,14 @@ func (h *LoanHandler) Pay(c *gin.Context) {
 		return
 	}
 
-	// find next unpaid
-	paid := false
-	for i := range l.Installments {
-		inst := &l.Installments[i]
-		if inst.Status == "BELUM" || inst.Status == "OVERDUE" {
-			inst.Status = "DIBAYAR"
-			inst.TanggalBayar = time.Now().Format("2006-01-02")
-			l.SisaPokok -= inst.NominalPokok
-			if l.SisaPokok < 0 {
-				l.SisaPokok = 0
-			}
-
-			mock.AppendJournalEntry(
-				fmt.Sprintf("Angsuran pinjaman %s bulan ke-%d", l.MemberNama, inst.BulanKe),
-				"Kas", "Piutang Anggota", inst.TotalBayar, "PINJAMAN", inst.TanggalBayar,
-			)
-
-			paid = true
-			break
-		}
-	}
-	if !paid {
+	_, lunas, err := h.Svc.Pay(c.Request.Context(), l, time.Now().Format("2006-01-02"))
+	if err != nil {
 		SetFlash(c, "error", "Tidak ada angsuran yang perlu dibayar.")
 		c.Redirect(http.StatusFound, "/loans/"+strconv.Itoa(id))
 		return
 	}
 
-	// check if all installments are paid
-	allPaid := true
-	for _, inst := range l.Installments {
-		if inst.Status != "DIBAYAR" {
-			allPaid = false
-			break
-		}
-	}
-	if allPaid {
-		l.Status = "LUNAS"
+	if lunas {
 		SetFlash(c, "success", "Angsuran dibayar. Pinjaman LUNAS! 🎉")
 	} else {
 		SetFlash(c, "success", "Angsuran berhasil dibayar.")

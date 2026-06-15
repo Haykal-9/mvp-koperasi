@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS ecommerce_users_linked_member_unique;

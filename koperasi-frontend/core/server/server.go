@@ -1,29 +1,44 @@
 package server
 
 import (
+	"context"
+	"crypto/rand"
+	"crypto/subtle"
+	"encoding/base64"
 	"fmt"
 	"html/template"
 	"io/fs"
 	"log"
 	"net/http"
 	"path"
-	"strings"
 	"strconv"
+	"strings"
 
 	"koperasi-frontend/core/handler"
 	ecommerce "koperasi-frontend/core/handler/ecommerce"
 	"koperasi-frontend/core/middleware"
-	"koperasi-frontend/core/mock"
 	"koperasi-frontend/core/model"
+	"koperasi-frontend/core/repository"
+	"koperasi-frontend/core/service"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 // Assets is assigned from outside (api/index.go or cmd/web/main.go).
 // For Vercel: assigned an embed.FS. For local dev: assigned an os.DirFS.
 var Assets fs.FS
+
+type AppOptions struct {
+	SessionSecret string
+	SessionSecure bool
+}
+
+// sidebarMemberID me-resolve MemberID dari nama anggota untuk shortcut sidebar.
+// Di-set di SetupApp saat DB terhubung; nil bila berjalan tanpa DB.
+var sidebarMemberID func(ctx context.Context, nama string) int
 
 // pageTemplates holds {layoutName: {pagePath: parsedTemplate}}
 var pageTemplates = map[string]map[string]*template.Template{}
@@ -64,10 +79,80 @@ var templateFuncs = template.FuncMap{
 		}
 		return a / b
 	},
-	"iadd": func(a, b int) int { return a + b },
+	"iadd":     func(a, b int) int { return a + b },
 	"contains": func(s, substr string) bool { return strings.Contains(s, substr) },
-	"float64": func(i int) float64 { return float64(i) },
-	"itoa": strconv.Itoa,
+	"float64":  func(i int) float64 { return float64(i) },
+	"itoa":     strconv.Itoa,
+}
+
+const csrfSessionKey = "csrf_token"
+
+func csrfMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if strings.HasPrefix(c.Request.URL.Path, "/static/") {
+			c.Next()
+			return
+		}
+
+		sess := sessions.Default(c)
+		token, _ := sess.Get(csrfSessionKey).(string)
+		if token == "" {
+			var err error
+			token, err = newCSRFToken()
+			if err != nil {
+				c.String(http.StatusInternalServerError, "Gagal menyiapkan token keamanan.")
+				c.Abort()
+				return
+			}
+			sess.Set(csrfSessionKey, token)
+			if err := sess.Save(); err != nil {
+				c.String(http.StatusInternalServerError, "Gagal menyimpan token keamanan.")
+				c.Abort()
+				return
+			}
+		}
+		c.Set(csrfSessionKey, token)
+
+		if isSafeMethod(c.Request.Method) {
+			c.Next()
+			return
+		}
+
+		submitted := c.GetHeader("X-CSRF-Token")
+		if submitted == "" {
+			submitted = c.PostForm("_csrf")
+		}
+		if !validCSRFToken(token, submitted) {
+			c.String(http.StatusForbidden, "CSRF token tidak valid.")
+			c.Abort()
+			return
+		}
+		c.Next()
+	}
+}
+
+func newCSRFToken() (string, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return base64.RawURLEncoding.EncodeToString(b), nil
+}
+
+func isSafeMethod(method string) bool {
+	switch method {
+	case http.MethodGet, http.MethodHead, http.MethodOptions, http.MethodTrace:
+		return true
+	default:
+		return false
+	}
+}
+
+func validCSRFToken(expected, submitted string) bool {
+	if expected == "" || submitted == "" || len(expected) != len(submitted) {
+		return false
+	}
+	return subtle.ConstantTimeCompare([]byte(expected), []byte(submitted)) == 1
 }
 
 // readTemplate reads a template file from the embedded FS.
@@ -155,6 +240,9 @@ func renderPage(c *gin.Context, layout, page string, data gin.H) {
 	if data == nil {
 		data = gin.H{}
 	}
+	if _, ok := data["CSRFToken"]; !ok {
+		data["CSRFToken"] = c.GetString(csrfSessionKey)
+	}
 
 	sess := sessions.Default(c)
 	if _, ok := data["UserNama"]; !ok {
@@ -167,13 +255,11 @@ func renderPage(c *gin.Context, layout, page string, data gin.H) {
 	}
 
 	// Sidebar (base layout) needs the MemberID for ANGGOTA shortcut links.
+	// sidebarMemberID di-set saat startup (DB); nil bila DB tidak terhubung.
 	if _, ok := data["MemberID"]; !ok {
-		if nama, ok := data["UserNama"].(string); ok && nama != "" {
-			for i := range mock.Members {
-				if mock.Members[i].Nama == nama {
-					data["MemberID"] = mock.Members[i].ID
-					break
-				}
+		if nama, ok := data["UserNama"].(string); ok && nama != "" && sidebarMemberID != nil {
+			if id := sidebarMemberID(c.Request.Context(), nama); id > 0 {
+				data["MemberID"] = id
 			}
 		}
 	}
@@ -241,14 +327,24 @@ func renderPage(c *gin.Context, layout, page string, data gin.H) {
 	}
 }
 
-func SetupApp() *gin.Engine {
+func SetupApp(db *gorm.DB, opts AppOptions) *gin.Engine {
+	if len(opts.SessionSecret) < 32 {
+		panic("server: session secret must be at least 32 characters")
+	}
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 
 	loadTemplates()
 
-	store := cookie.NewStore([]byte("koperasi-secret-key-change-me"))
+	store := cookie.NewStore([]byte(opts.SessionSecret))
+	store.Options(sessions.Options{
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   opts.SessionSecure,
+		SameSite: http.SameSiteLaxMode,
+	})
 	r.Use(sessions.Sessions("koperasi_session", store))
+	r.Use(csrfMiddleware())
 
 	// Serve static files from embedded FS
 	staticFS, err := fs.Sub(Assets, "static")
@@ -261,21 +357,69 @@ func SetupApp() *gin.Engine {
 		c.Redirect(http.StatusFound, "/dashboard")
 	})
 
+	// ===== KOPERASI PROTECTED =====
+	// Fase 2: M1 Keanggotaan dari DB (repository -> service -> handler).
+	// Jika db nil (mis. DATABASE_URL belum diset), service nil & handler memberi pesan.
+	var memSvc *service.MemberService
+	var prodSvc *service.ProductService
+	var orderSvc *service.OrderService
+	var loanSvc *service.LoanService
+	var finSvc *service.FinanceService
+	var ecStoreSvc *service.ECStoreService
+	var ecAcctSvc *service.ECAccountService
+	var ecShopSvc *service.ECShopService
+	var ecSellerSvc *service.ECSellerService
+	var ecAdminSvc *service.ECAdminService
+	var dashSvc *service.DashboardService
+	var authSvc *service.AuthService
+	if db != nil {
+		authSvc = service.NewAuthService(repository.NewUserRepository(db))
+		memberRepo := repository.NewMemberRepository(db)
+		prodRepo := repository.NewProductRepository(db)
+		orderRepo := repository.NewOrderRepository(db)
+		loanRepo := repository.NewLoanRepository(db)
+		memSvc = service.NewMemberService(memberRepo)
+		// Fase 4a: M3 POS dari DB (produk, stok, order, jurnal penjualan).
+		prodSvc = service.NewProductService(prodRepo)
+		orderSvc = service.NewOrderService(orderRepo)
+		// Fase 4b: M4 Pinjaman dari DB (loans, installments, jurnal pinjaman).
+		loanSvc = service.NewLoanService(loanRepo)
+		// Fase 4c: M2 Keuangan dari DB (jurnal, ringkasan, jurnal manual).
+		finSvc = service.NewFinanceService(repository.NewJournalRepository(db))
+		// Fase 4d-1: M5 E-Commerce storefront/katalog dari DB.
+		ecStoreSvc = service.NewECStoreService(repository.NewECommerceRepository(db))
+		// Fase 4d-2: akun EC (auth/SSO, integrasi koperasi, dashboard buyer) dari DB.
+		ecAcctSvc = service.NewECAccountService(repository.NewECommerceRepository(db))
+		// Fase 4d-3: alur beli EC (checkout, order, wishlist) dari DB.
+		ecShopSvc = service.NewECShopService(repository.NewECommerceRepository(db))
+		// Fase 4d-5: seller (dashboard, produk, order, earnings) dari DB.
+		ecSellerSvc = service.NewECSellerService(repository.NewECommerceRepository(db))
+		// Fase 4d-6: admin (moderasi, voucher, analytics, audit) dari DB.
+		ecAdminSvc = service.NewECAdminService(repository.NewECommerceRepository(db))
+		// Fase 4e: dashboard agregat dari DB + sidebar MemberID (lepas mock dari runtime).
+		dashSvc = service.NewDashboardService(memberRepo, loanRepo, prodRepo, orderRepo)
+		sidebarMemberID = func(ctx context.Context, nama string) int {
+			if m, _ := memberRepo.FindByNama(ctx, nama); m != nil {
+				return m.ID
+			}
+			return 0
+		}
+	}
+
 	// ===== KOPERASI AUTH =====
-	authH := handler.NewAuthHandler(renderPage)
+	authH := handler.NewAuthHandler(renderPage, authSvc)
 	r.GET("/login", authH.ShowLogin)
 	r.POST("/login", authH.DoLogin)
 	r.GET("/register", authH.ShowRegister)
 	r.POST("/register", authH.DoRegister)
 	r.GET("/logout", authH.DoLogout)
 
-	// ===== KOPERASI PROTECTED =====
-	dashH := handler.NewDashboardHandler(renderPage)
-	memH := handler.NewMemberHandler(renderPage)
-	prodH := handler.NewProductHandler(renderPage)
-	orderH := handler.NewOrderHandler(renderPage)
-	loanH := handler.NewLoanHandler(renderPage)
-	finH := handler.NewFinanceHandler(renderPage)
+	dashH := handler.NewDashboardHandler(renderPage, dashSvc)
+	memH := handler.NewMemberHandler(renderPage, memSvc)
+	prodH := handler.NewProductHandler(renderPage, prodSvc)
+	orderH := handler.NewOrderHandler(renderPage, orderSvc, prodSvc)
+	loanH := handler.NewLoanHandler(renderPage, loanSvc)
+	finH := handler.NewFinanceHandler(renderPage, finSvc)
 
 	protected := r.Group("/")
 	protected.Use(handler.AuthRequired())
@@ -355,8 +499,8 @@ func SetupApp() *gin.Engine {
 	}
 
 	// ===== E-COMMERCE PUBLIC (no auth) =====
-	ecAuthH := ecommerce.NewAuthHandler(renderPage)
-	ecStoreH := ecommerce.NewStoreHandler(renderPage)
+	ecAuthH := ecommerce.NewAuthHandler(renderPage, ecAcctSvc)
+	ecStoreH := ecommerce.NewStoreHandler(renderPage, ecStoreSvc)
 
 	r.GET("/ecommerce/login", ecAuthH.Login)
 	r.POST("/ecommerce/login", ecAuthH.DoLogin)
@@ -373,11 +517,11 @@ func SetupApp() *gin.Engine {
 	r.GET("/ecommerce/seller/:id/profile", ecStoreH.SellerProfilePage)
 
 	// ===== E-COMMERCE PROTECTED (auth required) =====
-	ecBuyerH := ecommerce.NewBuyerHandler(renderPage)
-	ecWishlistH := ecommerce.NewWishlistHandler(renderPage)
+	ecBuyerH := ecommerce.NewBuyerHandler(renderPage, ecAcctSvc)
+	ecWishlistH := ecommerce.NewWishlistHandler(renderPage, ecShopSvc)
 
 	ecProtected := r.Group("/ecommerce")
-	ecProtected.Use(middleware.RequireECommerceAuth())
+	ecProtected.Use(middleware.RequireECommerceAuth(ecAcctSvc))
 	{
 		// Buyer routes
 		ecProtected.GET("/buyer", ecBuyerH.Dashboard)
@@ -387,14 +531,14 @@ func SetupApp() *gin.Engine {
 		ecProtected.POST("/wishlist/toggle", ecWishlistH.Toggle)
 
 		// Orders & Checkout
-		ecOrderH := ecommerce.NewOrderHandler(renderPage)
+		ecOrderH := ecommerce.NewOrderHandler(renderPage, ecShopSvc)
 		ecProtected.GET("/checkout", ecOrderH.ShowCheckout)
 		ecProtected.POST("/checkout", ecOrderH.DoCheckout)
 		ecProtected.GET("/orders", ecOrderH.OrderList)
 		ecProtected.GET("/orders/:id/track", ecOrderH.ShowTracking)
 
 		// Profile & Addresses
-		ecProfileH := ecommerce.NewProfileHandler(renderPage)
+		ecProfileH := ecommerce.NewProfileHandler(renderPage, ecAcctSvc)
 		ecProtected.GET("/profile", ecProfileH.Profile)
 		ecProtected.GET("/profile/addresses", ecProfileH.Addresses)
 		ecProtected.GET("/profile/addresses/new", ecProfileH.ShowCreateAddress)
@@ -405,12 +549,12 @@ func SetupApp() *gin.Engine {
 		ecProtected.POST("/profile/settings", ecProfileH.UpdateSettings)
 
 		// Reviews
-		ecReviewH := ecommerce.NewReviewHandler(renderPage)
+		ecReviewH := ecommerce.NewReviewHandler(renderPage, ecShopSvc)
 		ecProtected.GET("/order/:id/review", ecReviewH.ShowReview)
 		ecProtected.POST("/order/:id/review", ecReviewH.DoReview)
 
 		// Points & Loyalty
-		ecPointsH := ecommerce.NewPointsHandler(renderPage)
+		ecPointsH := ecommerce.NewPointsHandler(renderPage, ecAcctSvc)
 		ecProtected.GET("/points", ecPointsH.Balance)
 		ecProtected.GET("/points/convert", ecPointsH.ConvertForm)
 		ecProtected.POST("/points/convert", ecPointsH.DoConvert)
@@ -418,8 +562,8 @@ func SetupApp() *gin.Engine {
 		ecProtected.POST("/points/link-member", ecPointsH.DoLinkMember)
 		ecProtected.GET("/api/points/conversion-status", ecPointsH.CheckConversionStatus)
 
-		// Koperasi integration mock API
-		ecIntegrationH := ecommerce.NewIntegrationHandler()
+		// Koperasi integration API
+		ecIntegrationH := ecommerce.NewIntegrationHandler(ecAcctSvc)
 		ecProtected.GET("/api/koperasi/member/:id", ecIntegrationH.GetKoperasiMember)
 		ecProtected.POST("/api/koperasi/link", ecIntegrationH.LinkToKoperasi)
 		ecProtected.POST("/api/koperasi/simpanan/add", ecIntegrationH.AddToSimpanan)
@@ -429,7 +573,7 @@ func SetupApp() *gin.Engine {
 		ecProtected.POST("/unlink-member", ecAuthH.UnlinkKoperasiMember)
 
 		// Seller routes (require seller status)
-		ecSellerH := ecommerce.NewSellerHandler(renderPage)
+		ecSellerH := ecommerce.NewSellerHandler(renderPage, ecSellerSvc)
 		ecSeller := ecProtected.Group("/seller")
 		ecSeller.Use(middleware.RequireECommerceSeller())
 		{
@@ -443,10 +587,14 @@ func SetupApp() *gin.Engine {
 		}
 
 		// Admin routes (require ADMIN role)
-		ecAdminH := ecommerce.NewAdminHandler(renderPage)
+		ecAdminH := ecommerce.NewAdminHandler(renderPage, ecAdminSvc)
 		ecAdmin := ecProtected.Group("/admin")
-		ecAdmin.Use(middleware.RequireECommerceAdmin())
+		// Area admin terbuka untuk ADMIN dan PENGURUS (moderator operasional).
+		ecAdmin.Use(middleware.RequireECommerceAdminArea())
 		{
+			// adminOnly menjaga rute sensitif agar tetap eksklusif ADMIN (PENGURUS ditolak).
+			adminOnly := middleware.RequireECommerceAdmin()
+
 			ecAdmin.GET("", ecAdminH.Dashboard)
 			ecAdmin.GET("/analytics", ecAdminH.Analytics)
 			ecAdmin.GET("/sellers", ecAdminH.SellerApprovals)
@@ -455,17 +603,15 @@ func SetupApp() *gin.Engine {
 			ecAdmin.GET("/products", ecAdminH.ProductApprovals)
 			ecAdmin.POST("/products/:id/approve", ecAdminH.ApproveProduct)
 			ecAdmin.POST("/products/:id/reject", ecAdminH.RejectProduct)
-			ecAdmin.GET("/vouchers", ecAdminH.VoucherManagement)
-			ecAdmin.POST("/vouchers/create", ecAdminH.CreateVoucher)
-			ecAdmin.POST("/vouchers/:id/toggle", ecAdminH.ToggleVoucher)
+			ecAdmin.GET("/vouchers", adminOnly, ecAdminH.VoucherManagement)
+			ecAdmin.POST("/vouchers/create", adminOnly, ecAdminH.CreateVoucher)
+			ecAdmin.POST("/vouchers/:id/toggle", adminOnly, ecAdminH.ToggleVoucher)
 			ecAdmin.GET("/orders", ecAdminH.OrderManagement)
-			ecAdmin.GET("/members", ecAdminH.MemberManagement)
+			ecAdmin.GET("/members", adminOnly, ecAdminH.MemberManagement)
 			ecAdmin.GET("/points", ecAdminH.PointsMonitoring)
-			ecAdmin.GET("/audit", ecAdminH.AuditLog)
+			ecAdmin.GET("/audit", adminOnly, ecAdminH.AuditLog)
 		}
 	}
 
 	return r
 }
-
-

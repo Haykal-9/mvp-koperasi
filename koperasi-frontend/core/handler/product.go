@@ -4,10 +4,9 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
-	"koperasi-frontend/core/mock"
 	"koperasi-frontend/core/model"
+	"koperasi-frontend/core/service"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -15,44 +14,42 @@ import (
 
 type ProductHandler struct {
 	Render Renderer
+	Svc    *service.ProductService
 }
 
-func NewProductHandler(render Renderer) *ProductHandler {
-	return &ProductHandler{Render: render}
+func NewProductHandler(render Renderer, svc *service.ProductService) *ProductHandler {
+	return &ProductHandler{Render: render, Svc: svc}
+}
+
+// ready memastikan service (DB) tersedia; jika tidak, alihkan dengan pesan.
+func (h *ProductHandler) ready(c *gin.Context) bool {
+	if h.Svc == nil {
+		SetFlash(c, "error", "Fitur produk membutuhkan koneksi database.")
+		c.Redirect(http.StatusFound, "/dashboard")
+		return false
+	}
+	return true
 }
 
 // ===== GET /products =====
 func (h *ProductHandler) Catalog(c *gin.Context) {
-	q := strings.ToLower(strings.TrimSpace(c.Query("q")))
+	if !h.ready(c) {
+		return
+	}
+	q := c.Query("q")
 	kategori := c.Query("kategori")
 
-	products := []model.Product{}
-	categorySet := map[string]bool{}
-	for _, p := range mock.Products {
-		categorySet[p.Kategori] = true
-		// hide PENDING/REJECTED dari katalog publik
-		if p.Status != "APPROVED" {
-			continue
-		}
-		if q != "" && !strings.Contains(strings.ToLower(p.Nama), q) {
-			continue
-		}
-		if kategori != "" && p.Kategori != kategori {
-			continue
-		}
-		products = append(products, p)
-	}
-
-	categories := []string{}
-	for k := range categorySet {
-		categories = append(categories, k)
+	products, categories, err := h.Svc.Catalog(c.Request.Context(), q, kategori)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
 	}
 
 	h.Render(c, "base", "product/catalog", gin.H{
 		"Title":      "Katalog Produk",
 		"Active":     "products",
 		"Products":   products,
-		"Q":          c.Query("q"),
+		"Q":          q,
 		"Kategori":   kategori,
 		"Categories": categories,
 	})
@@ -60,8 +57,15 @@ func (h *ProductHandler) Catalog(c *gin.Context) {
 
 // ===== GET /products/:id =====
 func (h *ProductHandler) Detail(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	id, _ := strconv.Atoi(c.Param("id"))
-	p := mock.FindProductByID(id)
+	p, err := h.Svc.FindByID(c.Request.Context(), id)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
 	if p == nil {
 		c.String(http.StatusNotFound, "Produk tidak ditemukan")
 		return
@@ -96,6 +100,9 @@ func (h *ProductHandler) ShowCreate(c *gin.Context) {
 
 // ===== POST /products/create =====
 func (h *ProductHandler) DoCreate(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	nama := strings.TrimSpace(c.PostForm("nama"))
 	kategori := strings.TrimSpace(c.PostForm("kategori"))
 	hargaStr := c.PostForm("harga")
@@ -116,43 +123,37 @@ func (h *ProductHandler) DoCreate(c *gin.Context) {
 	stok, _ := strconv.Atoi(stokStr)
 	minStok, _ := strconv.Atoi(minStr)
 
-	if nama == "" || kategori == "" || harga <= 0 || stok < 0 {
-		SetFlash(c, "error", "Nama, kategori, harga (>0), dan stok (≥0) wajib diisi.")
+	if err := h.Svc.ValidateCreate(nama, kategori, harga, stok); err != nil {
+		SetFlash(c, "error", err.Error())
 		preserve()
 		c.Redirect(http.StatusFound, "/products/create")
 		return
 	}
-	if minStok < 0 {
-		minStok = 0
-	}
 
-	// auto-approve jika OWNER/KASIR, pending jika ANGGOTA
+	// auto-approve jika OWNER/KASIR, pending jika peran lain
 	sess := sessions.Default(c)
 	role, _ := sess.Get("user_role").(string)
-	nama_user, _ := sess.Get("user_nama").(string)
-	status := "PENDING"
-	if role == "OWNER" || role == "KASIR" {
-		status = "APPROVED"
+	namaUser, _ := sess.Get("user_nama").(string)
+	if namaUser == "" {
+		namaUser = "Anggota"
 	}
-	if nama_user == "" {
-		nama_user = "Anggota"
-	}
+	status := h.Svc.StatusForRole(role)
 
-	id := mock.NextProductID()
-	mock.Products = append(mock.Products, model.Product{
-		ID:               id,
+	_, err := h.Svc.Create(c.Request.Context(), model.Product{
 		Nama:             nama,
 		Kategori:         kategori,
 		Harga:            harga,
 		Stok:             stok,
 		BatasStokMinimum: minStok,
 		Deskripsi:        deskripsi,
-		FotoURL:          "https://placehold.co/400x300?text=" + strings.ReplaceAll(nama, " ", "+"),
-		PenjualNama:      nama_user,
+		PenjualNama:      namaUser,
 		Status:           status,
 	})
-	if stok > 0 {
-		_ = mock.AppendStockChange(id, "RESTOCK", stok, "Stok awal saat ditambahkan", time.Now().Format("2006-01-02"))
+	if err != nil {
+		SetFlash(c, "error", "Gagal menyimpan produk.")
+		preserve()
+		c.Redirect(http.StatusFound, "/products/create")
+		return
 	}
 
 	if status == "APPROVED" {
@@ -166,11 +167,13 @@ func (h *ProductHandler) DoCreate(c *gin.Context) {
 
 // ===== GET /products/review =====
 func (h *ProductHandler) Review(c *gin.Context) {
-	pending := []model.Product{}
-	for _, p := range mock.Products {
-		if p.Status == "PENDING" {
-			pending = append(pending, p)
-		}
+	if !h.ready(c) {
+		return
+	}
+	pending, err := h.Svc.PendingReview(c.Request.Context())
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
 	}
 	h.Render(c, "base", "product/review", gin.H{
 		"Title":    "Review Produk Pending",
@@ -181,8 +184,15 @@ func (h *ProductHandler) Review(c *gin.Context) {
 
 // ===== POST /products/:id/approve =====
 func (h *ProductHandler) Approve(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	id, _ := strconv.Atoi(c.Param("id"))
-	p := mock.FindProductByID(id)
+	p, err := h.Svc.FindByID(c.Request.Context(), id)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
 	if p == nil {
 		c.String(http.StatusNotFound, "Produk tidak ditemukan")
 		return
@@ -192,15 +202,26 @@ func (h *ProductHandler) Approve(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/products/review")
 		return
 	}
-	p.Status = "APPROVED"
+	if err := h.Svc.Approve(c.Request.Context(), id); err != nil {
+		SetFlash(c, "error", "Gagal menyetujui produk.")
+		c.Redirect(http.StatusFound, "/products/review")
+		return
+	}
 	SetFlash(c, "success", "Produk \""+p.Nama+"\" disetujui dan tayang di katalog.")
 	c.Redirect(http.StatusFound, "/products/review")
 }
 
 // ===== POST /products/:id/reject =====
 func (h *ProductHandler) Reject(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	id, _ := strconv.Atoi(c.Param("id"))
-	p := mock.FindProductByID(id)
+	p, err := h.Svc.FindByID(c.Request.Context(), id)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
 	if p == nil {
 		c.String(http.StatusNotFound, "Produk tidak ditemukan")
 		return
@@ -210,57 +231,60 @@ func (h *ProductHandler) Reject(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/products/review")
 		return
 	}
-	p.Status = "REJECTED"
+	if err := h.Svc.Reject(c.Request.Context(), id); err != nil {
+		SetFlash(c, "error", "Gagal menolak produk.")
+		c.Redirect(http.StatusFound, "/products/review")
+		return
+	}
 	SetFlash(c, "success", "Produk \""+p.Nama+"\" ditolak.")
 	c.Redirect(http.StatusFound, "/products/review")
 }
 
 // ===== GET /products/:id/stock =====
 func (h *ProductHandler) ShowStock(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	id, _ := strconv.Atoi(c.Param("id"))
-	p := mock.FindProductByID(id)
+	p, err := h.Svc.FindByID(c.Request.Context(), id)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
 	if p == nil {
 		c.String(http.StatusNotFound, "Produk tidak ditemukan")
 		return
 	}
+	history, err := h.Svc.StockHistory(c.Request.Context(), id)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
 	h.Render(c, "base", "product/stock", gin.H{
-		"Title":     "Stok — " + p.Nama,
-		"Active":    "products",
-		"Product":   p,
+		"Title":      "Stok — " + p.Nama,
+		"Active":     "products",
+		"Product":    p,
 		"StokRendah": p.Stok < p.BatasStokMinimum,
-		"History":   mock.StockChangesByProduct(id),
+		"History":    history,
 	})
 }
 
 // ===== POST /products/:id/stock =====
 func (h *ProductHandler) DoStock(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	p := mock.FindProductByID(id)
-	if p == nil {
-		c.String(http.StatusNotFound, "Produk tidak ditemukan")
+	if !h.ready(c) {
 		return
 	}
+	id, _ := strconv.Atoi(c.Param("id"))
 	tipe := strings.ToUpper(c.PostForm("tipe"))
 	jumlah, _ := strconv.Atoi(c.PostForm("jumlah"))
 	keterangan := strings.TrimSpace(c.PostForm("keterangan"))
 
-	if tipe != "RESTOCK" && tipe != "KOREKSI" {
-		SetFlash(c, "error", "Tipe perubahan stok tidak valid.")
+	if err := h.Svc.ValidateStock(tipe, jumlah); err != nil {
+		SetFlash(c, "error", err.Error())
 		c.Redirect(http.StatusFound, "/products/"+strconv.Itoa(id)+"/stock")
 		return
 	}
-	if jumlah == 0 {
-		SetFlash(c, "error", "Jumlah tidak boleh 0.")
-		c.Redirect(http.StatusFound, "/products/"+strconv.Itoa(id)+"/stock")
-		return
-	}
-	if tipe == "RESTOCK" && jumlah < 0 {
-		SetFlash(c, "error", "Restock harus berupa angka positif.")
-		c.Redirect(http.StatusFound, "/products/"+strconv.Itoa(id)+"/stock")
-		return
-	}
-
-	if err := mock.AppendStockChange(id, tipe, jumlah, keterangan, time.Now().Format("2006-01-02")); err != nil {
+	if err := h.Svc.AdjustStock(c.Request.Context(), id, tipe, jumlah, keterangan); err != nil {
 		SetFlash(c, "error", err.Error())
 		c.Redirect(http.StatusFound, "/products/"+strconv.Itoa(id)+"/stock")
 		return

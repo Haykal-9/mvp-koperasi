@@ -1,6 +1,7 @@
 package ecommerce
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -10,89 +11,97 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"koperasi-frontend/core/handler"
-	"koperasi-frontend/core/mock"
-	"koperasi-frontend/core/model"
+	"koperasi-frontend/core/service"
 )
 
 // PointsHandler handles loyalty points operations.
 type PointsHandler struct {
 	Render ECRenderer
+	Svc    *service.ECAccountService
 }
 
-func NewPointsHandler(render ECRenderer) *PointsHandler {
-	return &PointsHandler{Render: render}
+func NewPointsHandler(render ECRenderer, svc *service.ECAccountService) *PointsHandler {
+	return &PointsHandler{Render: render, Svc: svc}
+}
+
+func (h *PointsHandler) ready(c *gin.Context) bool {
+	if h.Svc == nil {
+		c.String(http.StatusServiceUnavailable, "E-Commerce sementara tidak tersedia (database tidak terhubung).")
+		return false
+	}
+	return true
 }
 
 // Balance shows the user's points balance, linked member, and transaction history.
 // GET /ecommerce/points
 func (h *PointsHandler) Balance(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	ecUserID := GetECUserID(c)
 
-	points := mock.GetECUserPoints(ecUserID)
-	balance := 0.0
-	totalEarned := 0.0
-	totalRedeemed := 0.0
-	if points != nil {
-		balance = points.Balance
-		totalEarned = points.TotalEarned
-		totalRedeemed = points.TotalRedeemed
+	o, err := h.Svc.PointsOverview(c.Request.Context(), ecUserID)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
 	}
-
-	transactions := mock.GetECPointsTransactions(ecUserID)
-	linkedMember := mock.GetLinkedKoperasiMember(ecUserID)
-
-	// Rp equivalent (1 poin = Rp 100)
-	rpEquivalent := balance * 100
 
 	h.Render(c, "ec_base", "ecommerce/points/balance", gin.H{
 		"Title":         "Poin & Reward",
 		"Active":        "points",
-		"Balance":       balance,
-		"TotalEarned":   totalEarned,
-		"TotalRedeemed": totalRedeemed,
-		"RpEquivalent":  rpEquivalent,
-		"Transactions":  transactions,
-		"LinkedMember":  linkedMember,
+		"Balance":       o.Balance,
+		"TotalEarned":   o.TotalEarned,
+		"TotalRedeemed": o.TotalRedeemed,
+		"RpEquivalent":  o.RpEquivalent,
+		"PointValue":    service.PointValueRupiah,
+		"Transactions":  o.Transactions,
+		"LinkedMember":  o.LinkedMember,
 	})
 }
 
 // ConvertForm shows the points-to-simpanan conversion page.
 // GET /ecommerce/points/convert
 func (h *PointsHandler) ConvertForm(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	ecUserID := GetECUserID(c)
 
-	points := mock.GetECUserPoints(ecUserID)
-	balance := 0.0
-	if points != nil {
-		balance = points.Balance
+	o, err := h.Svc.PointsOverview(c.Request.Context(), ecUserID)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
 	}
 
-	linkedMember := mock.GetLinkedKoperasiMember(ecUserID)
-
 	h.Render(c, "ec_base", "ecommerce/points/convert", gin.H{
-		"Title":        "Konversi Poin ke Simpanan",
-		"Active":       "points",
-		"Balance":      balance,
-		"LinkedMember": linkedMember,
+		"Title":            "Konversi Poin ke Simpanan",
+		"Active":           "points",
+		"Balance":          o.Balance,
+		"PointValue":       service.PointValueRupiah,
+		"MinConvertPoints": service.MinPointConversion,
+		"MinConvertRupiah": service.MinPointConversion * service.PointValueRupiah,
+		"LinkedMember":     o.LinkedMember,
 	})
 }
 
 // DoConvert processes the points conversion to koperasi simpanan.
 // POST /ecommerce/points/convert
 func (h *PointsHandler) DoConvert(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	ecUserID := GetECUserID(c)
 
-	amountStr := c.PostForm("amount")
-	amount, err := strconv.ParseFloat(amountStr, 64)
-	if err != nil || amount < 100 {
-		handler.SetFlash(c, "ec_error", "Minimum konversi 100 poin.")
+	amount, err := strconv.ParseFloat(c.PostForm("amount"), 64)
+	if err != nil || amount < service.MinPointConversion {
+		handler.SetFlash(c, "ec_error", fmt.Sprintf("Minimum konversi %.0f poin.", service.MinPointConversion))
 		c.Redirect(http.StatusFound, "/ecommerce/points/convert")
 		return
 	}
 
-	ok, msg := mock.ConvertPointsToKoperasiSimpanan(ecUserID, amount)
-	if !ok {
-		handler.SetFlash(c, "ec_error", msg)
+	msg, _, _, convErr := h.Svc.ConvertToSimpanan(c.Request.Context(), ecUserID, amount)
+	if convErr != nil {
+		handler.SetFlash(c, "ec_error", convErr.Error())
 		c.Redirect(http.StatusFound, "/ecommerce/points/convert")
 		return
 	}
@@ -102,8 +111,7 @@ func (h *PointsHandler) DoConvert(c *gin.Context) {
 }
 
 // invalidateECSession clears the e-commerce session keys. Used when the
-// session references an EC user that no longer exists (e.g. server restart
-// in dev wiped in-memory data, but the cookie still holds the old ID).
+// session references an EC user that no longer exists.
 func invalidateECSession(c *gin.Context) {
 	sess := sessions.Default(c)
 	sess.Delete("ec_user_id")
@@ -115,17 +123,18 @@ func invalidateECSession(c *gin.Context) {
 }
 
 // LinkMemberPage menampilkan form pendaftaran sebagai anggota koperasi baru.
-// EC user yang belum jadi anggota mengisi data tambahan (NIK, alamat, no HP)
-// untuk membuat record Member berstatus PENDING, sekaligus auto-link ke akun EC.
 // GET /ecommerce/points/link-member
 func (h *PointsHandler) LinkMemberPage(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	ecUserID := GetECUserID(c)
 
-	// Resolve current EC user explicitly. If the session points to a user
-	// that doesn't exist anymore (server restarted, mock data reset),
-	// clear the session and bounce to login — otherwise we'd render a form
-	// that's guaranteed to fail on submit.
-	ecUser := mock.FindECommerceUserByID(ecUserID)
+	ecUser, err := h.Svc.UserByID(c.Request.Context(), ecUserID)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
 	if ecUser == nil {
 		invalidateECSession(c)
 		handler.SetFlash(c, "ec_error", "Sesi tidak valid. Silakan login kembali.")
@@ -133,13 +142,11 @@ func (h *PointsHandler) LinkMemberPage(c *gin.Context) {
 		return
 	}
 
-	var linkedMember *model.Member
-	if ecUser.LinkedKoperasiMemberID != 0 {
-		linkedMember = mock.FindMemberByID(ecUser.LinkedKoperasiMemberID)
+	linkedMember, err := h.Svc.LinkedMember(c.Request.Context(), ecUserID)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
 	}
-
-	// Default nama dari username EC, untuk pre-fill form
-	defaultNama := ecUser.Username
 
 	// Preserve form values on validation error
 	formNama, _ := handler.PopFlash(c, "form_nama")
@@ -147,7 +154,7 @@ func (h *PointsHandler) LinkMemberPage(c *gin.Context) {
 	formAlamat, _ := handler.PopFlash(c, "form_alamat")
 	formNoHP, _ := handler.PopFlash(c, "form_nohp")
 	if formNama == "" {
-		formNama = defaultNama
+		formNama = ecUser.Username // default nama dari username EC
 	}
 
 	h.Render(c, "ec_base", "ecommerce/points/link_member", gin.H{
@@ -162,32 +169,16 @@ func (h *PointsHandler) LinkMemberPage(c *gin.Context) {
 }
 
 // DoLinkMember memproses pendaftaran anggota koperasi baru dari EC, lalu
-// auto-link akun EC ke Member record yang baru dibuat (status PENDING,
-// menunggu approval pengurus sesuai BPMN M1.1).
+// auto-link akun EC ke Member record yang baru dibuat (status PENDING).
 // POST /ecommerce/points/link-member
 func (h *PointsHandler) DoLinkMember(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	ecUserID := GetECUserID(c)
 	if ecUserID == 0 {
 		handler.SetFlash(c, "ec_error", "Silakan login terlebih dahulu.")
 		c.Redirect(http.StatusFound, "/ecommerce/login")
-		return
-	}
-
-	// Resolve EC user explicitly. Nil here means the session is pointing at
-	// a user that no longer exists (typical after dev restart) — bounce to
-	// login instead of creating an orphaned Member record.
-	ecUser := mock.FindECommerceUserByID(ecUserID)
-	if ecUser == nil {
-		invalidateECSession(c)
-		handler.SetFlash(c, "ec_error", "Sesi tidak valid. Silakan login kembali.")
-		c.Redirect(http.StatusFound, "/ecommerce/login")
-		return
-	}
-
-	// Sudah linked → tolak. Harus unlink dulu untuk daftar ulang.
-	if ecUser.LinkedKoperasiMemberID != 0 {
-		handler.SetFlash(c, "ec_error", "Akun Anda sudah terhubung ke member koperasi.")
-		c.Redirect(http.StatusFound, "/ecommerce/points")
 		return
 	}
 
@@ -224,23 +215,18 @@ func (h *PointsHandler) DoLinkMember(c *gin.Context) {
 			return
 		}
 	}
-	if mock.IsNIKRegistered(nik) {
-		handler.SetFlash(c, "ec_error", "NIK sudah terdaftar pada anggota lain.")
-		preserve()
-		c.Redirect(http.StatusFound, "/ecommerce/points/link-member")
-		return
-	}
 
-	// Buat Member baru status PENDING. Setelah berhasil tersimpan, link akun
-	// EC ke record tersebut. Kalau link gagal (skenario edge — misalnya user
-	// dihapus tepat di antara dua call), rollback Member supaya tidak ada
-	// record yatim di /members.
-	newID := mock.RegisterPendingMember(nama, nik, alamat, noHP)
-	if !mock.LinkToKoperasiMember(ecUserID, newID) {
-		mock.RemoveMemberByID(newID)
+	err := h.Svc.RegisterMemberAsKoperasi(c.Request.Context(), ecUserID, nama, nik, alamat, noHP)
+	if errors.Is(err, service.ErrECUserNotFound) {
 		invalidateECSession(c)
 		handler.SetFlash(c, "ec_error", "Sesi tidak valid. Silakan login kembali.")
 		c.Redirect(http.StatusFound, "/ecommerce/login")
+		return
+	}
+	if err != nil {
+		handler.SetFlash(c, "ec_error", err.Error())
+		preserve()
+		c.Redirect(http.StatusFound, "/ecommerce/points/link-member")
 		return
 	}
 
@@ -254,8 +240,16 @@ func (h *PointsHandler) DoLinkMember(c *gin.Context) {
 // CheckConversionStatus returns JSON status of recent conversions.
 // GET /ecommerce/api/points/conversion-status
 func (h *PointsHandler) CheckConversionStatus(c *gin.Context) {
+	if h.Svc == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Database tidak terhubung"})
+		return
+	}
 	ecUserID := GetECUserID(c)
-	transactions := mock.GetECPointsTransactions(ecUserID)
+	transactions, err := h.Svc.PointsTransactions(c.Request.Context(), ecUserID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Kesalahan database"})
+		return
+	}
 
 	var conversions []gin.H
 	for _, t := range transactions {

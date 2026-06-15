@@ -1,0 +1,51 @@
+<mxfile host="app.diagrams.net" modified="2026-06-09T00:00:00.000Z" agent="SmartMart-BAB3" version="22.0.0" type="device">
+  <diagram name="Sequence - Pengurus Approve Seller" id="seq-pengurus-approve-seller">
+    <mxGraphModel dx="1422" dy="757" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="title" value="Sequence Diagram — Pengurus Approve Seller (alur diizinkan + audit trail)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=16;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="380" y="20" width="760" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="pengurus" value="Pengurus" style="shape=umlActor;verticalLabelPosition=bottom;labelBackgroundColor=#ffffff;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="60" y="80" width="40" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="browser" value=":Web Browser" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="180" y="80" width="120" height="700" as="geometry" />
+        </mxCell>
+        <mxCell id="gin" value=":Gin Router" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#d5e8d4;strokeColor=#82b366" vertex="1" parent="1">
+          <mxGeometry x="360" y="80" width="120" height="700" as="geometry" />
+        </mxCell>
+        <mxCell id="mw" value=":Middleware&#10;RequireECommerceAdminArea" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450" vertex="1" parent="1">
+          <mxGeometry x="540" y="80" width="160" height="700" as="geometry" />
+        </mxCell>
+        <mxCell id="handler" value=":AdminHandler&#10;.ApproveSeller" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#ffe6cc;strokeColor=#d79b00" vertex="1" parent="1">
+          <mxGeometry x="760" y="80" width="150" height="700" as="geometry" />
+        </mxCell>
+        <mxCell id="mockuser" value=":mock&#10;FindECommerceUserByID /&#10;ActivateSellerAccount" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6" vertex="1" parent="1">
+          <mxGeometry x="970" y="80" width="170" height="700" as="geometry" />
+        </mxCell>
+        <mxCell id="mockaudit" value=":mock&#10;LogAuditAction" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6" vertex="1" parent="1">
+          <mxGeometry x="1200" y="80" width="150" height="700" as="geometry" />
+        </mxCell>
+
+        <mxCell id="m1" value="1. Klik tombol &quot;Approve&quot; pada pengajuan seller" style="endArrow=block;html=1;align=left;verticalAlign=top;endFill=1;fontSize=11" edge="1" parent="1" source="pengurus" target="browser"><mxGeometry x="0.05" relative="1" as="geometry"/></mxCell>
+        <mxCell id="m2" value="2. POST /ecommerce/admin/sellers/:id/approve" style="endArrow=block;html=1;align=left;verticalAlign=top;endFill=1;fontSize=11" edge="1" parent="1" source="browser" target="gin"><mxGeometry x="0.1" relative="1" as="geometry"/></mxCell>
+        <mxCell id="m3" value="3. forward request" style="endArrow=block;html=1;align=left;verticalAlign=top;endFill=1;fontSize=11" edge="1" parent="1" source="gin" target="mw"><mxGeometry x="0.15" relative="1" as="geometry"/></mxCell>
+        <mxCell id="m4" value="4. cek session role ∈ {ADMIN, PENGURUS} → PENGURUS OK" style="endArrow=block;html=1;align=left;verticalAlign=top;endFill=0;fontSize=11;dashed=1" edge="1" parent="1" source="mw" target="mw"><mxGeometry x="0.2" relative="1" as="geometry"><mxPoint x="700" y="260" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="m5" value="5. pass to handler" style="endArrow=block;html=1;align=left;verticalAlign=top;endFill=1;fontSize=11" edge="1" parent="1" source="mw" target="handler"><mxGeometry x="0.25" relative="1" as="geometry"/></mxCell>
+        <mxCell id="m6" value="6. FindECommerceUserByID(id)" style="endArrow=block;html=1;align=left;verticalAlign=top;endFill=1;fontSize=11" edge="1" parent="1" source="handler" target="mockuser"><mxGeometry x="0.3" relative="1" as="geometry"/></mxCell>
+        <mxCell id="m7" value="7. user (cek IsSellerActive)" style="endArrow=open;html=1;align=left;verticalAlign=top;endFill=0;fontSize=11;dashed=1" edge="1" parent="1" source="mockuser" target="handler"><mxGeometry x="0.35" relative="1" as="geometry"/></mxCell>
+        <mxCell id="m8" value="8. ActivateSellerAccount(id)" style="endArrow=block;html=1;align=left;verticalAlign=top;endFill=1;fontSize=11" edge="1" parent="1" source="handler" target="mockuser"><mxGeometry x="0.45" relative="1" as="geometry"/></mxCell>
+        <mxCell id="m9" value="9. ok" style="endArrow=open;html=1;align=left;verticalAlign=top;endFill=0;fontSize=11;dashed=1" edge="1" parent="1" source="mockuser" target="handler"><mxGeometry x="0.5" relative="1" as="geometry"/></mxCell>
+        <mxCell id="m10" value="10. LogAuditAction(APPROVE_SELLER, pengurusID, ...)" style="endArrow=block;html=1;align=left;verticalAlign=top;endFill=1;fontSize=11" edge="1" parent="1" source="handler" target="mockaudit"><mxGeometry x="0.6" relative="1" as="geometry"/></mxCell>
+        <mxCell id="m11" value="11. logged" style="endArrow=open;html=1;align=left;verticalAlign=top;endFill=0;fontSize=11;dashed=1" edge="1" parent="1" source="mockaudit" target="handler"><mxGeometry x="0.65" relative="1" as="geometry"/></mxCell>
+        <mxCell id="m12" value="12. SetFlash(success) + redirect 302 → /ecommerce/admin/sellers" style="endArrow=open;html=1;align=left;verticalAlign=top;endFill=0;fontSize=11;dashed=1" edge="1" parent="1" source="handler" target="browser"><mxGeometry x="0.75" relative="1" as="geometry"/></mxCell>
+        <mxCell id="m13" value="13. tampilkan daftar seller (status seller aktif)" style="endArrow=open;html=1;align=left;verticalAlign=top;endFill=0;fontSize=11;dashed=1" edge="1" parent="1" source="browser" target="pengurus"><mxGeometry x="0.85" relative="1" as="geometry"/></mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

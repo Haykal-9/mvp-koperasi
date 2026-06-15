@@ -4,39 +4,52 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
-	"koperasi-frontend/core/mock"
 	"koperasi-frontend/core/model"
+	"koperasi-frontend/core/service"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
 type OrderHandler struct {
-	Render Renderer
+	Render     Renderer
+	OrderSvc   *service.OrderService
+	ProductSvc *service.ProductService
 }
 
-func NewOrderHandler(render Renderer) *OrderHandler {
-	return &OrderHandler{Render: render}
+func NewOrderHandler(render Renderer, orderSvc *service.OrderService, productSvc *service.ProductService) *OrderHandler {
+	return &OrderHandler{Render: render, OrderSvc: orderSvc, ProductSvc: productSvc}
+}
+
+func (h *OrderHandler) ready(c *gin.Context) bool {
+	if h.OrderSvc == nil || h.ProductSvc == nil {
+		SetFlash(c, "error", "Fitur order membutuhkan koneksi database.")
+		c.Redirect(http.StatusFound, "/dashboard")
+		return false
+	}
+	return true
 }
 
 // resolved cart row (joined with product) for display
 type cartRow struct {
-	ProductID   int
-	ProductNama string
-	FotoURL     string
-	HargaSatuan float64
+	ProductID    int
+	ProductNama  string
+	FotoURL      string
+	HargaSatuan  float64
 	StokTersedia int
-	Jumlah      int
-	Subtotal    float64
+	Jumlah       int
+	Subtotal     float64
 }
 
-func resolveCart(items []CartItem) ([]cartRow, float64) {
+func (h *OrderHandler) resolveCart(c *gin.Context, items []CartItem) ([]cartRow, float64, error) {
 	rows := []cartRow{}
 	total := 0.0
 	for _, it := range items {
-		p := mock.FindProductByID(it.ProductID)
+		p, err := h.ProductSvc.FindByID(c.Request.Context(), it.ProductID)
+		if err != nil {
+			return nil, 0, err
+		}
 		if p == nil {
 			continue
 		}
@@ -52,12 +65,19 @@ func resolveCart(items []CartItem) ([]cartRow, float64) {
 		})
 		total += sub
 	}
-	return rows, total
+	return rows, total, nil
 }
 
 // ===== GET /cart =====
 func (h *OrderHandler) ShowCart(c *gin.Context) {
-	rows, total := resolveCart(GetCart(c))
+	if !h.ready(c) {
+		return
+	}
+	rows, total, err := h.resolveCart(c, GetCart(c))
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
 	h.Render(c, "base", "order/cart", gin.H{
 		"Title":  "Keranjang",
 		"Active": "cart",
@@ -68,12 +88,19 @@ func (h *OrderHandler) ShowCart(c *gin.Context) {
 
 // ===== POST /cart/add =====
 func (h *OrderHandler) AddToCart(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	pid, _ := strconv.Atoi(c.PostForm("product_id"))
 	jumlah, _ := strconv.Atoi(c.PostForm("jumlah"))
 	if jumlah < 1 {
 		jumlah = 1
 	}
-	p := mock.FindProductByID(pid)
+	p, err := h.ProductSvc.FindByID(c.Request.Context(), pid)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
 	if p == nil {
 		SetFlash(c, "error", "Produk tidak ditemukan.")
 		c.Redirect(http.StatusFound, "/products")
@@ -91,9 +118,16 @@ func (h *OrderHandler) AddToCart(c *gin.Context) {
 
 // ===== POST /cart/update =====
 func (h *OrderHandler) UpdateCart(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	pid, _ := strconv.Atoi(c.PostForm("product_id"))
 	jumlah, _ := strconv.Atoi(c.PostForm("jumlah"))
-	p := mock.FindProductByID(pid)
+	p, err := h.ProductSvc.FindByID(c.Request.Context(), pid)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
 	if p != nil && jumlah > p.Stok {
 		SetFlash(c, "error", "Jumlah melebihi stok tersedia.")
 		c.Redirect(http.StatusFound, "/cart")
@@ -113,25 +147,38 @@ func (h *OrderHandler) RemoveFromCart(c *gin.Context) {
 
 // ===== GET /checkout =====
 func (h *OrderHandler) ShowCheckout(c *gin.Context) {
-	rows, total := resolveCart(GetCart(c))
+	if !h.ready(c) {
+		return
+	}
+	rows, total, err := h.resolveCart(c, GetCart(c))
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
 	if len(rows) == 0 {
 		SetFlash(c, "error", "Keranjang kosong.")
 		c.Redirect(http.StatusFound, "/cart")
 		return
 	}
-	fee := total * 0.03
 	h.Render(c, "base", "order/checkout", gin.H{
 		"Title":       "Checkout",
 		"Active":      "cart",
 		"Items":       rows,
 		"Total":       total,
-		"FeeKoperasi": fee,
+		"FeeKoperasi": h.OrderSvc.Fee(total),
 	})
 }
 
 // ===== POST /checkout =====
 func (h *OrderHandler) DoCheckout(c *gin.Context) {
-	rows, total := resolveCart(GetCart(c))
+	if !h.ready(c) {
+		return
+	}
+	rows, total, err := h.resolveCart(c, GetCart(c))
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
 	if len(rows) == 0 {
 		SetFlash(c, "error", "Keranjang kosong.")
 		c.Redirect(http.StatusFound, "/cart")
@@ -169,16 +216,12 @@ func (h *OrderHandler) DoCheckout(c *gin.Context) {
 		})
 	}
 
-	order := model.Order{
-		PembeliNama: pembeliNama,
-		Items:       items,
-		TotalHarga:  total,
-		FeeKoperasi: total * 0.03,
-		Status:      "DIBAYAR",
-		MetodeBayar: metode,
-		CreatedAt:   time.Now().Format("2006-01-02 15:04"),
+	saved, err := h.OrderSvc.Checkout(c.Request.Context(), pembeliNama, items, total, metode)
+	if err != nil {
+		SetFlash(c, "error", "Gagal membuat order.")
+		c.Redirect(http.StatusFound, "/checkout")
+		return
 	}
-	saved := mock.AppendOrder(order)
 	ClearCart(c)
 	SetFlash(c, "success", "Order "+saved.NomorOrder+" berhasil dibuat.")
 	c.Redirect(http.StatusFound, "/orders/"+strconv.Itoa(saved.ID))
@@ -187,20 +230,27 @@ func (h *OrderHandler) DoCheckout(c *gin.Context) {
 // ===== GET /orders =====
 // ANGGOTA hanya melihat order miliknya; OWNER/KASIR melihat semua order.
 func (h *OrderHandler) List(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	statusFilter := strings.ToUpper(c.Query("status"))
 	role := CurrentUserRole(c)
 	userNama := CurrentUserNama(c)
 	scopeOwn := role == "ANGGOTA"
+	scope := ""
+	if scopeOwn {
+		scope = userNama
+	}
+
+	all, err := h.OrderSvc.List(c.Request.Context(), scope)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
 
 	out := []model.Order{}
 	cnt := map[string]int{}
-	totalAll := 0
-	for i := len(mock.Orders) - 1; i >= 0; i-- {
-		o := mock.Orders[i]
-		if scopeOwn && o.PembeliNama != userNama {
-			continue
-		}
-		totalAll++
+	for _, o := range all {
 		cnt[o.Status]++
 		if statusFilter != "" && statusFilter != "ALL" && o.Status != statusFilter {
 			continue
@@ -212,7 +262,7 @@ func (h *OrderHandler) List(c *gin.Context) {
 		"Active":        "orders",
 		"Orders":        out,
 		"StatusFilter":  statusFilter,
-		"CountAll":      totalAll,
+		"CountAll":      len(all),
 		"CountDibayar":  cnt["DIBAYAR"],
 		"CountDikirim":  cnt["DIKIRIM"],
 		"CountSelesai":  cnt["SELESAI"],
@@ -225,8 +275,15 @@ func (h *OrderHandler) List(c *gin.Context) {
 // ===== GET /orders/:id =====
 // ANGGOTA hanya boleh akses order miliknya sendiri.
 func (h *OrderHandler) Detail(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	id, _ := strconv.Atoi(c.Param("id"))
-	o := mock.FindOrderByID(id)
+	o, err := h.OrderSvc.FindByID(c.Request.Context(), id)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
 	if o == nil {
 		c.String(http.StatusNotFound, "Order tidak ditemukan")
 		return
@@ -291,8 +348,15 @@ func buildTimeline(o *model.Order) []timelineStep {
 
 // ===== POST /orders/:id/ship =====
 func (h *OrderHandler) Ship(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	id, _ := strconv.Atoi(c.Param("id"))
-	o := mock.FindOrderByID(id)
+	o, err := h.OrderSvc.FindByID(c.Request.Context(), id)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
 	if o == nil {
 		c.String(http.StatusNotFound, "Order tidak ditemukan")
 		return
@@ -302,7 +366,11 @@ func (h *OrderHandler) Ship(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/orders/"+strconv.Itoa(id))
 		return
 	}
-	o.Status = "DIKIRIM"
+	if err := h.OrderSvc.Ship(c.Request.Context(), id); err != nil {
+		SetFlash(c, "error", "Gagal memperbarui order.")
+		c.Redirect(http.StatusFound, "/orders/"+strconv.Itoa(id))
+		return
+	}
 	SetFlash(c, "success", "Order "+o.NomorOrder+" ditandai DIKIRIM.")
 	c.Redirect(http.StatusFound, "/orders/"+strconv.Itoa(id))
 }
@@ -310,8 +378,15 @@ func (h *OrderHandler) Ship(c *gin.Context) {
 // ===== POST /orders/:id/complete =====
 // Konfirmasi terima — boleh pembeli sendiri, OWNER, atau KASIR.
 func (h *OrderHandler) Complete(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	id, _ := strconv.Atoi(c.Param("id"))
-	o := mock.FindOrderByID(id)
+	o, err := h.OrderSvc.FindByID(c.Request.Context(), id)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
 	if o == nil {
 		c.String(http.StatusNotFound, "Order tidak ditemukan")
 		return
@@ -326,7 +401,11 @@ func (h *OrderHandler) Complete(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/orders/"+strconv.Itoa(id))
 		return
 	}
-	o.Status = "SELESAI"
+	if err := h.OrderSvc.Complete(c.Request.Context(), id); err != nil {
+		SetFlash(c, "error", "Gagal memperbarui order.")
+		c.Redirect(http.StatusFound, "/orders/"+strconv.Itoa(id))
+		return
+	}
 	SetFlash(c, "success", "Order "+o.NomorOrder+" SELESAI. Split payment dijalankan.")
 	c.Redirect(http.StatusFound, "/orders/"+strconv.Itoa(id))
 }
@@ -334,8 +413,15 @@ func (h *OrderHandler) Complete(c *gin.Context) {
 // ===== GET /orders/:id/complain =====
 // Hanya pemilik order yang boleh membuka form komplain (kecuali staff).
 func (h *OrderHandler) ShowComplain(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	id, _ := strconv.Atoi(c.Param("id"))
-	o := mock.FindOrderByID(id)
+	o, err := h.OrderSvc.FindByID(c.Request.Context(), id)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
 	if o == nil {
 		c.String(http.StatusNotFound, "Order tidak ditemukan")
 		return
@@ -354,8 +440,15 @@ func (h *OrderHandler) ShowComplain(c *gin.Context) {
 
 // ===== POST /orders/:id/complain =====
 func (h *OrderHandler) DoComplain(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	id, _ := strconv.Atoi(c.Param("id"))
-	o := mock.FindOrderByID(id)
+	o, err := h.OrderSvc.FindByID(c.Request.Context(), id)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
 	if o == nil {
 		c.String(http.StatusNotFound, "Order tidak ditemukan")
 		return
@@ -377,21 +470,24 @@ func (h *OrderHandler) DoComplain(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/orders/"+strconv.Itoa(id)+"/complain")
 		return
 	}
-	o.Status = "DISPUTED"
-	o.KomplainAlasan = alasan
-	o.KomplainBukti = bukti
-	o.KomplainTanggal = time.Now().Format("2006-01-02 15:04")
+	if err := h.OrderSvc.Complain(c.Request.Context(), id, alasan, bukti); err != nil {
+		SetFlash(c, "error", "Gagal mengirim komplain.")
+		c.Redirect(http.StatusFound, "/orders/"+strconv.Itoa(id))
+		return
+	}
 	SetFlash(c, "success", "Komplain dikirim. Menunggu review pengurus.")
 	c.Redirect(http.StatusFound, "/orders/"+strconv.Itoa(id))
 }
 
 // ===== GET /orders/complaints =====
 func (h *OrderHandler) Complaints(c *gin.Context) {
-	out := []model.Order{}
-	for _, o := range mock.Orders {
-		if o.Status == "DISPUTED" {
-			out = append(out, o)
-		}
+	if !h.ready(c) {
+		return
+	}
+	out, err := h.OrderSvc.Complaints(c.Request.Context())
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
 	}
 	h.Render(c, "base", "order/complaints", gin.H{
 		"Title":  "Daftar Komplain",
@@ -402,8 +498,15 @@ func (h *OrderHandler) Complaints(c *gin.Context) {
 
 // ===== POST /orders/:id/resolve =====
 func (h *OrderHandler) Resolve(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	id, _ := strconv.Atoi(c.Param("id"))
-	o := mock.FindOrderByID(id)
+	o, err := h.OrderSvc.FindByID(c.Request.Context(), id)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
 	if o == nil {
 		c.String(http.StatusNotFound, "Order tidak ditemukan")
 		return
@@ -416,15 +519,18 @@ func (h *OrderHandler) Resolve(c *gin.Context) {
 	keputusan := c.PostForm("keputusan") // approve_retur | reject
 	switch keputusan {
 	case "approve_retur":
-		o.Status = "BATAL"
-		// kembalikan stok
-		for _, it := range o.Items {
-			_ = mock.AppendStockChange(it.ProductID, "KOREKSI", it.Jumlah,
-				"Retur dari komplain "+o.NomorOrder, time.Now().Format("2006-01-02"))
+		if err := h.OrderSvc.Resolve(c.Request.Context(), id, true); err != nil {
+			SetFlash(c, "error", "Gagal memproses komplain.")
+			c.Redirect(http.StatusFound, "/orders/complaints")
+			return
 		}
 		SetFlash(c, "success", "Komplain disetujui. Order "+o.NomorOrder+" dibatalkan & stok dikembalikan.")
 	case "reject":
-		o.Status = "SELESAI"
+		if err := h.OrderSvc.Resolve(c.Request.Context(), id, false); err != nil {
+			SetFlash(c, "error", "Gagal memproses komplain.")
+			c.Redirect(http.StatusFound, "/orders/complaints")
+			return
+		}
 		SetFlash(c, "success", "Komplain ditolak. Order "+o.NomorOrder+" diselesaikan.")
 	default:
 		SetFlash(c, "error", "Keputusan tidak valid.")

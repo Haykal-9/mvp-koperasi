@@ -1,0 +1,48 @@
+<mxfile host="app.diagrams.net" modified="2026-06-09T00:00:00.000Z" agent="SmartMart-BAB3" version="22.0.0" type="device">
+  <diagram name="Sequence - Pengurus Akses Ditolak Voucher" id="seq-pengurus-denied-voucher">
+    <mxGraphModel dx="1422" dy="757" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="760" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="title" value="Sequence Diagram — Pengurus Akses Voucher DITOLAK (RBAC adminOnly, HTTP 403)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=16;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="320" y="20" width="800" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="pengurus" value="Pengurus" style="shape=umlActor;verticalLabelPosition=bottom;labelBackgroundColor=#ffffff;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="60" y="90" width="40" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="browser" value=":Web Browser" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="200" y="90" width="120" height="560" as="geometry" />
+        </mxCell>
+        <mxCell id="gin" value=":Gin Router" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#d5e8d4;strokeColor=#82b366" vertex="1" parent="1">
+          <mxGeometry x="420" y="90" width="120" height="560" as="geometry" />
+        </mxCell>
+        <mxCell id="mwarea" value=":Middleware&#10;RequireECommerceAdminArea&#10;(ADMIN|PENGURUS)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#fff2cc;strokeColor=#d6b656" vertex="1" parent="1">
+          <mxGeometry x="640" y="90" width="170" height="560" as="geometry" />
+        </mxCell>
+        <mxCell id="mwadmin" value=":Middleware&#10;adminOnly&#10;RequireECommerceAdmin" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450" vertex="1" parent="1">
+          <mxGeometry x="900" y="90" width="170" height="560" as="geometry" />
+        </mxCell>
+        <mxCell id="handler" value=":AdminHandler&#10;.VoucherManagement&#10;(TIDAK pernah dipanggil)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#f5f5f5;strokeColor=#999999;dashed=1" vertex="1" parent="1">
+          <mxGeometry x="1170" y="90" width="170" height="560" as="geometry" />
+        </mxCell>
+
+        <mxCell id="m1" value="1. Klik menu / akses URL Manajemen Voucher" style="endArrow=block;html=1;align=left;verticalAlign=top;endFill=1;fontSize=11" edge="1" parent="1" source="pengurus" target="browser"><mxGeometry x="0.05" relative="1" as="geometry"/></mxCell>
+        <mxCell id="m2" value="2. GET /ecommerce/admin/vouchers" style="endArrow=block;html=1;align=left;verticalAlign=top;endFill=1;fontSize=11" edge="1" parent="1" source="browser" target="gin"><mxGeometry x="0.12" relative="1" as="geometry"/></mxCell>
+        <mxCell id="m3" value="3. forward request" style="endArrow=block;html=1;align=left;verticalAlign=top;endFill=1;fontSize=11" edge="1" parent="1" source="gin" target="mwarea"><mxGeometry x="0.2" relative="1" as="geometry"/></mxCell>
+        <mxCell id="m4" value="4. cek role ∈ {ADMIN, PENGURUS} → lolos area admin" style="endArrow=block;html=1;align=left;verticalAlign=top;endFill=0;fontSize=11;dashed=1" edge="1" parent="1" source="mwarea" target="mwarea"><mxGeometry x="0.28" relative="1" as="geometry"><mxPoint x="810" y="280" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="m5" value="5. lanjut ke guard adminOnly rute voucher" style="endArrow=block;html=1;align=left;verticalAlign=top;endFill=1;fontSize=11" edge="1" parent="1" source="mwarea" target="mwadmin"><mxGeometry x="0.36" relative="1" as="geometry"/></mxCell>
+        <mxCell id="m6" value="6. cek role == ADMIN ? → role = PENGURUS → GAGAL" style="endArrow=block;html=1;align=left;verticalAlign=top;endFill=0;fontSize=11;dashed=1;strokeColor=#b85450" edge="1" parent="1" source="mwadmin" target="mwadmin"><mxGeometry x="0.44" relative="1" as="geometry"><mxPoint x="1070" y="360" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="m7" value="7. c.Abort() — handler tidak dieksekusi" style="endArrow=open;html=1;align=left;verticalAlign=top;endFill=0;fontSize=11;dashed=1;strokeColor=#999999" edge="1" parent="1" source="mwadmin" target="handler"><mxGeometry x="0.5" relative="1" as="geometry"/></mxCell>
+        <mxCell id="m8" value="8. HTTP 403 &quot;Akses ditolak: role PENGURUS tidak diizinkan.&quot;" style="endArrow=open;html=1;align=left;verticalAlign=top;endFill=0;fontSize=11;dashed=1;strokeColor=#b85450" edge="1" parent="1" source="mwadmin" target="browser"><mxGeometry x="0.62" relative="1" as="geometry"/></mxCell>
+        <mxCell id="m9" value="9. tampilkan halaman 403 (Forbidden)" style="endArrow=open;html=1;align=left;verticalAlign=top;endFill=0;fontSize=11;dashed=1;strokeColor=#b85450" edge="1" parent="1" source="browser" target="pengurus"><mxGeometry x="0.72" relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="note" value="Sumber: server.go:462 (vouchers dijaga adminOnly), middleware/ecommerce.go:49-61 &amp; 64-68.&#10;adminOnly = RequireECommerceAdmin() yang hanya mengizinkan role ADMIN." style="text;html=1;strokeColor=#b85450;fillColor=#fff5f5;align=left;verticalAlign=top;spacingLeft=8;spacingTop=6;fontSize=11;rounded=1" vertex="1" parent="1">
+          <mxGeometry x="200" y="668" width="900" height="60" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

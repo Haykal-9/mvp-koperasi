@@ -5,6 +5,7 @@
     <a href="/ecommerce/admin/members?role=BUYER" class="btn btn-sm {{if eq .RoleFilter `BUYER`}}btn-primary{{else}}btn-outline-secondary{{end}}">Buyer</a>
     <a href="/ecommerce/admin/members?role=SELLER" class="btn btn-sm {{if eq .RoleFilter `SELLER`}}btn-info{{else}}btn-outline-secondary{{end}}">Seller Aktif</a>
     <a href="/ecommerce/admin/members?role=ADMIN" class="btn btn-sm {{if eq .RoleFilter `ADMIN`}}btn-warning{{else}}btn-outline-secondary{{end}}">Admin</a>
+    <a href="/ecommerce/admin/members?role=PENGURUS" class="btn btn-sm {{if eq .RoleFilter `PENGURUS`}}btn-success{{else}}btn-outline-secondary{{end}}">Pengurus</a>
 </div>
 
 <div class="ec-card p-4">
@@ -40,6 +41,8 @@
                     <td>
                         {{if eq .Role "ADMIN"}}
                         <span class="badge" style="background:rgba(245,158,11,.15);color:#f59e0b;">ADMIN</span>
+                        {{else if eq .Role "PENGURUS"}}
+                        <span class="badge" style="background:rgba(16,185,129,.15);color:#10b981;">PENGURUS</span>
                         {{else if eq .Role "KASIR"}}
                         <span class="badge" style="background:rgba(6,182,212,.15);color:#06b6d4;">KASIR</span>
                         {{else}}

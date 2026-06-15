@@ -3,10 +3,11 @@ package mock
 import "koperasi-frontend/core/model"
 
 var Users = []model.User{
-	{ID: 1, Email: "owner@koperasi.id", Password: "owner123", Role: "OWNER", Nama: "Budi Santoso"},
-	{ID: 2, Email: "kasir@koperasi.id", Password: "kasir123", Role: "KASIR", Nama: "Siti Aminah"},
-	{ID: 3, Email: "anggota@koperasi.id", Password: "anggota123", Role: "ANGGOTA", Nama: "Andi Wijaya"},
-	{ID: 4, Email: "rina@koperasi.id", Password: "rina123", Role: "ANGGOTA", Nama: "Rina Pertiwi"},
+	{ID: 1, Email: "owner@koperasi.id", Password: "$2a$10$ziC5K65cq/hZEtuxfWdmZOCTRCGd6.xSjFOnj0HdpdjTM8oB.mxtG", Role: "OWNER", Nama: "Budi Santoso"},
+	{ID: 2, Email: "kasir@koperasi.id", Password: "$2a$10$afbed69AaUh6EcwisdNUUOPNeZynke4Zkv/bRi8M0YRKFWiWD.rT.", Role: "KASIR", Nama: "Siti Aminah"},
+	{ID: 3, Email: "anggota@koperasi.id", Password: "$2a$10$QKjvwsmNwv71BUgST6zunuXOZCimAtVM3irKMfVaS7tpkKjqzuVEW", Role: "ANGGOTA", Nama: "Andi Wijaya"},
+	{ID: 4, Email: "rina@koperasi.id", Password: "$2a$10$KNCILIyV3lsCEmuDTuUo/u.nnvhpvHreuTBWHyEXiu78cBpsasvwG", Role: "ANGGOTA", Nama: "Rina Pertiwi"},
+	{ID: 5, Email: "pengurus@koperasi.id", Password: "$2a$10$J8n2AsGm6KXdIs1D6ZUfpuR6NUUVQQ1fsmTZ0lLlQOt17qgsVuvAK", Role: "PENGURUS", Nama: "Dewi Lestari"},
 }
 
 var Members = []model.Member{

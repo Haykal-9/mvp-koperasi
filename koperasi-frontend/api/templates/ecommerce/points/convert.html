@@ -18,12 +18,26 @@
                 </div>
                 <div>
                     <strong>{{.LinkedMember.Nama}}</strong>
-                    <div class="small text-muted">{{.LinkedMember.NomorAnggota}}</div>
+                    <div class="small text-muted">{{.LinkedMember.NomorAnggota}} · {{.LinkedMember.Status}}</div>
                     <div class="small text-muted">Simpanan Sukarela saat ini: <strong>Rp {{printf "%.0f" .LinkedMember.SimpananSukarela}}</strong></div>
                 </div>
             </div>
         </div>
 
+        {{if ne .LinkedMember.Status "AKTIF"}}
+        <div class="ec-card p-4 mb-3 text-center">
+            <i class="bi bi-hourglass-split" style="font-size:2.5rem;color:rgba(245,158,11,.75);"></i>
+            <h5 class="mt-3">Konversi belum aktif</h5>
+            <p class="text-muted mb-0">Member koperasi harus berstatus AKTIF sebelum poin dapat dikonversi ke Simpanan Sukarela.</p>
+        </div>
+        {{else if lt .Balance .MinConvertPoints}}
+        <div class="ec-card p-4 mb-3 text-center">
+            <i class="bi bi-stars" style="font-size:2.5rem;color:rgba(255,255,255,.2);"></i>
+            <h5 class="mt-3">Saldo poin belum cukup</h5>
+            <p class="text-muted mb-3">Minimum konversi adalah {{printf "%.0f" .MinConvertPoints}} poin. Saldo Anda saat ini {{printf "%.0f" .Balance}} poin.</p>
+            <a href="/ecommerce/store" class="btn btn-ec-primary">Belanja untuk tambah poin</a>
+        </div>
+        {{else}}
         <!-- Conversion Calculator -->
         <div class="ec-card p-4 mb-3">
             <h6 class="mb-3"><i class="bi bi-calculator me-1"></i>Kalkulator Konversi</h6>
@@ -31,34 +45,34 @@
             <form method="POST" action="/ecommerce/points/convert" id="convertForm">
                 <div class="mb-3">
                     <label class="form-label">Saldo Poin: <strong class="text-warning">{{printf "%.0f" .Balance}}</strong></label>
-                    <input type="range" class="form-range" id="poinSlider" min="100" max="{{printf "%.0f" .Balance}}" step="100" value="100" oninput="updateConversion(this.value)">
-                    <input type="hidden" name="amount" id="amountInput" value="100">
+                    <input type="range" class="form-range" id="poinSlider" min="{{printf "%.0f" .MinConvertPoints}}" max="{{printf "%.0f" .Balance}}" step="100" value="{{printf "%.0f" .MinConvertPoints}}" oninput="updateConversion(this.value)">
+                    <input type="hidden" name="amount" id="amountInput" value="{{printf "%.0f" .MinConvertPoints}}">
                 </div>
 
                 <div class="p-3 rounded text-center mb-3" style="background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.15);">
                     <div class="d-flex justify-content-center align-items-center gap-3">
                         <div>
-                            <span class="text-warning fw-bold" style="font-size:1.5rem;" id="poinDisplay">100</span>
+                            <span class="text-warning fw-bold" style="font-size:1.5rem;" id="poinDisplay">{{printf "%.0f" .MinConvertPoints}}</span>
                             <div class="small text-muted">poin</div>
                         </div>
                         <i class="bi bi-arrow-right" style="font-size:1.5rem;color:rgba(255,255,255,.3);"></i>
                         <div>
-                            <span style="color:#22c55e;font-weight:bold;font-size:1.5rem;" id="rpDisplay">Rp 10.000</span>
+                            <span style="color:#22c55e;font-weight:bold;font-size:1.5rem;" id="rpDisplay">Rp {{printf "%.0f" .MinConvertRupiah}}</span>
                             <div class="small text-muted">Simpanan Sukarela</div>
                         </div>
                     </div>
                 </div>
 
                 <div class="p-2 rounded small mb-3" style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);">
-                    <div class="d-flex justify-content-between"><span>Poin dikonversi:</span><span id="summaryPoin">100 poin</span></div>
-                    <div class="d-flex justify-content-between"><span>Rate konversi:</span><span>1 poin = Rp 100</span></div>
-                    <div class="d-flex justify-content-between"><span>Simpanan bertambah:</span><strong id="summaryRp" style="color:#22c55e;">Rp 10.000</strong></div>
+                    <div class="d-flex justify-content-between"><span>Poin dikonversi:</span><span id="summaryPoin">{{printf "%.0f" .MinConvertPoints}} poin</span></div>
+                    <div class="d-flex justify-content-between"><span>Rate konversi:</span><span>1 poin = Rp {{printf "%.0f" .PointValue}}</span></div>
+                    <div class="d-flex justify-content-between"><span>Simpanan bertambah:</span><strong id="summaryRp" style="color:#22c55e;">Rp {{printf "%.0f" .MinConvertRupiah}}</strong></div>
                     <div class="d-flex justify-content-between"><span>Atas nama:</span><strong>{{.LinkedMember.Nama}}</strong></div>
                 </div>
 
                 <div class="p-2 rounded small mb-3" style="background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.1);">
                     <i class="bi bi-info-circle text-warning me-1"></i>
-                    Konversi bersifat final. Simpanan Sukarela member akan bertambah sesuai jumlah konversi. Minimum: 100 poin.
+                    Konversi bersifat final. Simpanan Sukarela member akan bertambah sesuai jumlah konversi. Minimum: {{printf "%.0f" .MinConvertPoints}} poin.
                 </div>
 
                 <button type="submit" class="btn btn-ec-primary w-100 py-2">
@@ -66,13 +80,15 @@
                 </button>
             </form>
         </div>
+        {{end}}
     </div>
 </div>
 
 <script>
 function updateConversion(val) {
     val = parseInt(val);
-    var rp = val * 100;
+    var pointValue = Number('{{printf "%.2f" .PointValue}}');
+    var rp = val * pointValue;
     document.getElementById('poinDisplay').textContent = val.toLocaleString('id-ID');
     document.getElementById('rpDisplay').textContent = 'Rp ' + rp.toLocaleString('id-ID');
     document.getElementById('summaryPoin').textContent = val.toLocaleString('id-ID') + ' poin';

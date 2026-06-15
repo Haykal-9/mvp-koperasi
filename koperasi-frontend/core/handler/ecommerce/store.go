@@ -6,27 +6,49 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"koperasi-frontend/core/mock"
-	"koperasi-frontend/core/model"
+	"koperasi-frontend/core/service"
 )
 
 // StoreHandler handles storefront pages.
 type StoreHandler struct {
 	Render ECRenderer
+	Svc    *service.ECStoreService
 }
 
-func NewStoreHandler(render ECRenderer) *StoreHandler {
-	return &StoreHandler{Render: render}
+func NewStoreHandler(render ECRenderer, svc *service.ECStoreService) *StoreHandler {
+	return &StoreHandler{Render: render, Svc: svc}
+}
+
+// ready memastikan service (DB) tersedia untuk halaman storefront.
+func (h *StoreHandler) ready(c *gin.Context) bool {
+	if h.Svc == nil {
+		c.String(http.StatusServiceUnavailable, "E-Commerce sementara tidak tersedia (database tidak terhubung).")
+		return false
+	}
+	return true
 }
 
 // Home renders the storefront homepage.
 // GET /ecommerce/store
 func (h *StoreHandler) Home(c *gin.Context) {
-	featured := mock.GetAllApprovedECProducts()
-	categories := mock.GetECCategories()
-
-	if len(featured) > 8 {
-		featured = featured[:8]
+	if !h.ready(c) {
+		return
+	}
+	ctx := c.Request.Context()
+	featured, err := h.Svc.Featured(ctx, 8)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
+	categories, err := h.Svc.Categories(ctx)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
+	sellers, err := h.Svc.SellerProfiles(ctx)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
 	}
 
 	h.Render(c, "ec_base", "ecommerce/store/home", gin.H{
@@ -34,15 +56,22 @@ func (h *StoreHandler) Home(c *gin.Context) {
 		"Active":           "store",
 		"FeaturedProducts": featured,
 		"Categories":       categories,
-		"Sellers":          mock.ECSellerProfiles,
+		"Sellers":          sellers,
 	})
 }
 
 // CategoryPage shows products filtered by category.
 // GET /ecommerce/category/:slug
 func (h *StoreHandler) CategoryPage(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
 	slug := c.Param("slug")
-	products := mock.GetECProductsByCategory(slug)
+	products, err := h.Svc.Catalog(c.Request.Context(), "", slug)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
 
 	h.Render(c, "ec_base", "ecommerce/store/category", gin.H{
 		"Title":    "Kategori: " + slug,
@@ -55,19 +84,23 @@ func (h *StoreHandler) CategoryPage(c *gin.Context) {
 // ProductCatalog shows all products with filters.
 // GET /ecommerce/products
 func (h *StoreHandler) ProductCatalog(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
+	ctx := c.Request.Context()
 	category := c.Query("category")
 	query := c.Query("q")
 
-	var products []model.ECProduct
-	if query != "" {
-		products = mock.SearchECProducts(query)
-	} else if category != "" {
-		products = mock.GetECProductsByCategory(category)
-	} else {
-		products = mock.GetAllApprovedECProducts()
+	products, err := h.Svc.Catalog(ctx, query, category)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
 	}
-
-	categories := mock.GetECCategories()
+	categories, err := h.Svc.Categories(ctx)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
 
 	h.Render(c, "ec_base", "ecommerce/product/catalog", gin.H{
 		"Title":      "Katalog Produk",
@@ -82,36 +115,47 @@ func (h *StoreHandler) ProductCatalog(c *gin.Context) {
 // ProductDetail shows a single product with reviews and seller info.
 // GET /ecommerce/products/:id
 func (h *StoreHandler) ProductDetail(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
+	ctx := c.Request.Context()
 	var id int
 	if _, err := fmt.Sscanf(c.Param("id"), "%d", &id); err != nil {
 		c.Redirect(http.StatusFound, "/ecommerce/products")
 		return
 	}
 
-	product := mock.FindECProductByID(id)
+	product, err := h.Svc.ProductByID(ctx, id)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
 	if product == nil {
 		c.Redirect(http.StatusFound, "/ecommerce/products")
 		return
 	}
 
-	seller := mock.GetSellerProfile(product.SellerID)
-	reviews := mock.GetECProductReviews(id)
-
-	related := mock.GetSellerProducts(product.SellerID)
-	var relatedFiltered []model.ECProduct
-	for _, p := range related {
-		if p.ID != id && p.Status == "APPROVED" {
-			relatedFiltered = append(relatedFiltered, p)
-		}
+	seller, err := h.Svc.SellerProfile(ctx, product.SellerID)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
 	}
-	if len(relatedFiltered) > 4 {
-		relatedFiltered = relatedFiltered[:4]
+	reviews, err := h.Svc.Reviews(ctx, id)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
+	related, err := h.Svc.Related(ctx, product.SellerID, id, 4)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
 	}
 
 	wishlisted := false
-	ecUserID := GetECUserID(c)
-	if ecUserID > 0 {
-		wishlisted = mock.IsECWishlisted(ecUserID, id)
+	if ecUserID := GetECUserID(c); ecUserID > 0 {
+		if w, werr := h.Svc.IsWishlisted(ctx, ecUserID, id); werr == nil {
+			wishlisted = w
+		}
 	}
 
 	h.Render(c, "ec_base", "ecommerce/product/detail", gin.H{
@@ -120,7 +164,7 @@ func (h *StoreHandler) ProductDetail(c *gin.Context) {
 		"Product":         product,
 		"SellerProfile":   seller,
 		"Reviews":         reviews,
-		"RelatedProducts": relatedFiltered,
+		"RelatedProducts": related,
 		"IsWishlisted":    wishlisted,
 	})
 }
@@ -128,24 +172,30 @@ func (h *StoreHandler) ProductDetail(c *gin.Context) {
 // SellerProfilePage shows a seller's public profile.
 // GET /ecommerce/seller/:id/profile
 func (h *StoreHandler) SellerProfilePage(c *gin.Context) {
+	if !h.ready(c) {
+		return
+	}
+	ctx := c.Request.Context()
 	var id int
 	if _, err := fmt.Sscanf(c.Param("id"), "%d", &id); err != nil {
 		c.Redirect(http.StatusFound, "/ecommerce/store")
 		return
 	}
 
-	seller := mock.GetSellerProfile(id)
+	seller, err := h.Svc.SellerProfile(ctx, id)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
+	}
 	if seller == nil {
 		c.Redirect(http.StatusFound, "/ecommerce/store")
 		return
 	}
 
-	products := mock.GetSellerProducts(id)
-	var approved []model.ECProduct
-	for _, p := range products {
-		if p.Status == "APPROVED" {
-			approved = append(approved, p)
-		}
+	approved, err := h.Svc.SellerApprovedProducts(ctx, id)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Kesalahan database")
+		return
 	}
 
 	h.Render(c, "ec_base", "ecommerce/seller/profile", gin.H{

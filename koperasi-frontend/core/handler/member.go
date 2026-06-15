@@ -4,45 +4,42 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
-	"koperasi-frontend/core/mock"
-	"koperasi-frontend/core/model"
+	"koperasi-frontend/core/service"
 
 	"github.com/gin-gonic/gin"
 )
 
 type MemberHandler struct {
 	Render Renderer
+	Svc    *service.MemberService
 }
 
-func NewMemberHandler(render Renderer) *MemberHandler {
-	return &MemberHandler{Render: render}
+func NewMemberHandler(render Renderer, svc *service.MemberService) *MemberHandler {
+	return &MemberHandler{Render: render, Svc: svc}
+}
+
+// svcReady memastikan service (DB) tersedia. Jika tidak, beri pesan & redirect.
+func (h *MemberHandler) svcReady(c *gin.Context) bool {
+	if h.Svc == nil {
+		SetFlash(c, "error", "Fitur keanggotaan memerlukan database (DATABASE_URL belum dikonfigurasi).")
+		c.Redirect(http.StatusFound, "/dashboard")
+		return false
+	}
+	return true
 }
 
 // ===== GET /members =====
 func (h *MemberHandler) List(c *gin.Context) {
+	if !h.svcReady(c) {
+		return
+	}
 	statusFilter := strings.ToUpper(c.Query("status"))
 
-	members := []model.Member{}
-	for _, m := range mock.Members {
-		if statusFilter != "" && statusFilter != "ALL" && m.Status != statusFilter {
-			continue
-		}
-		members = append(members, m)
-	}
-
-	// counts for tab badges
-	var aktif, pending, nonAktif int
-	for _, m := range mock.Members {
-		switch m.Status {
-		case "AKTIF":
-			aktif++
-		case "PENDING":
-			pending++
-		case "NON_AKTIF":
-			nonAktif++
-		}
+	members, counts, err := h.Svc.List(c.Request.Context(), statusFilter)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Gagal memuat anggota: %v", err)
+		return
 	}
 
 	h.Render(c, "base", "member/list", gin.H{
@@ -50,18 +47,25 @@ func (h *MemberHandler) List(c *gin.Context) {
 		"Active":        "members",
 		"Members":       members,
 		"StatusFilter":  statusFilter,
-		"CountAktif":    aktif,
-		"CountPending":  pending,
-		"CountNonAktif": nonAktif,
-		"CountAll":      len(mock.Members),
+		"CountAktif":    counts.Aktif,
+		"CountPending":  counts.Pending,
+		"CountNonAktif": counts.NonAktif,
+		"CountAll":      counts.All,
 	})
 }
 
 // ===== GET /members/:id =====
 // ANGGOTA hanya boleh melihat profilnya sendiri.
 func (h *MemberHandler) Detail(c *gin.Context) {
+	if !h.svcReady(c) {
+		return
+	}
 	id, _ := strconv.Atoi(c.Param("id"))
-	m := mock.FindMemberByID(id)
+	m, err := h.Svc.FindByID(c.Request.Context(), id)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Gagal memuat anggota: %v", err)
+		return
+	}
 	if m == nil {
 		c.String(http.StatusNotFound, "Anggota tidak ditemukan")
 		return
@@ -71,13 +75,15 @@ func (h *MemberHandler) Detail(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/dashboard")
 		return
 	}
+	simpanan, _ := h.Svc.SimpananHistory(c.Request.Context(), m.ID)
+	loans, _ := h.Svc.LoansByMember(c.Request.Context(), m.ID)
 	h.Render(c, "base", "member/detail", gin.H{
 		"Title":           "Detail Anggota",
 		"Active":          "members",
 		"Member":          m,
 		"TotalSimpanan":   m.SimpananPokok + m.SimpananWajib + m.SimpananSukarela,
-		"SimpananHistory": mock.SimpananByMember(m.Nama),
-		"PinjamanHistory": mock.LoansByMember(m.Nama),
+		"SimpananHistory": simpanan,
+		"PinjamanHistory": loans,
 		"CanReview":       CurrentUserRole(c) == "OWNER",
 	})
 }
@@ -101,6 +107,9 @@ func (h *MemberHandler) ShowRegister(c *gin.Context) {
 
 // ===== POST /members/register =====
 func (h *MemberHandler) DoRegister(c *gin.Context) {
+	if !h.svcReady(c) {
+		return
+	}
 	nama := strings.TrimSpace(c.PostForm("nama"))
 	nik := strings.TrimSpace(c.PostForm("nik"))
 	alamat := strings.TrimSpace(c.PostForm("alamat"))
@@ -126,16 +135,12 @@ func (h *MemberHandler) DoRegister(c *gin.Context) {
 		return
 	}
 
-	mock.Members = append(mock.Members, model.Member{
-		ID:           mock.NextMemberID(),
-		NomorAnggota: "-",
-		Nama:         nama,
-		NIK:          nik,
-		Alamat:       alamat,
-		NoHP:         noHP,
-		Status:       "PENDING",
-		TanggalMasuk: time.Now().Format("2006-01-02"),
-	})
+	if _, err := h.Svc.Register(c.Request.Context(), nama, nik, alamat, noHP); err != nil {
+		SetFlash(c, "error", "Gagal menyimpan pendaftaran: "+err.Error())
+		preserve()
+		c.Redirect(http.StatusFound, "/members/register")
+		return
+	}
 
 	SetFlash(c, "success", "Pendaftaran terkirim. Menunggu review pengurus.")
 	c.Redirect(http.StatusFound, "/members?status=PENDING")
@@ -143,8 +148,15 @@ func (h *MemberHandler) DoRegister(c *gin.Context) {
 
 // ===== POST /members/:id/approve =====
 func (h *MemberHandler) Approve(c *gin.Context) {
+	if !h.svcReady(c) {
+		return
+	}
 	id, _ := strconv.Atoi(c.Param("id"))
-	m := mock.FindMemberByID(id)
+	m, err := h.Svc.FindByID(c.Request.Context(), id)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Gagal memuat anggota: %v", err)
+		return
+	}
 	if m == nil {
 		c.String(http.StatusNotFound, "Anggota tidak ditemukan")
 		return
@@ -154,18 +166,28 @@ func (h *MemberHandler) Approve(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/members")
 		return
 	}
-	m.Status = "AKTIF"
-	m.NomorAnggota = mock.GenerateNomorAnggota()
-	m.TanggalMasuk = time.Now().Format("2006-01-02")
+	nomor, err := h.Svc.Approve(c.Request.Context(), id)
+	if err != nil {
+		SetFlash(c, "error", "Gagal menyetujui anggota: "+err.Error())
+		c.Redirect(http.StatusFound, "/members")
+		return
+	}
 
-	SetFlash(c, "success", "Anggota "+m.Nama+" disetujui (Nomor "+m.NomorAnggota+").")
+	SetFlash(c, "success", "Anggota "+m.Nama+" disetujui (Nomor "+nomor+").")
 	c.Redirect(http.StatusFound, "/members")
 }
 
 // ===== POST /members/:id/reject =====
 func (h *MemberHandler) Reject(c *gin.Context) {
+	if !h.svcReady(c) {
+		return
+	}
 	id, _ := strconv.Atoi(c.Param("id"))
-	m := mock.FindMemberByID(id)
+	m, err := h.Svc.FindByID(c.Request.Context(), id)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Gagal memuat anggota: %v", err)
+		return
+	}
 	if m == nil {
 		c.String(http.StatusNotFound, "Anggota tidak ditemukan")
 		return
@@ -175,7 +197,11 @@ func (h *MemberHandler) Reject(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/members")
 		return
 	}
-	m.Status = "NON_AKTIF"
+	if err := h.Svc.Reject(c.Request.Context(), id); err != nil {
+		SetFlash(c, "error", "Gagal menolak pendaftaran: "+err.Error())
+		c.Redirect(http.StatusFound, "/members")
+		return
+	}
 
 	SetFlash(c, "success", "Pendaftaran "+m.Nama+" ditolak.")
 	c.Redirect(http.StatusFound, "/members")
@@ -184,8 +210,15 @@ func (h *MemberHandler) Reject(c *gin.Context) {
 // ===== GET /members/:id/simpanan =====
 // ANGGOTA hanya boleh melihat simpanan sendiri.
 func (h *MemberHandler) ShowSimpanan(c *gin.Context) {
+	if !h.svcReady(c) {
+		return
+	}
 	id, _ := strconv.Atoi(c.Param("id"))
-	m := mock.FindMemberByID(id)
+	m, err := h.Svc.FindByID(c.Request.Context(), id)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Gagal memuat anggota: %v", err)
+		return
+	}
 	if m == nil {
 		c.String(http.StatusNotFound, "Anggota tidak ditemukan")
 		return
@@ -195,12 +228,13 @@ func (h *MemberHandler) ShowSimpanan(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/dashboard")
 		return
 	}
+	simpanan, _ := h.Svc.SimpananHistory(c.Request.Context(), m.ID)
 	h.Render(c, "base", "member/simpanan", gin.H{
 		"Title":           "Simpanan — " + m.Nama,
 		"Active":          "members",
 		"Member":          m,
 		"TotalSimpanan":   m.SimpananPokok + m.SimpananWajib + m.SimpananSukarela,
-		"SimpananHistory": mock.SimpananByMember(m.Nama),
+		"SimpananHistory": simpanan,
 		"CanRecord":       IsOwnerOrKasir(c),
 	})
 }
@@ -208,8 +242,15 @@ func (h *MemberHandler) ShowSimpanan(c *gin.Context) {
 // ===== POST /members/:id/simpanan =====
 // Pencatatan transaksi simpanan hanya boleh OWNER/KASIR.
 func (h *MemberHandler) DoSimpanan(c *gin.Context) {
+	if !h.svcReady(c) {
+		return
+	}
 	id, _ := strconv.Atoi(c.Param("id"))
-	m := mock.FindMemberByID(id)
+	m, err := h.Svc.FindByID(c.Request.Context(), id)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Gagal memuat anggota: %v", err)
+		return
+	}
 	if m == nil {
 		c.String(http.StatusNotFound, "Anggota tidak ditemukan")
 		return
@@ -246,7 +287,7 @@ func (h *MemberHandler) DoSimpanan(c *gin.Context) {
 		}
 	}
 
-	if err := mock.AppendSimpanan(id, jenis, tipe, nominal, keterangan, time.Now().Format("2006-01-02")); err != nil {
+	if err := h.Svc.RecordSimpanan(c.Request.Context(), id, jenis, tipe, nominal, keterangan); err != nil {
 		SetFlash(c, "error", err.Error())
 		c.Redirect(http.StatusFound, "/members/"+strconv.Itoa(id)+"/simpanan")
 		return
@@ -259,8 +300,15 @@ func (h *MemberHandler) DoSimpanan(c *gin.Context) {
 // ===== GET /members/:id/resign =====
 // Pengajuan resign — pemilik akun atau OWNER; KASIR tidak boleh approve.
 func (h *MemberHandler) ShowResign(c *gin.Context) {
+	if !h.svcReady(c) {
+		return
+	}
 	id, _ := strconv.Atoi(c.Param("id"))
-	m := mock.FindMemberByID(id)
+	m, err := h.Svc.FindByID(c.Request.Context(), id)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Gagal memuat anggota: %v", err)
+		return
+	}
 	if m == nil {
 		c.String(http.StatusNotFound, "Anggota tidak ditemukan")
 		return
@@ -273,7 +321,8 @@ func (h *MemberHandler) ShowResign(c *gin.Context) {
 	}
 	// outstanding obligations: aktif loans
 	var sisaPinjaman float64
-	for _, l := range mock.LoansByMember(m.Nama) {
+	loans, _ := h.Svc.LoansByMember(c.Request.Context(), m.ID)
+	for _, l := range loans {
 		if l.Status == "AKTIF" {
 			sisaPinjaman += l.SisaPokok
 		}
@@ -291,8 +340,15 @@ func (h *MemberHandler) ShowResign(c *gin.Context) {
 // ===== POST /members/:id/resign =====
 // Hanya pemilik akun yang mengajukan, atau OWNER yang memproses.
 func (h *MemberHandler) DoResign(c *gin.Context) {
+	if !h.svcReady(c) {
+		return
+	}
 	id, _ := strconv.Atoi(c.Param("id"))
-	m := mock.FindMemberByID(id)
+	m, err := h.Svc.FindByID(c.Request.Context(), id)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Gagal memuat anggota: %v", err)
+		return
+	}
 	if m == nil {
 		c.String(http.StatusNotFound, "Anggota tidak ditemukan")
 		return
@@ -304,7 +360,8 @@ func (h *MemberHandler) DoResign(c *gin.Context) {
 		return
 	}
 	var sisaPinjaman float64
-	for _, l := range mock.LoansByMember(m.Nama) {
+	loans, _ := h.Svc.LoansByMember(c.Request.Context(), m.ID)
+	for _, l := range loans {
 		if l.Status == "AKTIF" {
 			sisaPinjaman += l.SisaPokok
 		}
@@ -314,7 +371,11 @@ func (h *MemberHandler) DoResign(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/members/"+strconv.Itoa(id)+"/resign")
 		return
 	}
-	m.Status = "NON_AKTIF"
+	if err := h.Svc.Resign(c.Request.Context(), id); err != nil {
+		SetFlash(c, "error", "Gagal memproses pengunduran diri: "+err.Error())
+		c.Redirect(http.StatusFound, "/members/"+strconv.Itoa(id)+"/resign")
+		return
+	}
 	SetFlash(c, "success", "Pengunduran diri "+m.Nama+" diproses.")
 	c.Redirect(http.StatusFound, "/members")
 }

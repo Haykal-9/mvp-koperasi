@@ -17,3 +17,18 @@ refrensi/
 
 #buku TA
 Buku_TA_Koperasi_Haykal.docx
+BAB3_ADMIN.md
+CLAUDE_CODE_SKILLS.md
+ta1-1.pdf
+ta1.pdf
+prompts/
+.opencode/
+opencode.json
+
+# Backend env & build artifacts
+.env
+koperasi-frontend/.env
+*.exe
+
+PRD_BACKEND.md
+RENCANA_IMPLEMENTASI_BACKEND.md

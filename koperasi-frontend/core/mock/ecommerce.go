@@ -10,28 +10,34 @@ import "koperasi-frontend/core/model"
 // Credentials (email + password) are identical to koperasi Users — single login for both systems.
 var ECommerceUsers = []model.ECommerceUser{
 	{
-		ID: 1, Username: "andi_wijaya", Email: "anggota@koperasi.id", Password: "anggota123",
+		ID: 1, Username: "andi_wijaya", Email: "anggota@koperasi.id", Password: "$2a$10$QKjvwsmNwv71BUgST6zunuXOZCimAtVM3irKMfVaS7tpkKjqzuVEW",
 		Role: "BUYER", IsSellerActive: true, SellerRating: 4.7,
 		LinkedKoperasiMemberID: 1, // Andi Wijaya — KOP-0001
-		CreatedAt: "2026-01-10",
+		CreatedAt:              "2026-01-10",
 	},
 	{
-		ID: 2, Username: "rina_pertiwi", Email: "rina@koperasi.id", Password: "rina123",
+		ID: 2, Username: "rina_pertiwi", Email: "rina@koperasi.id", Password: "$2a$10$KNCILIyV3lsCEmuDTuUo/u.nnvhpvHreuTBWHyEXiu78cBpsasvwG",
 		Role: "BUYER", IsSellerActive: true, SellerRating: 4.5,
 		LinkedKoperasiMemberID: 2, // Rina Pertiwi — KOP-0002
-		CreatedAt: "2026-01-15",
+		CreatedAt:              "2026-01-15",
 	},
 	{
-		ID: 3, Username: "budi_santoso", Email: "owner@koperasi.id", Password: "owner123",
+		ID: 3, Username: "budi_santoso", Email: "owner@koperasi.id", Password: "$2a$10$ziC5K65cq/hZEtuxfWdmZOCTRCGd6.xSjFOnj0HdpdjTM8oB.mxtG",
 		Role: "ADMIN", IsSellerActive: false, SellerRating: 0,
 		LinkedKoperasiMemberID: 0,
-		CreatedAt: "2026-01-01",
+		CreatedAt:              "2026-01-01",
 	},
 	{
-		ID: 4, Username: "siti_aminah", Email: "kasir@koperasi.id", Password: "kasir123",
+		ID: 4, Username: "siti_aminah", Email: "kasir@koperasi.id", Password: "$2a$10$afbed69AaUh6EcwisdNUUOPNeZynke4Zkv/bRi8M0YRKFWiWD.rT.",
 		Role: "BUYER", IsSellerActive: false, SellerRating: 0,
 		LinkedKoperasiMemberID: 0,
-		CreatedAt: "2026-01-05",
+		CreatedAt:              "2026-01-05",
+	},
+	{
+		ID: 5, Username: "dewi_lestari", Email: "pengurus@koperasi.id", Password: "$2a$10$J8n2AsGm6KXdIs1D6ZUfpuR6NUUVQQ1fsmTZ0lLlQOt17qgsVuvAK",
+		Role: "PENGURUS", IsSellerActive: false, SellerRating: 0,
+		LinkedKoperasiMemberID: 0,
+		CreatedAt:              "2026-02-01",
 	},
 }
 
@@ -39,14 +45,14 @@ var ECommerceUsers = []model.ECommerceUser{
 var ECSellerProfiles = []model.SellerProfile{
 	{
 		SellerID: 1, StoreName: "Toko Andi Jaya",
-		Description:  "Menjual berbagai kebutuhan pokok dan sembako berkualitas dengan harga terjangkau.",
-		Rating:       4.7, ResponseTime: "< 1 jam", TotalSold: 234,
+		Description: "Menjual berbagai kebutuhan pokok dan sembako berkualitas dengan harga terjangkau.",
+		Rating:      4.7, ResponseTime: "< 1 jam", TotalSold: 234,
 		JoinedAt: "2026-01-10",
 	},
 	{
 		SellerID: 2, StoreName: "Rina Craft & Food",
-		Description:  "Produk makanan rumahan dan kerajinan tangan khas Bandung.",
-		Rating:       4.5, ResponseTime: "< 2 jam", TotalSold: 156,
+		Description: "Produk makanan rumahan dan kerajinan tangan khas Bandung.",
+		Rating:      4.5, ResponseTime: "< 2 jam", TotalSold: 156,
 		JoinedAt: "2026-01-15",
 	},
 }
@@ -207,7 +213,7 @@ var ECOrders = []model.ECOrder{
 			{ProductID: 3, ProductNama: "Gula Aren Bubuk 500g", SellerID: 1, Jumlah: 2, HargaSatuan: 35000, Subtotal: 70000},
 		},
 		AlamatPengiriman: "Jl. Cihampelas No. 55, Bandung",
-		ShippingOption: "JNE Reguler", ShippingCost: 12000,
+		ShippingOption:   "JNE Reguler", ShippingCost: 12000,
 		Subtotal: 155000, Discount: 0, PointsUsed: 0, TotalHarga: 167000,
 		VoucherCode: "", MetodeBayar: "Transfer Bank", Status: "SELESAI",
 		ResiPengiriman: "JNE1234567890", PointsEarned: 155,
@@ -221,7 +227,7 @@ var ECOrders = []model.ECOrder{
 			{ProductID: 8, ProductNama: "Sambal Matah Bali 250ml", SellerID: 2, Jumlah: 1, HargaSatuan: 22000, Subtotal: 22000},
 		},
 		AlamatPengiriman: "Jl. Cihampelas No. 55, Bandung",
-		ShippingOption: "J&T Express", ShippingCost: 10000,
+		ShippingOption:   "J&T Express", ShippingCost: 10000,
 		Subtotal: 76000, Discount: 0, PointsUsed: 0, TotalHarga: 86000,
 		VoucherCode: "", MetodeBayar: "QRIS", Status: "DIKIRIM",
 		ResiPengiriman: "JT2345678901", PointsEarned: 76,
@@ -234,7 +240,7 @@ var ECOrders = []model.ECOrder{
 			{ProductID: 9, ProductNama: "Tas Rajut Handmade", SellerID: 2, Jumlah: 1, HargaSatuan: 120000, Subtotal: 120000},
 		},
 		AlamatPengiriman: "Jl. Merdeka No. 12, Bandung",
-		ShippingOption: "SiCepat BEST", ShippingCost: 15000,
+		ShippingOption:   "SiCepat BEST", ShippingCost: 15000,
 		Subtotal: 120000, Discount: 15000, PointsUsed: 0, TotalHarga: 120000,
 		VoucherCode: "GRATIS15K", MetodeBayar: "Transfer Bank", Status: "DIPROSES",
 		ResiPengiriman: "", PointsEarned: 0,
