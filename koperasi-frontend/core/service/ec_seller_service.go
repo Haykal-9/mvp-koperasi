@@ -95,6 +95,24 @@ func (s *ECSellerService) Categories(ctx context.Context) ([]string, error) {
 
 // CreateProduct membuat produk baru milik seller (status PENDING_APPROVAL).
 func (s *ECSellerService) CreateProduct(ctx context.Context, sellerID int, nama, deskripsi, kategori string, harga float64, stok, berat int) error {
+	nama = strings.TrimSpace(nama)
+	kategori = strings.TrimSpace(kategori)
+	if nama == "" {
+		return fmt.Errorf("nama produk wajib diisi")
+	}
+	if kategori == "" {
+		return fmt.Errorf("kategori produk wajib diisi")
+	}
+	if harga <= 0 {
+		return fmt.Errorf("harga produk harus lebih dari 0")
+	}
+	if stok < 0 {
+		return fmt.Errorf("stok produk tidak boleh negatif")
+	}
+	if berat <= 0 {
+		return fmt.Errorf("berat produk harus lebih dari 0")
+	}
+
 	sellerName := "Seller"
 	if sp, err := s.repo.SellerProfile(ctx, sellerID); err != nil {
 		return err
@@ -150,7 +168,7 @@ func (s *ECSellerService) MarkShipped(ctx context.Context, sellerID, orderID int
 	if sp, err := s.repo.SellerProfile(ctx, sellerID); err == nil && sp != nil {
 		sellerName = sp.StoreName
 	}
-	if err := s.repo.MarkOrderShipped(ctx, orderID, resi,
+	if err := s.repo.MarkOrderShipped(ctx, sellerID, orderID, resi,
 		"Gudang "+sellerName, "Paket diserahkan ke kurir. Resi: "+resi); err != nil {
 		return nil, err
 	}

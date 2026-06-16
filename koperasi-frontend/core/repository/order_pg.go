@@ -200,25 +200,65 @@ func (r *pgOrderRepository) Create(ctx context.Context, o model.Order) (*model.O
 }
 
 func (r *pgOrderRepository) SetStatus(ctx context.Context, id int, status string) error {
-	return r.db.WithContext(ctx).
-		Exec("UPDATE orders SET status = ? WHERE id = ?", status, id).Error
+	allowedFrom := map[string][]string{
+		"DIKIRIM": {"DIBAYAR"},
+		"SELESAI": {"DIKIRIM"},
+	}
+	if from, ok := allowedFrom[status]; ok {
+		res := r.db.WithContext(ctx).
+			Exec("UPDATE orders SET status = ? WHERE id = ? AND status IN ?", status, id, from)
+		if res.Error != nil {
+			return res.Error
+		}
+		if res.RowsAffected == 0 {
+			return fmt.Errorf("order tidak bisa diubah ke status %s dari status saat ini", status)
+		}
+		return nil
+	}
+	return r.db.WithContext(ctx).Exec("UPDATE orders SET status = ? WHERE id = ?", status, id).Error
 }
 
 func (r *pgOrderRepository) SetComplaint(ctx context.Context, id int, alasan, bukti string) error {
-	return r.db.WithContext(ctx).Exec(
+	res := r.db.WithContext(ctx).Exec(
 		`UPDATE orders SET status = 'DISPUTED', komplain_alasan = ?, komplain_bukti = ?,
-		        komplain_tanggal = CURRENT_DATE WHERE id = ?`,
-		alasan, bukti, id).Error
+		        komplain_tanggal = CURRENT_DATE
+		  WHERE id = ? AND status IN ('DIKIRIM', 'SELESAI')`,
+		alasan, bukti, id)
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return fmt.Errorf("order tidak bisa dikomplain dari status saat ini")
+	}
+	return nil
 }
 
 func (r *pgOrderRepository) Resolve(ctx context.Context, id int, approveRetur bool) error {
 	if !approveRetur {
-		return r.db.WithContext(ctx).Exec("UPDATE orders SET status = 'SELESAI' WHERE id = ?", id).Error
+		res := r.db.WithContext(ctx).Exec(
+			"UPDATE orders SET status = 'SELESAI' WHERE id = ? AND status = 'DISPUTED'", id)
+		if res.Error != nil {
+			return res.Error
+		}
+		if res.RowsAffected == 0 {
+			return fmt.Errorf("order tidak dalam status DISPUTED")
+		}
+		return nil
 	}
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var nomor string
-		if err := tx.Raw("SELECT nomor_order FROM orders WHERE id = ?", id).Scan(&nomor).Error; err != nil {
+		type orderStatusRow struct {
+			NomorOrder string
+			Status     string
+		}
+		var order orderStatusRow
+		if err := tx.Raw("SELECT nomor_order, status FROM orders WHERE id = ? FOR UPDATE", id).Scan(&order).Error; err != nil {
 			return err
+		}
+		if order.NomorOrder == "" {
+			return fmt.Errorf("order tidak ditemukan")
+		}
+		if order.Status != "DISPUTED" {
+			return fmt.Errorf("order tidak dalam status DISPUTED")
 		}
 		if err := tx.Exec("UPDATE orders SET status = 'BATAL' WHERE id = ?", id).Error; err != nil {
 			return err
@@ -244,7 +284,7 @@ func (r *pgOrderRepository) Resolve(ctx context.Context, id int, approveRetur bo
 			if err := tx.Exec(
 				`INSERT INTO stock_changes (product_id, tipe, jumlah, stok_setelah, keterangan, created_at)
 				 VALUES (?, 'KOREKSI', ?, ?, ?, now())`,
-				it.ProductID, it.Jumlah, newStok, "Retur dari komplain "+nomor).Error; err != nil {
+				it.ProductID, it.Jumlah, newStok, "Retur dari komplain "+order.NomorOrder).Error; err != nil {
 				return err
 			}
 		}

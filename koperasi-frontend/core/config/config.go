@@ -17,6 +17,9 @@ type Config struct {
 	// DatabaseURL adalah DSN PostgreSQL (mis. dari Supabase/Neon).
 	// Kosong = fitur yang memerlukan basis data tidak tersedia.
 	DatabaseURL string
+	// MigrationDatabaseURL adalah DSN PostgreSQL untuk menjalankan migrasi.
+	// Biasanya direct/session pooler; default ke DatabaseURL bila kosong.
+	MigrationDatabaseURL string
 	// SessionSecret menggantikan secret hardcode lama (FR-SEC-02).
 	SessionSecret string
 	// SessionSecure menambahkan atribut Secure pada cookie sesi saat HTTPS.
@@ -39,11 +42,13 @@ func Load() (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+	databaseURL := os.Getenv("DATABASE_URL")
 	return &Config{
-		DatabaseURL:   os.Getenv("DATABASE_URL"),
-		SessionSecret: secret,
-		SessionSecure: secure,
-		Port:          getenv("PORT", "8080"),
+		DatabaseURL:          databaseURL,
+		MigrationDatabaseURL: getenv("MIGRATION_DATABASE_URL", databaseURL),
+		SessionSecret:        secret,
+		SessionSecure:        secure,
+		Port:                 getenv("PORT", "8080"),
 	}, nil
 }
 

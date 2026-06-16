@@ -120,12 +120,22 @@ func (h *SellerHandler) DoCreateProduct(c *gin.Context) {
 		return
 	}
 
-	harga, _ := strconv.ParseFloat(hargaStr, 64)
-	stok, _ := strconv.Atoi(stokStr)
-	berat, _ := strconv.Atoi(beratStr)
+	harga, errHarga := strconv.ParseFloat(hargaStr, 64)
+	stok, errStok := strconv.Atoi(stokStr)
+	berat, errBerat := strconv.Atoi(beratStr)
 
-	if harga <= 0 {
-		handler.SetFlash(c, "ec_error", "Harga harus lebih dari 0.")
+	if errHarga != nil || harga <= 0 {
+		handler.SetFlash(c, "ec_error", "Harga harus berupa angka lebih dari 0.")
+		c.Redirect(http.StatusFound, "/ecommerce/seller/products/create")
+		return
+	}
+	if errStok != nil || stok < 0 {
+		handler.SetFlash(c, "ec_error", "Stok harus berupa angka 0 atau lebih.")
+		c.Redirect(http.StatusFound, "/ecommerce/seller/products/create")
+		return
+	}
+	if errBerat != nil || berat <= 0 {
+		handler.SetFlash(c, "ec_error", "Berat harus berupa angka lebih dari 0 gram.")
 		c.Redirect(http.StatusFound, "/ecommerce/seller/products/create")
 		return
 	}

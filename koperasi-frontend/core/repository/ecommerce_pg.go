@@ -434,6 +434,13 @@ func (r *pgECommerceRepository) LogAudit(ctx context.Context, action string, use
 		action, userID, username, resource, details).Error
 }
 
+func insertAuditLogTx(tx *gorm.DB, audit AuditAction) error {
+	return tx.Exec(
+		`INSERT INTO audit_logs (action, user_id, username, resource, details)
+		 VALUES (?, ?, ?, ?, ?)`,
+		audit.Action, audit.UserID, audit.Username, audit.Resource, audit.Details).Error
+}
+
 // ---- Dashboard buyer / read (4d-2) ----
 
 // ecOrderRow: DTO datar untuk ec_orders (model.ECOrder punya slice Items yang
@@ -846,11 +853,17 @@ func (r *pgECommerceRepository) HasReviewed(ctx context.Context, userID, product
 
 func (r *pgECommerceRepository) SubmitReview(ctx context.Context, userID, productID, rating int, komentar, username string) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if e := tx.Exec(
+		var reviewID int
+		if e := tx.Raw(
 			`INSERT INTO product_reviews (product_id, user_id, username, rating, komentar)
-			 VALUES (?, ?, ?, ?, ?)`,
-			productID, userID, username, rating, komentar).Error; e != nil {
+			 VALUES (?, ?, ?, ?, ?)
+			 ON CONFLICT (user_id, product_id) DO NOTHING
+			 RETURNING id`,
+			productID, userID, username, rating, komentar).Scan(&reviewID).Error; e != nil {
 			return e
+		}
+		if reviewID == 0 {
+			return nil
 		}
 		// Perbarui agregat rating produk dari seluruh ulasan.
 		return tx.Exec(
@@ -925,21 +938,59 @@ func (r *pgECommerceRepository) AllUserPoints(ctx context.Context) ([]model.User
 
 func (r *pgECommerceRepository) ActivateSeller(ctx context.Context, userID int, storeName string) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if e := tx.Exec(
-			"UPDATE ecommerce_users SET is_seller_active = true WHERE id = ?", userID).Error; e != nil {
-			return e
-		}
-		return tx.Exec(
-			`INSERT INTO seller_profiles (seller_id, store_name, description, rating, response_time, total_sold)
-			 VALUES (?, ?, 'Toko baru', 0, '-', 0)
-			 ON CONFLICT (seller_id) DO NOTHING`,
-			userID, storeName).Error
+		return activateSellerTx(tx, userID, storeName)
 	})
+}
+
+func (r *pgECommerceRepository) ActivateSellerWithAudit(ctx context.Context, userID int, storeName string, audit AuditAction) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := activateSellerTx(tx, userID, storeName); err != nil {
+			return err
+		}
+		return insertAuditLogTx(tx, audit)
+	})
+}
+
+func activateSellerTx(tx *gorm.DB, userID int, storeName string) error {
+	res := tx.Exec(
+		"UPDATE ecommerce_users SET is_seller_active = true WHERE id = ? AND is_seller_active = false",
+		userID)
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return fmt.Errorf("user tidak ditemukan atau sudah menjadi seller aktif")
+	}
+	return tx.Exec(
+		`INSERT INTO seller_profiles (seller_id, store_name, description, rating, response_time, total_sold)
+		 VALUES (?, ?, 'Toko baru', 0, '-', 0)
+		 ON CONFLICT (seller_id) DO NOTHING`,
+		userID, storeName).Error
 }
 
 func (r *pgECommerceRepository) SetECProductStatus(ctx context.Context, id int, status string) error {
 	return r.db.WithContext(ctx).Exec(
 		"UPDATE ec_products SET status = ? WHERE id = ?", status, id).Error
+}
+
+func (r *pgECommerceRepository) SetECProductStatusWithAudit(ctx context.Context, id int, status, expectedStatus string, audit AuditAction) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var res *gorm.DB
+		if expectedStatus != "" {
+			res = tx.Exec(
+				"UPDATE ec_products SET status = ? WHERE id = ? AND status = ?",
+				status, id, expectedStatus)
+		} else {
+			res = tx.Exec("UPDATE ec_products SET status = ? WHERE id = ?", status, id)
+		}
+		if res.Error != nil {
+			return res.Error
+		}
+		if res.RowsAffected == 0 {
+			return fmt.Errorf("produk tidak bisa diubah ke status %s dari status saat ini", status)
+		}
+		return insertAuditLogTx(tx, audit)
+	})
 }
 
 func (r *pgECommerceRepository) VoucherByID(ctx context.Context, id int) (*model.Voucher, error) {
@@ -968,9 +1019,48 @@ func (r *pgECommerceRepository) CreateVoucher(ctx context.Context, v model.Vouch
 	return id, err
 }
 
+func (r *pgECommerceRepository) CreateVoucherWithAudit(ctx context.Context, v model.Voucher, audit AuditAction) (int, error) {
+	var id int
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if e := tx.Raw(
+			`INSERT INTO vouchers (code, deskripsi, tipe_diskon, nilai_diskon, min_pembelian,
+				maks_diskon, kuota, status, berlaku_sampai)
+			 VALUES (?, ?, ?, ?, ?, ?, ?, 'ACTIVE', ?) RETURNING id`,
+			v.Code, v.Deskripsi, v.TipeDiskon, v.NilaiDiskon, v.MinPembelian,
+			v.MaksDiskon, v.Kuota, v.BerlakuSampai).Scan(&id).Error; e != nil {
+			return e
+		}
+		if audit.Resource == "" {
+			audit.Resource = fmt.Sprintf("voucher:%d", id)
+		}
+		return insertAuditLogTx(tx, audit)
+	})
+	return id, err
+}
+
 func (r *pgECommerceRepository) SetVoucherStatus(ctx context.Context, id int, status string) error {
 	return r.db.WithContext(ctx).Exec(
 		"UPDATE vouchers SET status = ? WHERE id = ?", status, id).Error
+}
+
+func (r *pgECommerceRepository) SetVoucherStatusWithAudit(ctx context.Context, id int, status, expectedStatus string, audit AuditAction) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var res *gorm.DB
+		if expectedStatus != "" {
+			res = tx.Exec(
+				"UPDATE vouchers SET status = ? WHERE id = ? AND status = ?",
+				status, id, expectedStatus)
+		} else {
+			res = tx.Exec("UPDATE vouchers SET status = ? WHERE id = ?", status, id)
+		}
+		if res.Error != nil {
+			return res.Error
+		}
+		if res.RowsAffected == 0 {
+			return fmt.Errorf("voucher tidak bisa diubah ke status %s dari status saat ini", status)
+		}
+		return insertAuditLogTx(tx, audit)
+	})
 }
 
 // ---- Poin & loyalty (4d-4) ----
@@ -1010,6 +1100,15 @@ func (r *pgECommerceRepository) OrdersBySeller(ctx context.Context, sellerID int
 }
 
 func (r *pgECommerceRepository) CreateECProduct(ctx context.Context, p model.ECProduct) (int, error) {
+	if p.Harga <= 0 {
+		return 0, fmt.Errorf("harga produk harus lebih dari 0")
+	}
+	if p.Stok < 0 {
+		return 0, fmt.Errorf("stok produk tidak boleh negatif")
+	}
+	if p.Berat <= 0 {
+		return 0, fmt.Errorf("berat produk harus lebih dari 0")
+	}
 	var id int
 	err := r.db.WithContext(ctx).Raw(
 		`INSERT INTO ec_products (seller_id, seller_name, nama, deskripsi, kategori,
@@ -1020,12 +1119,18 @@ func (r *pgECommerceRepository) CreateECProduct(ctx context.Context, p model.ECP
 	return id, err
 }
 
-func (r *pgECommerceRepository) MarkOrderShipped(ctx context.Context, orderID int, resi, lokasi, keterangan string) error {
+func (r *pgECommerceRepository) MarkOrderShipped(ctx context.Context, sellerID, orderID int, resi, lokasi, keterangan string) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if e := tx.Exec(
-			"UPDATE ec_orders SET status = 'DIKIRIM', resi_pengiriman = ?, updated_at = now() WHERE id = ?",
-			resi, orderID).Error; e != nil {
-			return e
+		res := tx.Exec(
+			`UPDATE ec_orders
+			    SET status = 'DIKIRIM', resi_pengiriman = ?, updated_at = now()
+			  WHERE id = ? AND seller_id = ? AND status IN ('DIBAYAR', 'DIPROSES')`,
+			resi, orderID, sellerID)
+		if res.Error != nil {
+			return res.Error
+		}
+		if res.RowsAffected == 0 {
+			return fmt.Errorf("pesanan tidak bisa dikirim dari status saat ini")
 		}
 		return tx.Exec(
 			`INSERT INTO shipment_events (order_id, status, lokasi, keterangan)

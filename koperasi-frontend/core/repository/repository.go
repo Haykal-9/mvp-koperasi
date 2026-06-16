@@ -127,6 +127,16 @@ type MonthlyCashflow struct {
 	Pengeluaran float64
 }
 
+// AuditAction membawa metadata audit untuk operasi admin yang harus atomik
+// dengan mutasi data yang dicatatnya.
+type AuditAction struct {
+	Action   string
+	UserID   int
+	Username string
+	Resource string
+	Details  string
+}
+
 // ECommerceRepository: akses data domain E-Commerce SmartMart (M5).
 // Dibangun bertahap per sub-fase 4d; bagian katalog (read) terlebih dahulu.
 type ECommerceRepository interface {
@@ -222,7 +232,7 @@ type ECommerceRepository interface {
 	// CreateECProduct menyisipkan produk seller (status PENDING_APPROVAL). Mengembalikan id.
 	CreateECProduct(ctx context.Context, p model.ECProduct) (int, error)
 	// MarkOrderShipped menandai order DIKIRIM + resi dan mencatat shipment event (transaksional).
-	MarkOrderShipped(ctx context.Context, orderID int, resi, lokasi, keterangan string) error
+	MarkOrderShipped(ctx context.Context, sellerID, orderID int, resi, lokasi, keterangan string) error
 
 	// ---- Review (4d-6) ----
 	HasReviewed(ctx context.Context, userID, productID int) (bool, error)
@@ -239,10 +249,14 @@ type ECommerceRepository interface {
 	AllUserPoints(ctx context.Context) ([]model.UserPoints, error)
 	// ActivateSeller mengaktifkan akun seller + membuat seller_profile (transaksional).
 	ActivateSeller(ctx context.Context, userID int, storeName string) error
+	ActivateSellerWithAudit(ctx context.Context, userID int, storeName string, audit AuditAction) error
 	SetECProductStatus(ctx context.Context, id int, status string) error
+	SetECProductStatusWithAudit(ctx context.Context, id int, status, expectedStatus string, audit AuditAction) error
 	VoucherByID(ctx context.Context, id int) (*model.Voucher, error)
 	CreateVoucher(ctx context.Context, v model.Voucher) (int, error)
+	CreateVoucherWithAudit(ctx context.Context, v model.Voucher, audit AuditAction) (int, error)
 	SetVoucherStatus(ctx context.Context, id int, status string) error
+	SetVoucherStatusWithAudit(ctx context.Context, id int, status, expectedStatus string, audit AuditAction) error
 }
 
 // JournalRepository: akses data buku besar / jurnal keuangan (M2).

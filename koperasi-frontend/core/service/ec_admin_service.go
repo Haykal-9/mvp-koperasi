@@ -181,12 +181,13 @@ func (s *ECAdminService) ApproveSeller(ctx context.Context, adminID int, adminUs
 	if u.IsSellerActive {
 		return "", fmt.Errorf("User sudah menjadi seller aktif.")
 	}
-	if err := s.repo.ActivateSeller(ctx, sellerID, "Toko "+u.Username); err != nil {
-		return "", err
-	}
-	if err := s.repo.LogAudit(ctx, "APPROVE_SELLER", adminID, adminUsername,
-		fmt.Sprintf("seller:%d", sellerID),
-		fmt.Sprintf("Activated seller account for user: %s (%s)", u.Username, u.Email)); err != nil {
+	if err := s.repo.ActivateSellerWithAudit(ctx, sellerID, "Toko "+u.Username, repository.AuditAction{
+		Action:   "APPROVE_SELLER",
+		UserID:   adminID,
+		Username: adminUsername,
+		Resource: fmt.Sprintf("seller:%d", sellerID),
+		Details:  fmt.Sprintf("Activated seller account for user: %s (%s)", u.Username, u.Email),
+	}); err != nil {
 		return "", err
 	}
 	return u.Username, nil
@@ -237,12 +238,13 @@ func (s *ECAdminService) ApproveProduct(ctx context.Context, adminID int, adminU
 	if p.Status != "PENDING_APPROVAL" {
 		return nil, fmt.Errorf("Produk tidak dalam status PENDING.")
 	}
-	if err := s.repo.SetECProductStatus(ctx, productID, "APPROVED"); err != nil {
-		return nil, err
-	}
-	if err := s.repo.LogAudit(ctx, "APPROVE_PRODUCT", adminID, adminUsername,
-		fmt.Sprintf("product:%d", productID),
-		fmt.Sprintf("Approved: %s (seller: %s)", p.Nama, p.SellerName)); err != nil {
+	if err := s.repo.SetECProductStatusWithAudit(ctx, productID, "APPROVED", "PENDING_APPROVAL", repository.AuditAction{
+		Action:   "APPROVE_PRODUCT",
+		UserID:   adminID,
+		Username: adminUsername,
+		Resource: fmt.Sprintf("product:%d", productID),
+		Details:  fmt.Sprintf("Approved: %s (seller: %s)", p.Nama, p.SellerName),
+	}); err != nil {
 		return nil, err
 	}
 	return p, nil
@@ -256,15 +258,17 @@ func (s *ECAdminService) RejectProduct(ctx context.Context, adminID int, adminUs
 	if p == nil {
 		return nil, fmt.Errorf("Produk tidak ditemukan.")
 	}
-	if err := s.repo.SetECProductStatus(ctx, productID, "REJECTED"); err != nil {
-		return nil, err
-	}
 	detail := fmt.Sprintf("Rejected: %s (seller: %s)", p.Nama, p.SellerName)
 	if alasan != "" {
 		detail += ". Alasan: " + alasan
 	}
-	if err := s.repo.LogAudit(ctx, "REJECT_PRODUCT", adminID, adminUsername,
-		fmt.Sprintf("product:%d", productID), detail); err != nil {
+	if err := s.repo.SetECProductStatusWithAudit(ctx, productID, "REJECTED", p.Status, repository.AuditAction{
+		Action:   "REJECT_PRODUCT",
+		UserID:   adminID,
+		Username: adminUsername,
+		Resource: fmt.Sprintf("product:%d", productID),
+		Details:  detail,
+	}); err != nil {
 		return nil, err
 	}
 	return p, nil
@@ -294,12 +298,12 @@ func (s *ECAdminService) CreateVoucher(ctx context.Context, adminID int, adminUs
 		Code: code, Deskripsi: deskripsi, TipeDiskon: tipeDiskon, NilaiDiskon: nilai,
 		MinPembelian: min, MaksDiskon: maks, Kuota: kuota, BerlakuSampai: berlakuSampai,
 	}
-	id, err := s.repo.CreateVoucher(ctx, v)
-	if err != nil {
-		return err
-	}
-	if err := s.repo.LogAudit(ctx, "CREATE_VOUCHER", adminID, adminUsername,
-		fmt.Sprintf("voucher:%d", id), fmt.Sprintf("Created voucher %s: %s", code, deskripsi)); err != nil {
+	if _, err := s.repo.CreateVoucherWithAudit(ctx, v, repository.AuditAction{
+		Action:   "CREATE_VOUCHER",
+		UserID:   adminID,
+		Username: adminUsername,
+		Details:  fmt.Sprintf("Created voucher %s: %s", code, deskripsi),
+	}); err != nil {
 		return err
 	}
 	return nil
@@ -319,15 +323,17 @@ func (s *ECAdminService) ToggleVoucher(ctx context.Context, adminID int, adminUs
 	} else {
 		newStatus = "ACTIVE"
 	}
-	if err := s.repo.SetVoucherStatus(ctx, voucherID, newStatus); err != nil {
-		return "", "", err
-	}
 	action := "ACTIVATE_VOUCHER"
 	if newStatus == "EXPIRED" {
 		action = "DEACTIVATE_VOUCHER"
 	}
-	if err := s.repo.LogAudit(ctx, action, adminID, adminUsername,
-		fmt.Sprintf("voucher:%d", voucherID), fmt.Sprintf("%s voucher %s", action, v.Code)); err != nil {
+	if err := s.repo.SetVoucherStatusWithAudit(ctx, voucherID, newStatus, v.Status, repository.AuditAction{
+		Action:   action,
+		UserID:   adminID,
+		Username: adminUsername,
+		Resource: fmt.Sprintf("voucher:%d", voucherID),
+		Details:  fmt.Sprintf("%s voucher %s", action, v.Code),
+	}); err != nil {
 		return "", "", err
 	}
 	return v.Code, newStatus, nil

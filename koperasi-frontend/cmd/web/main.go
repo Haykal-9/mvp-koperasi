@@ -22,7 +22,7 @@ func main() {
 	var db *gorm.DB
 	if cfg.DatabaseURL != "" {
 		// Fase 1: jalankan migrasi (skema + seed) otomatis saat startup.
-		if err := database.Migrate(cfg.DatabaseURL); err != nil {
+		if err := database.Migrate(cfg.MigrationDatabaseURL); err != nil {
 			log.Printf("peringatan: migrasi DB gagal: %v", err)
 		}
 		var err error

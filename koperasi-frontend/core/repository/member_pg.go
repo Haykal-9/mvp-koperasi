@@ -179,6 +179,9 @@ func (r *pgMemberRepository) LoansByMember(ctx context.Context, memberID int) ([
 }
 
 func (r *pgMemberRepository) RecordSimpanan(ctx context.Context, memberID int, jenis, tipe string, nominal float64, keterangan string) error {
+	if nominal <= 0 {
+		return fmt.Errorf("nominal simpanan harus lebih dari 0")
+	}
 	// Kolom saldo per jenis (whitelist agar aman dari injeksi).
 	var saldoCol string
 	switch jenis {
@@ -193,8 +196,12 @@ func (r *pgMemberRepository) RecordSimpanan(ctx context.Context, memberID int, j
 	}
 
 	delta := nominal
-	if tipe == "KELUAR" {
+	switch tipe {
+	case "MASUK":
+	case "KELUAR":
 		delta = -nominal
+	default:
+		return fmt.Errorf("tipe simpanan tidak valid")
 	}
 	debit, kredit := "Kas", "Simpanan "+jenis
 	if tipe == "KELUAR" {
@@ -202,17 +209,27 @@ func (r *pgMemberRepository) RecordSimpanan(ctx context.Context, memberID int, j
 	}
 
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var nama string
-		if err := tx.Raw("SELECT nama FROM members WHERE id = ?", memberID).Scan(&nama).Error; err != nil {
+		type memberSaldoRow struct {
+			ID    int
+			Nama  string
+			Saldo float64
+		}
+		var row memberSaldoRow
+		if err := tx.Raw(
+			fmt.Sprintf("SELECT id, nama, %s AS saldo FROM members WHERE id = ? FOR UPDATE", saldoCol),
+			memberID).Scan(&row).Error; err != nil {
 			return err
 		}
-		if nama == "" {
+		if row.ID == 0 {
 			return fmt.Errorf("anggota tidak ditemukan")
+		}
+		if row.Saldo+delta < 0 {
+			return fmt.Errorf("saldo simpanan %s tidak mencukupi", jenis)
 		}
 		// 1) Perbarui saldo agregat.
 		if err := tx.Exec(
-			fmt.Sprintf("UPDATE members SET %s = %s + ? WHERE id = ?", saldoCol, saldoCol),
-			delta, memberID).Error; err != nil {
+			fmt.Sprintf("UPDATE members SET %s = ? WHERE id = ?", saldoCol),
+			row.Saldo+delta, memberID).Error; err != nil {
 			return err
 		}
 		// 2) Catat transaksi simpanan.
@@ -226,6 +243,6 @@ func (r *pgMemberRepository) RecordSimpanan(ctx context.Context, memberID int, j
 		return tx.Exec(
 			`INSERT INTO journal_entries (tanggal, keterangan, akun_debit, akun_kredit, nominal, tipe_transaksi)
 			 VALUES (CURRENT_DATE, ?, ?, ?, ?, 'SIMPANAN')`,
-			fmt.Sprintf("Simpanan %s %s — %s", jenis, tipe, nama), debit, kredit, nominal).Error
+			fmt.Sprintf("Simpanan %s %s — %s", jenis, tipe, row.Nama), debit, kredit, nominal).Error
 	})
 }
