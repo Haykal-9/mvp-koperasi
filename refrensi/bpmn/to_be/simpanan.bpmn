@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+             targetNamespace="http://koperasi.id/bpmn"
+             id="ToBe_Simpanan">
+  <collaboration id="Collab_1">
+    <participant id="Pool_1" name="KSP Koperasi — Simpanan (To-Be)" processRef="Proc_1"/>
+  </collaboration>
+  <process id="Proc_1" isExecutable="false">
+    <laneSet id="LS_1">
+      <lane id="Lane_Anggota" name="Anggota (Flutter App / Web Browser)">
+        <flowNodeRef>Start_1</flowNodeRef>
+        <flowNodeRef>Task_CekSaldoRT</flowNodeRef>
+        <flowNodeRef>GW_Sukarela</flowNodeRef>
+        <flowNodeRef>Task_Transfer</flowNodeRef>
+        <flowNodeRef>Task_UnggahBukti</flowNodeRef>
+        <flowNodeRef>Task_TerimaNotifFCM</flowNodeRef>
+        <flowNodeRef>End_1</flowNodeRef>
+        <flowNodeRef>End_2</flowNodeRef>
+      </lane>
+      <lane id="Lane_Kasir" name="Kasir (Backoffice Vue.js)">
+        <flowNodeRef>Task_TerimaNotifKasir</flowNodeRef>
+        <flowNodeRef>Task_KonfirmasiKasir</flowNodeRef>
+      </lane>
+      <lane id="Lane_GoBackend" name="Go Backend + PostgreSQL">
+        <flowNodeRef>Task_CatatRT</flowNodeRef>
+        <flowNodeRef>Task_UpdateSaldoRT</flowNodeRef>
+        <flowNodeRef>Task_KirimFCM</flowNodeRef>
+      </lane>
+      <lane id="Lane_Payroll" name="Sistem Payroll">
+        <flowNodeRef>Task_PotongWajib</flowNodeRef>
+      </lane>
+    </laneSet>
+    <startEvent id="Start_1" name="Tanggal gajian bulanan"><outgoing>F1</outgoing></startEvent>
+    <serviceTask id="Task_PotongWajib" name="Potong simpanan wajib otomatis via payroll"><incoming>F1</incoming><outgoing>F2</outgoing></serviceTask>
+    <serviceTask id="Task_CatatRT" name="Go Backend catat transaksi wajib ke PostgreSQL secara real-time"><incoming>F2</incoming><outgoing>F3</outgoing></serviceTask>
+    <serviceTask id="Task_UpdateSaldoRT" name="Update saldo Anggota di database secara real-time"><incoming>F3</incoming><outgoing>F4</outgoing></serviceTask>
+    <userTask id="Task_CekSaldoRT" name="Buka Flutter app (Android/iOS) atau web — cek saldo real-time (langsung akurat)"><incoming>F4</incoming><outgoing>F5</outgoing></userTask>
+    <exclusiveGateway id="GW_Sukarela" name="Ingin tambah simpanan sukarela?"><incoming>F5</incoming><outgoing>F_Tidak</outgoing><outgoing>F_Ya</outgoing></exclusiveGateway>
+    <endEvent id="End_1" name="Selesai (saldo real-time, multi-platform)"><incoming>F_Tidak</incoming></endEvent>
+    <userTask id="Task_Transfer" name="Transfer sukarela ke rekening koperasi"><incoming>F_Ya</incoming><outgoing>F6</outgoing></userTask>
+    <userTask id="Task_UnggahBukti" name="Unggah bukti transfer di Flutter app / web browser"><incoming>F6</incoming><outgoing>F7</outgoing></userTask>
+    <userTask id="Task_TerimaNotifKasir" name="Kasir terima notifikasi bukti masuk di dasbor backoffice Vue.js"><incoming>F7</incoming><outgoing>F8</outgoing></userTask>
+    <userTask id="Task_KonfirmasiKasir" name="Kasir verifikasi bukti dan klik Konfirmasi di dasbor Vue.js"><incoming>F8</incoming><outgoing>F9</outgoing></userTask>
+    <serviceTask id="Task_CatatRT" name="Go Backend catat sukarela ke PostgreSQL dan update saldo real-time"><incoming>F9</incoming><outgoing>F10</outgoing></serviceTask>
+    <serviceTask id="Task_KirimFCM" name="Kirim push notification FCM ke Flutter app Anggota (konfirmasi saldo diperbarui)"><incoming>F10</incoming><outgoing>F11</outgoing></serviceTask>
+    <userTask id="Task_TerimaNotifFCM" name="Anggota terima notifikasi konfirmasi di Flutter app"><incoming>F11</incoming><outgoing>F12</outgoing></userTask>
+    <endEvent id="End_2" name="Sukarela tercatat — saldo real-time di Flutter app"><incoming>F12</incoming></endEvent>
+    <sequenceFlow id="F1" sourceRef="Start_1" targetRef="Task_PotongWajib"/>
+    <sequenceFlow id="F2" sourceRef="Task_PotongWajib" targetRef="Task_CatatRT"/>
+    <sequenceFlow id="F3" sourceRef="Task_CatatRT" targetRef="Task_UpdateSaldoRT"/>
+    <sequenceFlow id="F4" sourceRef="Task_UpdateSaldoRT" targetRef="Task_CekSaldoRT"/>
+    <sequenceFlow id="F5" sourceRef="Task_CekSaldoRT" targetRef="GW_Sukarela"/>
+    <sequenceFlow id="F_Tidak" name="Tidak" sourceRef="GW_Sukarela" targetRef="End_1"/>
+    <sequenceFlow id="F_Ya" name="Ya" sourceRef="GW_Sukarela" targetRef="Task_Transfer"/>
+    <sequenceFlow id="F6" sourceRef="Task_Transfer" targetRef="Task_UnggahBukti"/>
+    <sequenceFlow id="F7" sourceRef="Task_UnggahBukti" targetRef="Task_TerimaNotifKasir"/>
+    <sequenceFlow id="F8" sourceRef="Task_TerimaNotifKasir" targetRef="Task_KonfirmasiKasir"/>
+    <sequenceFlow id="F9" sourceRef="Task_KonfirmasiKasir" targetRef="Task_CatatRT"/>
+    <sequenceFlow id="F10" sourceRef="Task_CatatRT" targetRef="Task_KirimFCM"/>
+    <sequenceFlow id="F11" sourceRef="Task_KirimFCM" targetRef="Task_TerimaNotifFCM"/>
+    <sequenceFlow id="F12" sourceRef="Task_TerimaNotifFCM" targetRef="End_2"/>
+  </process>
+  <bpmndi:BPMNDiagram id="Diag_1">
+    <bpmndi:BPMNPlane id="Plane_1" bpmnElement="Collab_1">
+      <bpmndi:BPMNShape id="Pool_1_di" bpmnElement="Pool_1" isHorizontal="true"><dc:Bounds x="80" y="50" width="1350" height="570"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Anggota_di" bpmnElement="Lane_Anggota" isHorizontal="true"><dc:Bounds x="110" y="50" width="1320" height="150"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Kasir_di" bpmnElement="Lane_Kasir" isHorizontal="true"><dc:Bounds x="110" y="200" width="1320" height="130"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_GoBackend_di" bpmnElement="Lane_GoBackend" isHorizontal="true"><dc:Bounds x="110" y="330" width="1320" height="140"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Payroll_di" bpmnElement="Lane_Payroll" isHorizontal="true"><dc:Bounds x="110" y="470" width="1320" height="150"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_1_di" bpmnElement="Start_1"><dc:Bounds x="142" y="528" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PotongWajib_di" bpmnElement="Task_PotongWajib"><dc:Bounds x="220" y="508" width="130" height="75"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CatatRT_di" bpmnElement="Task_CatatRT"><dc:Bounds x="400" y="360" width="130" height="75"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_UpdateSaldoRT_di" bpmnElement="Task_UpdateSaldoRT"><dc:Bounds x="580" y="360" width="130" height="75"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CekSaldoRT_di" bpmnElement="Task_CekSaldoRT"><dc:Bounds x="580" y="78" width="130" height="75"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_Sukarela_di" bpmnElement="GW_Sukarela" isMarkerVisible="true"><dc:Bounds x="760" y="91" width="50" height="50"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_1_di" bpmnElement="End_1"><dc:Bounds x="862" y="98" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Transfer_di" bpmnElement="Task_Transfer"><dc:Bounds x="870" y="78" width="130" height="75"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_UnggahBukti_di" bpmnElement="Task_UnggahBukti"><dc:Bounds x="1040" y="78" width="130" height="75"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_TerimaNotifKasir_di" bpmnElement="Task_TerimaNotifKasir"><dc:Bounds x="1040" y="228" width="130" height="75"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_KonfirmasiKasir_di" bpmnElement="Task_KonfirmasiKasir"><dc:Bounds x="880" y="228" width="130" height="75"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_KirimFCM_di" bpmnElement="Task_KirimFCM"><dc:Bounds x="760" y="360" width="130" height="75"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_TerimaNotifFCM_di" bpmnElement="Task_TerimaNotifFCM"><dc:Bounds x="1200" y="78" width="130" height="75"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_2_di" bpmnElement="End_2"><dc:Bounds x="1362" y="98" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="F1_di" bpmnElement="F1"><di:waypoint x="178" y="546"/><di:waypoint x="220" y="546"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F2_di" bpmnElement="F2"><di:waypoint x="350" y="546"/><di:waypoint x="465" y="435"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F3_di" bpmnElement="F3"><di:waypoint x="530" y="398"/><di:waypoint x="580" y="398"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F4_di" bpmnElement="F4"><di:waypoint x="645" y="360"/><di:waypoint x="645" y="153"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F5_di" bpmnElement="F5"><di:waypoint x="710" y="116"/><di:waypoint x="760" y="116"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Tidak_di" bpmnElement="F_Tidak"><di:waypoint x="760" y="116"/><di:waypoint x="862" y="116"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Ya_di" bpmnElement="F_Ya"><di:waypoint x="810" y="116"/><di:waypoint x="870" y="116"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F6_di" bpmnElement="F6"><di:waypoint x="1000" y="116"/><di:waypoint x="1040" y="116"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F7_di" bpmnElement="F7"><di:waypoint x="1105" y="153"/><di:waypoint x="1105" y="228"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F8_di" bpmnElement="F8"><di:waypoint x="1040" y="265"/><di:waypoint x="1010" y="265"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F9_di" bpmnElement="F9"><di:waypoint x="880" y="265"/><di:waypoint x="825" y="435"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F10_di" bpmnElement="F10"><di:waypoint x="825" y="398"/><di:waypoint x="760" y="398"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F11_di" bpmnElement="F11"><di:waypoint x="825" y="360"/><di:waypoint x="1265" y="153"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F12_di" bpmnElement="F12"><di:waypoint x="1330" y="116"/><di:waypoint x="1362" y="116"/></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

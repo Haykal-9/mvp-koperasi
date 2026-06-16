@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+             targetNamespace="http://koperasi.id/bpmn"
+             id="AsIs_Simpanan">
+  <collaboration id="Collab_1">
+    <participant id="Pool_1" name="KSP Koperasi — Simpanan (As-Is)" processRef="Proc_1"/>
+  </collaboration>
+  <process id="Proc_1" isExecutable="false">
+    <laneSet id="LS_1">
+      <lane id="Lane_Anggota" name="Anggota">
+        <flowNodeRef>Start_1</flowNodeRef>
+        <flowNodeRef>Task_CekSaldo</flowNodeRef>
+        <flowNodeRef>GW_Sukarela</flowNodeRef>
+        <flowNodeRef>Task_Transfer</flowNodeRef>
+        <flowNodeRef>Task_LaporBukti</flowNodeRef>
+        <flowNodeRef>End_1</flowNodeRef>
+        <flowNodeRef>End_2</flowNodeRef>
+      </lane>
+      <lane id="Lane_Kasir" name="Kasir">
+        <flowNodeRef>Task_InputOracle</flowNodeRef>
+      </lane>
+      <lane id="Lane_Payroll" name="Sistem Oracle / Payroll">
+        <flowNodeRef>Task_PotongWajib</flowNodeRef>
+        <flowNodeRef>Task_BatchUpdate</flowNodeRef>
+      </lane>
+    </laneSet>
+    <startEvent id="Start_1" name="Tanggal gajian bulanan"><outgoing>F1</outgoing></startEvent>
+    <serviceTask id="Task_PotongWajib" name="Potong simpanan wajib otomatis dari gaji (payroll)"><incoming>F1</incoming><outgoing>F2</outgoing></serviceTask>
+    <serviceTask id="Task_BatchUpdate" name="Update saldo di aplikasi Android sekali per bulan (batch)"><incoming>F2</incoming><outgoing>F3</outgoing></serviceTask>
+    <userTask id="Task_CekSaldo" name="Buka aplikasi Android untuk cek saldo (data mungkin sudah usang)"><incoming>F3</incoming><outgoing>F4</outgoing></userTask>
+    <exclusiveGateway id="GW_Sukarela" name="Ingin tambah simpanan sukarela?"><incoming>F4</incoming><outgoing>F_Tidak</outgoing><outgoing>F_Ya</outgoing></exclusiveGateway>
+    <endEvent id="End_1" name="Selesai (tanpa sukarela)"><incoming>F_Tidak</incoming></endEvent>
+    <userTask id="Task_Transfer" name="Transfer sukarela ke rekening koperasi (mandiri)"><incoming>F_Ya</incoming><outgoing>F5</outgoing></userTask>
+    <userTask id="Task_LaporBukti" name="Lapor bukti transfer ke Kasir secara langsung (tatap muka)"><incoming>F5</incoming><outgoing>F6</outgoing></userTask>
+    <userTask id="Task_InputOracle" name="Kasir input nominal sukarela ke Oracle manual"><incoming>F6</incoming><outgoing>F7</outgoing></userTask>
+    <serviceTask id="Task_BatchUpdate" name="Saldo sukarela diperbarui di aplikasi pada batch awal bulan berikutnya"><incoming>F7</incoming><outgoing>F8</outgoing></serviceTask>
+    <endEvent id="End_2" name="Sukarela tercatat (saldo update terlambat ~1 bulan)"><incoming>F8</incoming></endEvent>
+    <sequenceFlow id="F1" sourceRef="Start_1" targetRef="Task_PotongWajib"/>
+    <sequenceFlow id="F2" sourceRef="Task_PotongWajib" targetRef="Task_BatchUpdate"/>
+    <sequenceFlow id="F3" sourceRef="Task_BatchUpdate" targetRef="Task_CekSaldo"/>
+    <sequenceFlow id="F4" sourceRef="Task_CekSaldo" targetRef="GW_Sukarela"/>
+    <sequenceFlow id="F_Tidak" name="Tidak" sourceRef="GW_Sukarela" targetRef="End_1"/>
+    <sequenceFlow id="F_Ya" name="Ya" sourceRef="GW_Sukarela" targetRef="Task_Transfer"/>
+    <sequenceFlow id="F5" sourceRef="Task_Transfer" targetRef="Task_LaporBukti"/>
+    <sequenceFlow id="F6" sourceRef="Task_LaporBukti" targetRef="Task_InputOracle"/>
+    <sequenceFlow id="F7" sourceRef="Task_InputOracle" targetRef="Task_BatchUpdate"/>
+    <sequenceFlow id="F8" sourceRef="Task_BatchUpdate" targetRef="End_2"/>
+  </process>
+  <bpmndi:BPMNDiagram id="Diag_1">
+    <bpmndi:BPMNPlane id="Plane_1" bpmnElement="Collab_1">
+      <bpmndi:BPMNShape id="Pool_1_di" bpmnElement="Pool_1" isHorizontal="true"><dc:Bounds x="100" y="50" width="1150" height="430"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Anggota_di" bpmnElement="Lane_Anggota" isHorizontal="true"><dc:Bounds x="130" y="50" width="1120" height="150"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Kasir_di" bpmnElement="Lane_Kasir" isHorizontal="true"><dc:Bounds x="130" y="200" width="1120" height="120"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Payroll_di" bpmnElement="Lane_Payroll" isHorizontal="true"><dc:Bounds x="130" y="320" width="1120" height="160"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_1_di" bpmnElement="Start_1"><dc:Bounds x="162" y="383" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PotongWajib_di" bpmnElement="Task_PotongWajib"><dc:Bounds x="240" y="363" width="130" height="75"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_BatchUpdate_di" bpmnElement="Task_BatchUpdate"><dc:Bounds x="420" y="363" width="130" height="75"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CekSaldo_di" bpmnElement="Task_CekSaldo"><dc:Bounds x="580" y="75" width="130" height="75"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_Sukarela_di" bpmnElement="GW_Sukarela" isMarkerVisible="true"><dc:Bounds x="760" y="88" width="50" height="50"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_1_di" bpmnElement="End_1"><dc:Bounds x="862" y="95" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Transfer_di" bpmnElement="Task_Transfer"><dc:Bounds x="870" y="75" width="130" height="75"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_LaporBukti_di" bpmnElement="Task_LaporBukti"><dc:Bounds x="1040" y="75" width="130" height="75"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_InputOracle_di" bpmnElement="Task_InputOracle"><dc:Bounds x="1040" y="228" width="130" height="75"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_2_di" bpmnElement="End_2"><dc:Bounds x="862" y="383" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="F1_di" bpmnElement="F1"><di:waypoint x="198" y="401"/><di:waypoint x="240" y="401"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F2_di" bpmnElement="F2"><di:waypoint x="370" y="401"/><di:waypoint x="420" y="401"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F3_di" bpmnElement="F3"><di:waypoint x="485" y="363"/><di:waypoint x="645" y="150"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F4_di" bpmnElement="F4"><di:waypoint x="710" y="113"/><di:waypoint x="760" y="113"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Tidak_di" bpmnElement="F_Tidak"><di:waypoint x="760" y="113"/><di:waypoint x="862" y="113"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Ya_di" bpmnElement="F_Ya"><di:waypoint x="810" y="113"/><di:waypoint x="870" y="113"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F5_di" bpmnElement="F5"><di:waypoint x="1000" y="113"/><di:waypoint x="1040" y="113"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F6_di" bpmnElement="F6"><di:waypoint x="1105" y="150"/><di:waypoint x="1105" y="228"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F7_di" bpmnElement="F7"><di:waypoint x="1040" y="266"/><di:waypoint x="880" y="401"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F8_di" bpmnElement="F8"><di:waypoint x="880" y="401"/><di:waypoint x="862" y="401"/></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

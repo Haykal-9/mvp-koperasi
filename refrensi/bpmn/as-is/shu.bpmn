@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+             targetNamespace="http://koperasi.id/bpmn"
+             id="AsIs_SHU">
+  <collaboration id="Collab_1">
+    <participant id="Pool_1" name="KSP Koperasi — SHU (As-Is)" processRef="Proc_1"/>
+  </collaboration>
+  <process id="Proc_1" isExecutable="false">
+    <laneSet id="LS_1">
+      <lane id="Lane_Kasir" name="Kasir">
+        <flowNodeRef>Start_1</flowNodeRef>
+        <flowNodeRef>Task_EkstrakOracle</flowNodeRef>
+        <flowNodeRef>Task_RekapSpreadsheet</flowNodeRef>
+      </lane>
+      <lane id="Lane_Owner" name="Owner (Pengurus)">
+        <flowNodeRef>Task_HitungLabaBersih</flowNodeRef>
+        <flowNodeRef>Task_Alokasi5050</flowNodeRef>
+        <flowNodeRef>Task_HitungPorsiManual</flowNodeRef>
+        <flowNodeRef>GW_Validasi</flowNodeRef>
+        <flowNodeRef>Task_KoreksiData</flowNodeRef>
+        <flowNodeRef>Task_PresentasiRAT</flowNodeRef>
+        <flowNodeRef>Task_DistribusiSHU</flowNodeRef>
+      </lane>
+      <lane id="Lane_Anggota" name="Anggota">
+        <flowNodeRef>Task_HadirRAT</flowNodeRef>
+        <flowNodeRef>End_1</flowNodeRef>
+      </lane>
+    </laneSet>
+    <startEvent id="Start_1" name="Akhir tahun buku — persiapan RAT"><outgoing>F1</outgoing></startEvent>
+    <userTask id="Task_EkstrakOracle" name="Kasir ekstrak data pinjaman tiap Anggota dari Oracle ke spreadsheet manual"><incoming>F1</incoming><outgoing>F2</outgoing></userTask>
+    <userTask id="Task_RekapSpreadsheet" name="Kasir rekap kontribusi pinjaman per Anggota dalam spreadsheet"><incoming>F2</incoming><outgoing>F3</outgoing></userTask>
+    <userTask id="Task_HitungLabaBersih" name="Owner hitung keuntungan bersih koperasi (laba – pajak – biaya ops)"><incoming>F3</incoming><outgoing>F4</outgoing></userTask>
+    <userTask id="Task_Alokasi5050" name="Owner tetapkan: 50% untuk Anggota, 50% dana internal (sosial, pembangunan, pengurus, cadangan)"><incoming>F4</incoming><outgoing>F5</outgoing></userTask>
+    <userTask id="Task_HitungPorsiManual" name="Owner hitung porsi SHU tiap Anggota secara manual (basis: kontribusi pinjaman — bukan simpanan)"><incoming>F5</incoming><incoming>F_Ulang</incoming><outgoing>F6</outgoing></userTask>
+    <exclusiveGateway id="GW_Validasi" name="Laporan divalidasi Owner?"><incoming>F6</incoming><outgoing>F_Tidak</outgoing><outgoing>F_Ya</outgoing></exclusiveGateway>
+    <userTask id="Task_KoreksiData" name="Owner koreksi data spreadsheet dan hitung ulang"><incoming>F_Tidak</incoming><outgoing>F_Ulang</outgoing></userTask>
+    <userTask id="Task_PresentasiRAT" name="Owner presentasi laporan distribusi SHU dalam RAT"><incoming>F_Ya</incoming><outgoing>F7</outgoing></userTask>
+    <userTask id="Task_HadirRAT" name="Anggota hadir RAT dan menerima informasi SHU"><incoming>F7</incoming><outgoing>F8</outgoing></userTask>
+    <userTask id="Task_DistribusiSHU" name="Owner distribusikan SHU ke rekening/simpanan masing-masing Anggota"><incoming>F8</incoming><outgoing>F9</outgoing></userTask>
+    <endEvent id="End_1" name="SHU diterima Anggota"><incoming>F9</incoming></endEvent>
+    <sequenceFlow id="F1" sourceRef="Start_1" targetRef="Task_EkstrakOracle"/>
+    <sequenceFlow id="F2" sourceRef="Task_EkstrakOracle" targetRef="Task_RekapSpreadsheet"/>
+    <sequenceFlow id="F3" sourceRef="Task_RekapSpreadsheet" targetRef="Task_HitungLabaBersih"/>
+    <sequenceFlow id="F4" sourceRef="Task_HitungLabaBersih" targetRef="Task_Alokasi5050"/>
+    <sequenceFlow id="F5" sourceRef="Task_Alokasi5050" targetRef="Task_HitungPorsiManual"/>
+    <sequenceFlow id="F6" sourceRef="Task_HitungPorsiManual" targetRef="GW_Validasi"/>
+    <sequenceFlow id="F_Tidak" name="Ada koreksi" sourceRef="GW_Validasi" targetRef="Task_KoreksiData"/>
+    <sequenceFlow id="F_Ulang" sourceRef="Task_KoreksiData" targetRef="Task_HitungPorsiManual"/>
+    <sequenceFlow id="F_Ya" name="Valid" sourceRef="GW_Validasi" targetRef="Task_PresentasiRAT"/>
+    <sequenceFlow id="F7" sourceRef="Task_PresentasiRAT" targetRef="Task_HadirRAT"/>
+    <sequenceFlow id="F8" sourceRef="Task_HadirRAT" targetRef="Task_DistribusiSHU"/>
+    <sequenceFlow id="F9" sourceRef="Task_DistribusiSHU" targetRef="End_1"/>
+  </process>
+  <bpmndi:BPMNDiagram id="Diag_1">
+    <bpmndi:BPMNPlane id="Plane_1" bpmnElement="Collab_1">
+      <bpmndi:BPMNShape id="Pool_1_di" bpmnElement="Pool_1" isHorizontal="true"><dc:Bounds x="80" y="50" width="1380" height="560"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Kasir_di" bpmnElement="Lane_Kasir" isHorizontal="true"><dc:Bounds x="110" y="50" width="1350" height="140"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Owner_di" bpmnElement="Lane_Owner" isHorizontal="true"><dc:Bounds x="110" y="190" width="1350" height="230"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Anggota_di" bpmnElement="Lane_Anggota" isHorizontal="true"><dc:Bounds x="110" y="420" width="1350" height="190"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_1_di" bpmnElement="Start_1"><dc:Bounds x="142" y="102" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_EkstrakOracle_di" bpmnElement="Task_EkstrakOracle"><dc:Bounds x="220" y="82" width="130" height="75"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RekapSpreadsheet_di" bpmnElement="Task_RekapSpreadsheet"><dc:Bounds x="400" y="82" width="130" height="75"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_HitungLabaBersih_di" bpmnElement="Task_HitungLabaBersih"><dc:Bounds x="400" y="215" width="130" height="75"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Alokasi5050_di" bpmnElement="Task_Alokasi5050"><dc:Bounds x="580" y="215" width="130" height="75"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_HitungPorsiManual_di" bpmnElement="Task_HitungPorsiManual"><dc:Bounds x="760" y="215" width="130" height="75"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_Validasi_di" bpmnElement="GW_Validasi" isMarkerVisible="true"><dc:Bounds x="940" y="228" width="50" height="50"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_KoreksiData_di" bpmnElement="Task_KoreksiData"><dc:Bounds x="940" y="335" width="130" height="75"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PresentasiRAT_di" bpmnElement="Task_PresentasiRAT"><dc:Bounds x="1120" y="215" width="130" height="75"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_HadirRAT_di" bpmnElement="Task_HadirRAT"><dc:Bounds x="1120" y="455" width="130" height="75"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_DistribusiSHU_di" bpmnElement="Task_DistribusiSHU"><dc:Bounds x="1280" y="215" width="130" height="75"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_1_di" bpmnElement="End_1"><dc:Bounds x="1362" y="475" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="F1_di" bpmnElement="F1"><di:waypoint x="178" y="120"/><di:waypoint x="220" y="120"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F2_di" bpmnElement="F2"><di:waypoint x="350" y="120"/><di:waypoint x="400" y="120"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F3_di" bpmnElement="F3"><di:waypoint x="465" y="157"/><di:waypoint x="465" y="215"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F4_di" bpmnElement="F4"><di:waypoint x="530" y="253"/><di:waypoint x="580" y="253"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F5_di" bpmnElement="F5"><di:waypoint x="710" y="253"/><di:waypoint x="760" y="253"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F6_di" bpmnElement="F6"><di:waypoint x="890" y="253"/><di:waypoint x="940" y="253"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Tidak_di" bpmnElement="F_Tidak"><di:waypoint x="965" y="278"/><di:waypoint x="1005" y="335"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Ulang_di" bpmnElement="F_Ulang"><di:waypoint x="940" y="373"/><di:waypoint x="825" y="290"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_Ya_di" bpmnElement="F_Ya"><di:waypoint x="990" y="253"/><di:waypoint x="1120" y="253"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F7_di" bpmnElement="F7"><di:waypoint x="1185" y="290"/><di:waypoint x="1185" y="455"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F8_di" bpmnElement="F8"><di:waypoint x="1250" y="493"/><di:waypoint x="1345" y="253"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F9_di" bpmnElement="F9"><di:waypoint x="1345" y="253"/><di:waypoint x="1380" y="493"/></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>
