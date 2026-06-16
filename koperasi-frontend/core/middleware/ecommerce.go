@@ -25,11 +25,11 @@ func RequireECommerceAuth(acct *service.ECAccountService) gin.HandlerFunc {
 			return
 		}
 
-		// Auto-login fallback: restore EC session from koperasi session (all roles)
+		// Auto-login fallback: restore/provision EC session from koperasi session (all roles)
 		if acct != nil && sess.Get("user_id") != nil {
 			userEmail, _ := sess.Get("user_email").(string)
 			if userEmail != "" {
-				ecUser, _ := acct.UserByEmail(c.Request.Context(), userEmail)
+				ecUser, _ := acct.EnsureUserFromKoperasi(c.Request.Context(), userEmail)
 				if ecUser != nil {
 					if err := echandler.SetECSession(c, ecUser.ID, ecUser.Username, ecUser.Email, ecUser.Role, ecUser.IsSellerActive); err == nil {
 						c.Next()

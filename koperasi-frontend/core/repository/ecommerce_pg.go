@@ -2,10 +2,12 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"
@@ -146,24 +148,211 @@ func (r *pgECommerceRepository) AuthenticateUser(ctx context.Context, email, pas
 	}
 	rows := []authRow{}
 	if err := r.db.WithContext(ctx).Raw(
-		"SELECT "+ecUserCols+", password_hash FROM ecommerce_users WHERE email = ? LIMIT 1",
+		"SELECT "+ecUserCols+", password_hash FROM ecommerce_users WHERE lower(email) = lower(?) LIMIT 1",
 		email).Scan(&rows).Error; err != nil {
 		return nil, err
 	}
-	if len(rows) == 0 {
+	if len(rows) > 0 && security.VerifyPassword(rows[0].PasswordHash, password) {
+		u := rows[0].ECommerceUser
+		return &u, nil
+	}
+
+	kop, err := r.authenticateKoperasiUser(ctx, email, password)
+	if err != nil || kop == nil {
+		return nil, err
+	}
+
+	if len(rows) > 0 {
+		// Bila password koperasi valid tetapi hash EC tertinggal, sinkronkan agar
+		// percobaan berikutnya tidak perlu fallback lagi.
+		if rows[0].PasswordHash != kop.PasswordHash {
+			_ = r.db.WithContext(ctx).Exec(
+				"UPDATE ecommerce_users SET password_hash = ? WHERE id = ?",
+				kop.PasswordHash, rows[0].ID,
+			).Error
+		}
+		u := rows[0].ECommerceUser
+		return &u, nil
+	}
+
+	return r.ensureUserFromKoperasiRow(ctx, *kop)
+}
+
+type koperasiAuthRow struct {
+	ID           int
+	Email        string
+	PasswordHash string
+	Role         string
+	Nama         string
+}
+
+func (r *pgECommerceRepository) authenticateKoperasiUser(ctx context.Context, email, password string) (*koperasiAuthRow, error) {
+	rows := []koperasiAuthRow{}
+	if err := r.db.WithContext(ctx).Raw(
+		`SELECT id, email, password_hash, role, nama
+		   FROM users
+		  WHERE lower(email) = lower(?)
+		  LIMIT 1`,
+		email,
+	).Scan(&rows).Error; err != nil {
+		return nil, err
+	}
+	if len(rows) == 0 || !security.VerifyPassword(rows[0].PasswordHash, password) {
 		return nil, nil
 	}
-	if !security.VerifyPassword(rows[0].PasswordHash, password) {
+	return &rows[0], nil
+}
+
+func (r *pgECommerceRepository) EnsureUserFromKoperasi(ctx context.Context, email string) (*model.ECommerceUser, error) {
+	kopRows := []koperasiAuthRow{}
+	if err := r.db.WithContext(ctx).Raw(
+		`SELECT id, email, password_hash, role, nama
+		   FROM users
+		  WHERE lower(email) = lower(?)
+		  LIMIT 1`,
+		email,
+	).Scan(&kopRows).Error; err != nil {
+		return nil, err
+	}
+	if len(kopRows) == 0 {
 		return nil, nil
 	}
-	u := rows[0].ECommerceUser
-	return &u, nil
+	return r.ensureUserFromKoperasiRow(ctx, kopRows[0])
+}
+
+func (r *pgECommerceRepository) ensureUserFromKoperasiRow(ctx context.Context, kop koperasiAuthRow) (*model.ECommerceUser, error) {
+	if existing, err := r.UserByEmail(ctx, kop.Email); err != nil || existing != nil {
+		return existing, err
+	}
+
+	var newID int
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		username, err := uniqueECUsername(ctx, tx, kop.Nama, kop.Email)
+		if err != nil {
+			return err
+		}
+
+		linkedMemberID, err := availableLinkedMemberID(ctx, tx, kop.ID, kop.Nama)
+		if err != nil {
+			return err
+		}
+
+		var linked any
+		if linkedMemberID.Valid {
+			linked = linkedMemberID.Int64
+		}
+		if e := tx.Raw(
+			`INSERT INTO ecommerce_users
+			     (username, email, password_hash, role, is_seller_active, linked_koperasi_member_id)
+			   VALUES (?, ?, ?, ?, false, ?)
+			   RETURNING id`,
+			username, kop.Email, kop.PasswordHash, ecommerceRoleFromKoperasiRole(kop.Role), linked,
+		).Scan(&newID).Error; e != nil {
+			if isPGUniqueViolation(e) {
+				return nil
+			}
+			return e
+		}
+		if newID == 0 {
+			return nil
+		}
+		return tx.Exec(
+			`INSERT INTO user_points (user_id, balance, total_earned, total_redeemed)
+			   VALUES (?, 0, 0, 0)
+			   ON CONFLICT (user_id) DO NOTHING`,
+			newID,
+		).Error
+	})
+	if err != nil {
+		return nil, err
+	}
+	if newID == 0 {
+		return r.UserByEmail(ctx, kop.Email)
+	}
+	return r.UserByID(ctx, newID)
+}
+
+func uniqueECUsername(ctx context.Context, tx *gorm.DB, nama, email string) (string, error) {
+	base := normalizeECUsername(nama)
+	if base == "" {
+		base = normalizeECUsername(strings.Split(email, "@")[0])
+	}
+	if base == "" {
+		base = "user"
+	}
+	if len(base) > 42 {
+		base = base[:42]
+	}
+	for i := 0; i < 100; i++ {
+		candidate := base
+		if i > 0 {
+			candidate = fmt.Sprintf("%s_%d", base, i+1)
+		}
+		var n int64
+		if err := tx.WithContext(ctx).Raw(
+			"SELECT count(*) FROM ecommerce_users WHERE username = ?",
+			candidate,
+		).Scan(&n).Error; err != nil {
+			return "", err
+		}
+		if n == 0 {
+			return candidate, nil
+		}
+	}
+	return "", fmt.Errorf("gagal membuat username e-commerce unik")
+}
+
+func normalizeECUsername(s string) string {
+	s = strings.ToLower(strings.TrimSpace(s))
+	var b strings.Builder
+	lastUnderscore := false
+	for _, r := range s {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) {
+			b.WriteRune(r)
+			lastUnderscore = false
+			continue
+		}
+		if !lastUnderscore {
+			b.WriteByte('_')
+			lastUnderscore = true
+		}
+	}
+	return strings.Trim(b.String(), "_")
+}
+
+func ecommerceRoleFromKoperasiRole(role string) string {
+	switch strings.ToUpper(role) {
+	case "OWNER":
+		return "ADMIN"
+	case "PENGURUS":
+		return "PENGURUS"
+	default:
+		return "BUYER"
+	}
+}
+
+func availableLinkedMemberID(ctx context.Context, tx *gorm.DB, userID int, nama string) (sql.NullInt64, error) {
+	var memberID sql.NullInt64
+	err := tx.WithContext(ctx).Raw(
+		`SELECT m.id
+		   FROM members m
+		  WHERE (m.user_id = ? OR lower(m.nama) = lower(?))
+		    AND NOT EXISTS (
+		      SELECT 1
+		        FROM ecommerce_users eu
+		       WHERE eu.linked_koperasi_member_id = m.id
+		    )
+		  ORDER BY CASE WHEN m.user_id = ? THEN 0 ELSE 1 END, m.id
+		  LIMIT 1`,
+		userID, nama, userID,
+	).Scan(&memberID).Error
+	return memberID, err
 }
 
 func (r *pgECommerceRepository) UserByEmail(ctx context.Context, email string) (*model.ECommerceUser, error) {
 	out := []model.ECommerceUser{}
 	if err := r.db.WithContext(ctx).Raw(
-		"SELECT "+ecUserCols+" FROM ecommerce_users WHERE email = ? LIMIT 1", email).
+		"SELECT "+ecUserCols+" FROM ecommerce_users WHERE lower(email) = lower(?) LIMIT 1", email).
 		Scan(&out).Error; err != nil {
 		return nil, err
 	}
@@ -198,7 +387,7 @@ func (r *pgECommerceRepository) UsernameExists(ctx context.Context, username str
 func (r *pgECommerceRepository) EmailExists(ctx context.Context, email string) (bool, error) {
 	var n int64
 	if err := r.db.WithContext(ctx).Raw(
-		"SELECT count(*) FROM ecommerce_users WHERE email = ?", email).Scan(&n).Error; err != nil {
+		"SELECT count(*) FROM ecommerce_users WHERE lower(email) = lower(?)", email).Scan(&n).Error; err != nil {
 		return false, err
 	}
 	return n > 0, nil

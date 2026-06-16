@@ -33,6 +33,10 @@ func (s *ECAccountService) UserByEmail(ctx context.Context, email string) (*mode
 	return s.repo.UserByEmail(ctx, email)
 }
 
+func (s *ECAccountService) EnsureUserFromKoperasi(ctx context.Context, email string) (*model.ECommerceUser, error) {
+	return s.repo.EnsureUserFromKoperasi(ctx, email)
+}
+
 func (s *ECAccountService) UserByID(ctx context.Context, id int) (*model.ECommerceUser, error) {
 	return s.repo.UserByID(ctx, id)
 }

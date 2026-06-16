@@ -83,22 +83,44 @@ if (memberSearch) {
         memberResults.innerHTML = '<span class="text-muted"><i class="bi bi-arrow-repeat spin"></i> Mencari...</span>';
         searchTimer = setTimeout(() => {
             fetch('/ecommerce/api/members/search?q=' + encodeURIComponent(q))
-                .then(r => r.json())
+                .then(r => {
+                    if (!r.ok) throw new Error('search failed');
+                    return r.json();
+                })
                 .then(data => {
-                    if (!data || data.length === 0) {
+                    const results = Array.isArray(data) ? data : (data && Array.isArray(data.results) ? data.results : []);
+                    if (results.length === 0) {
                         memberResults.innerHTML = '<span class="text-muted">Tidak ada member yang cocok.</span>';
                         return;
                     }
-                    let html = '';
-                    data.forEach(m => {
-                        const badge = m.status === 'AKTIF'
-                            ? '<span class="badge bg-success">AKTIF</span>'
-                            : '<span class="badge bg-secondary">' + m.status + '</span>';
-                        html += '<div class="d-flex align-items-center justify-content-between py-1 px-2 rounded mb-1" style="background:rgba(255,255,255,.04);cursor:pointer;" onclick="selectMember(' + m.member_id + ',\'' + m.member_name + '\',\'' + m.member_number + '\')">';
-                        html += '<span>' + m.member_name + ' (' + m.member_number + ') ' + badge + '</span>';
-                        html += '<i class="bi bi-plus-circle text-success"></i></div>';
+                    memberResults.innerHTML = '';
+                    results.forEach(m => {
+                        const id = m.id || m.member_id;
+                        const name = m.nama || m.member_name || '';
+                        const number = m.nomor_anggota || m.member_number || '-';
+                        const status = m.status || '';
+
+                        const item = document.createElement('button');
+                        item.type = 'button';
+                        item.className = 'd-flex align-items-center justify-content-between py-1 px-2 rounded mb-1 border-0 w-100 text-start';
+                        item.style.background = 'rgba(255,255,255,.04)';
+                        item.style.color = 'inherit';
+                        item.addEventListener('click', () => selectMember(id, name, number));
+
+                        const text = document.createElement('span');
+                        text.textContent = name + ' (' + number + ') ';
+                        const badge = document.createElement('span');
+                        badge.className = status === 'AKTIF' ? 'badge bg-success' : 'badge bg-secondary';
+                        badge.textContent = status || 'UNKNOWN';
+                        text.appendChild(badge);
+
+                        const icon = document.createElement('i');
+                        icon.className = 'bi bi-plus-circle text-success';
+
+                        item.appendChild(text);
+                        item.appendChild(icon);
+                        memberResults.appendChild(item);
                     });
-                    memberResults.innerHTML = html;
                 })
                 .catch(() => { memberResults.innerHTML = '<span class="text-danger">Gagal mencari.</span>'; });
         }, 400);

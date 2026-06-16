@@ -47,11 +47,11 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	// SSO: auto-login for any koperasi role if a matching EC account exists
+	// SSO: auto-login for any koperasi role; provision EC account if needed.
 	if sess.Get("user_id") != nil && h.Svc != nil {
 		userEmail, _ := sess.Get("user_email").(string)
 		if userEmail != "" {
-			ecUser, _ := h.Svc.UserByEmail(c.Request.Context(), userEmail)
+			ecUser, _ := h.Svc.EnsureUserFromKoperasi(c.Request.Context(), userEmail)
 			if ecUser != nil {
 				if err := SetECSession(c, ecUser.ID, ecUser.Username, ecUser.Email, ecUser.Role, ecUser.IsSellerActive); err == nil {
 					handler.SetFlash(c, "ec_success", fmt.Sprintf("Selamat datang, %s! Anda login otomatis melalui akun Koperasi.", ecUser.Username))

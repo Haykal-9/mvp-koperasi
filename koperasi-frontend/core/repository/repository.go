@@ -166,6 +166,9 @@ type ECommerceRepository interface {
 	// AuthenticateUser memvalidasi email+password (bcrypt) terhadap ecommerce_users.
 	// Mengembalikan user (tanpa password) bila valid, nil bila kredensial salah.
 	AuthenticateUser(ctx context.Context, email, password string) (*model.ECommerceUser, error)
+	// EnsureUserFromKoperasi memastikan akun e-commerce tersedia untuk email user
+	// koperasi yang sudah terautentikasi. Dipakai untuk SSO dari session koperasi.
+	EnsureUserFromKoperasi(ctx context.Context, email string) (*model.ECommerceUser, error)
 	UserByEmail(ctx context.Context, email string) (*model.ECommerceUser, error)
 	UserByID(ctx context.Context, id int) (*model.ECommerceUser, error)
 	UsernameExists(ctx context.Context, username string) (bool, error)
