@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-06-04T00:00:00.000Z" agent="Codex" version="24.7.0" type="device">
+  <diagram id="smartcoop-class" name="Class Diagram">
+    <mxGraphModel dx="1900" dy="1300" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1900" pageHeight="1300" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Class Diagram SmartCoop MVP - Golang SSR" style="text;html=1;strokeColor=none;fillColor=none;fontSize=24;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="690" y="20" width="560" height="40" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="server" value="server package&#xa;------------------------------&#xa;+ SetupApp() *gin.Engine&#xa;- loadTemplates()&#xa;- renderPage(c, layout, page, data)&#xa;- readTemplate(path) string&#xa;- pageNameFromPath(path) string&#xa;&#xa;Fields:&#xa;+ Assets fs.FS&#xa;- pageTemplates map" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fontFamily=Consolas;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="760" y="90" width="360" height="240" as="geometry"/>
+        </mxCell>
+        <mxCell id="renderer" value="Renderer type&#xa;------------------------------&#xa;func(c *gin.Context,&#xa;     layout string,&#xa;     page string,&#xa;     data gin.H)" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fontFamily=Consolas;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="115" width="290" height="150" as="geometry"/>
+        </mxCell>
+        <mxCell id="templates" value="api/templates + static&#xa;------------------------------&#xa;layouts/base.html&#xa;layouts/auth.html&#xa;dashboard, member, product, order, loan, finance pages&#xa;static/css/style.css&#xa;static/js/app.js" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fontFamily=Consolas;fillColor=#eeeeee;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="340" y="110" width="330" height="180" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="auth_handler" value="AuthHandler&#xa;------------------------------&#xa;+ Render Renderer&#xa;&#xa;+ ShowLogin(c)&#xa;+ DoLogin(c)&#xa;+ ShowRegister(c)&#xa;+ DoRegister(c)&#xa;+ DoLogout(c)&#xa;+ AuthRequired() gin.HandlerFunc" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fontFamily=Consolas;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="60" y="410" width="280" height="225" as="geometry"/>
+        </mxCell>
+        <mxCell id="dashboard_handler" value="DashboardHandler&#xa;------------------------------&#xa;+ Render Renderer&#xa;&#xa;+ Index(c)&#xa;&#xa;Uses: members, loans, products, orders for aggregate dashboard stats." style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fontFamily=Consolas;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="380" y="410" width="300" height="190" as="geometry"/>
+        </mxCell>
+        <mxCell id="member_handler" value="MemberHandler&#xa;------------------------------&#xa;+ Render Renderer&#xa;&#xa;+ List(c)&#xa;+ Detail(c)&#xa;+ ShowRegister(c)&#xa;+ DoRegister(c)&#xa;+ Approve(c)&#xa;+ Reject(c)&#xa;+ ShowSimpanan(c)&#xa;+ DoSimpanan(c)&#xa;+ ShowResign(c)&#xa;+ DoResign(c)" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fontFamily=Consolas;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="720" y="390" width="300" height="290" as="geometry"/>
+        </mxCell>
+        <mxCell id="product_handler" value="ProductHandler&#xa;------------------------------&#xa;+ Render Renderer&#xa;&#xa;+ Catalog(c)&#xa;+ Detail(c)&#xa;+ ShowCreate(c)&#xa;+ DoCreate(c)&#xa;+ Review(c)&#xa;+ Approve(c)&#xa;+ Reject(c)&#xa;+ ShowStock(c)&#xa;+ DoStock(c)" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fontFamily=Consolas;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="395" width="300" height="270" as="geometry"/>
+        </mxCell>
+        <mxCell id="order_handler" value="OrderHandler&#xa;------------------------------&#xa;+ Render Renderer&#xa;&#xa;+ ShowCart(c)&#xa;+ AddToCart(c)&#xa;+ UpdateCart(c)&#xa;+ RemoveFromCart(c)&#xa;+ ShowCheckout(c)&#xa;+ DoCheckout(c)&#xa;+ List(c)&#xa;+ Detail(c)&#xa;+ Ship(c)&#xa;+ Complete(c)&#xa;+ ShowComplain(c)&#xa;+ DoComplain(c)&#xa;+ Complaints(c)&#xa;+ Resolve(c)" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fontFamily=Consolas;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="1400" y="360" width="330" height="360" as="geometry"/>
+        </mxCell>
+        <mxCell id="loan_handler" value="LoanHandler&#xa;------------------------------&#xa;+ Render Renderer&#xa;&#xa;+ ShowApply(c)&#xa;+ DoApply(c)&#xa;+ List(c)&#xa;+ Detail(c)&#xa;+ Approve(c)&#xa;+ Reject(c)&#xa;+ Disburse(c)&#xa;+ Pay(c)" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fontFamily=Consolas;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="410" y="725" width="310" height="250" as="geometry"/>
+        </mxCell>
+        <mxCell id="finance_handler" value="FinanceHandler&#xa;------------------------------&#xa;+ Render Renderer&#xa;&#xa;+ Journals(c)&#xa;+ ShowCreateJournal(c)&#xa;+ DoCreateJournal(c)&#xa;+ Summary(c)&#xa;- parseFloat(s)" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fontFamily=Consolas;fillColor=#eeeeee;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="760" y="740" width="310" height="215" as="geometry"/>
+        </mxCell>
+        <mxCell id="cart_helpers" value="Cart helpers + CartItem&#xa;------------------------------&#xa;CartItem:&#xa;+ ProductID int&#xa;+ Jumlah int&#xa;&#xa;+ GetCart(c)&#xa;+ SaveCart(c, items)&#xa;+ ClearCart(c)&#xa;+ AddOrIncrement(c, productID, jumlah)&#xa;+ SetQty(c, productID, jumlah)&#xa;+ RemoveItem(c, productID)&#xa;+ CartCount(c)" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fontFamily=Consolas;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="730" width="360" height="280" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="mock_repo" value="mock package - in-memory repository&#xa;------------------------------&#xa;Data slices:&#xa;+ Users []User&#xa;+ Members []Member&#xa;+ Products []Product&#xa;+ Orders []Order&#xa;+ Loans []Loan&#xa;+ SimpananTransactions []SimpananTransaction&#xa;+ StockChanges []StockChange&#xa;+ JournalEntries []JournalEntry&#xa;&#xa;Lookup/Mutation:&#xa;+ FindUserByEmail(email)&#xa;+ FindMemberByID(id)&#xa;+ FindProductByID(id)&#xa;+ FindOrderByID(id)&#xa;+ FindLoanByID(id)&#xa;+ AppendSimpanan(...)&#xa;+ AppendOrder(order)&#xa;+ AppendLoan(loan)&#xa;+ GenerateInstallments(loan)&#xa;+ AppendJournalEntry(...)" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fontFamily=Consolas;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="60" y="720" width="310" height="450" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="model_user_member" value="model.User / model.Member&#xa;------------------------------&#xa;User: ID, Email, Password, Role, Nama&#xa;&#xa;Member: ID, NomorAnggota, Nama, NIK, Alamat, NoHP, Status, SimpananPokok, SimpananWajib, SimpananSukarela, TanggalMasuk" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fontFamily=Consolas;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="430" y="1040" width="350" height="160" as="geometry"/>
+        </mxCell>
+        <mxCell id="model_product" value="model.Product / model.StockChange&#xa;------------------------------&#xa;Product: ID, Nama, Kategori, Harga, Stok, BatasStokMinimum, Deskripsi, FotoURL, PenjualNama, Status&#xa;&#xa;StockChange: ID, ProductID, ProductNama, Tipe, Jumlah, StokSetelah, Keterangan, CreatedAt" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fontFamily=Consolas;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="820" y="1040" width="360" height="170" as="geometry"/>
+        </mxCell>
+        <mxCell id="model_order" value="model.Order / model.OrderItem&#xa;------------------------------&#xa;Order: ID, NomorOrder, PembeliNama, Items, TotalHarga, FeeKoperasi, Status, MetodeBayar, CreatedAt, Komplain*&#xa;&#xa;OrderItem: ProductID, ProductNama, Jumlah, HargaSatuan, Subtotal" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fontFamily=Consolas;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="1040" width="360" height="170" as="geometry"/>
+        </mxCell>
+        <mxCell id="model_loan_finance" value="model.Loan / Installment / Finance&#xa;------------------------------&#xa;Loan: ID, MemberNama, Nominal, TenorBulan, BungaPersen, Tujuan, SisaPokok, Status, TanggalCair, Installments&#xa;&#xa;Installment: BulanKe, JatuhTempo, NominalPokok, NominalBunga, TotalBayar, Status, TanggalBayar&#xa;&#xa;SimpananTransaction, JournalEntry" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fontFamily=Consolas;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="60" y="1190" width="1520" height="90" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="edge_server_templates" value="loads/renders" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1" source="server" target="templates"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="edge_server_renderer" value="passes renderPage" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1" source="server" target="renderer"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="edge_server_auth" value="registers routes" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1" source="server" target="auth_handler"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="edge_server_dashboard" value="registers routes" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1" source="server" target="dashboard_handler"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="edge_server_member" value="registers routes" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1" source="server" target="member_handler"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="edge_server_product" value="registers routes" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1" source="server" target="product_handler"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="edge_server_order" value="registers routes" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1" source="server" target="order_handler"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="edge_server_loan" value="registers routes" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1" source="server" target="loan_handler"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="edge_server_finance" value="registers routes" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1" source="server" target="finance_handler"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="edge_handlers_mock1" value="uses" style="endArrow=open;dashed=1;html=1;rounded=0;" edge="1" parent="1" source="auth_handler" target="mock_repo"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="edge_handlers_mock2" value="uses" style="endArrow=open;dashed=1;html=1;rounded=0;" edge="1" parent="1" source="dashboard_handler" target="mock_repo"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="edge_handlers_mock3" value="uses" style="endArrow=open;dashed=1;html=1;rounded=0;" edge="1" parent="1" source="member_handler" target="mock_repo"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="edge_handlers_mock4" value="uses" style="endArrow=open;dashed=1;html=1;rounded=0;" edge="1" parent="1" source="product_handler" target="mock_repo"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="edge_handlers_mock5" value="uses" style="endArrow=open;dashed=1;html=1;rounded=0;" edge="1" parent="1" source="order_handler" target="mock_repo"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="edge_handlers_mock6" value="uses" style="endArrow=open;dashed=1;html=1;rounded=0;" edge="1" parent="1" source="loan_handler" target="mock_repo"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="edge_handlers_mock7" value="uses" style="endArrow=open;dashed=1;html=1;rounded=0;" edge="1" parent="1" source="finance_handler" target="mock_repo"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="edge_order_cart" value="session cart" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1" source="order_handler" target="cart_helpers"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="edge_mock_user_member" value="stores" style="endArrow=open;dashed=1;html=1;rounded=0;" edge="1" parent="1" source="mock_repo" target="model_user_member"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="edge_mock_product" value="stores" style="endArrow=open;dashed=1;html=1;rounded=0;" edge="1" parent="1" source="mock_repo" target="model_product"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="edge_mock_order" value="stores" style="endArrow=open;dashed=1;html=1;rounded=0;" edge="1" parent="1" source="mock_repo" target="model_order"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="edge_mock_loan_finance" value="stores" style="endArrow=open;dashed=1;html=1;rounded=0;" edge="1" parent="1" source="mock_repo" target="model_loan_finance"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

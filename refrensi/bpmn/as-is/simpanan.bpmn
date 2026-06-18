@@ -1,80 +1,236 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
-             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
-             xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
-             xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
-             targetNamespace="http://koperasi.id/bpmn"
-             id="AsIs_Simpanan">
-  <collaboration id="Collab_1">
-    <participant id="Pool_1" name="KSP Koperasi — Simpanan (As-Is)" processRef="Proc_1"/>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_Proc_AsIs_Simpanan" targetNamespace="http://smartcoop.id/bpmn/revisi" exporter="Camunda Modeler" exporterVersion="5.47.0">
+  <documentation>Revisi BPMN As-Is: proses bisnis pembayaran simpanan dengan pencatatan dan pembaruan saldo periodik.</documentation>
+  <collaboration id="Collab_AsIs_Simpanan">
+    <participant id="Participant_AsIs_Simpanan" name="Koperasi Simpan Pinjam - As-Is Simpanan" processRef="Proc_AsIs_Simpanan" />
   </collaboration>
-  <process id="Proc_1" isExecutable="false">
-    <laneSet id="LS_1">
-      <lane id="Lane_Anggota" name="Anggota">
-        <flowNodeRef>Start_1</flowNodeRef>
-        <flowNodeRef>Task_CekSaldo</flowNodeRef>
-        <flowNodeRef>GW_Sukarela</flowNodeRef>
-        <flowNodeRef>Task_Transfer</flowNodeRef>
-        <flowNodeRef>Task_LaporBukti</flowNodeRef>
-        <flowNodeRef>End_1</flowNodeRef>
-        <flowNodeRef>End_2</flowNodeRef>
+  <process id="Proc_AsIs_Simpanan" isExecutable="false">
+    <documentation>Revisi BPMN As-Is: proses bisnis pembayaran simpanan dengan pencatatan dan pembaruan saldo periodik.</documentation>
+    <laneSet id="LaneSet_Proc_AsIs_Simpanan">
+      <lane id="Lane_4_Pembukuan_Utama_Aplikasi_Ang" name="Pembukuan Utama &#38; Aplikasi Anggota">
+        <flowNodeRef>Start_JatuhTempo</flowNodeRef>
+        <flowNodeRef>Task_RekapBulanan</flowNodeRef>
+        <flowNodeRef>Task_UpdateAplikasi</flowNodeRef>
+        <flowNodeRef>Evt_AwalBulan</flowNodeRef>
       </lane>
-      <lane id="Lane_Kasir" name="Kasir">
-        <flowNodeRef>Task_InputOracle</flowNodeRef>
+      <lane id="Lane_3_Pengurus" name="Pengurus">
+        <flowNodeRef>Evt_Terlambat</flowNodeRef>
+        <flowNodeRef>Task_Tegur</flowNodeRef>
+        <flowNodeRef>End_Tunggakan</flowNodeRef>
       </lane>
-      <lane id="Lane_Payroll" name="Sistem Oracle / Payroll">
-        <flowNodeRef>Task_PotongWajib</flowNodeRef>
-        <flowNodeRef>Task_BatchUpdate</flowNodeRef>
+      <lane id="Lane_2_Kasir_Keuangan" name="Kasir / Keuangan">
+        <flowNodeRef>Task_SiapkanDaftar</flowNodeRef>
+        <flowNodeRef>GW_Tunggu</flowNodeRef>
+        <flowNodeRef>Evt_BuktiMasuk</flowNodeRef>
+        <flowNodeRef>Task_CatatManual</flowNodeRef>
+      </lane>
+      <lane id="Lane_1_Anggota" name="Anggota">
+        <flowNodeRef>Task_Bayar</flowNodeRef>
+        <flowNodeRef>End_Saldo</flowNodeRef>
       </lane>
     </laneSet>
-    <startEvent id="Start_1" name="Tanggal gajian bulanan"><outgoing>F1</outgoing></startEvent>
-    <serviceTask id="Task_PotongWajib" name="Potong simpanan wajib otomatis dari gaji (payroll)"><incoming>F1</incoming><outgoing>F2</outgoing></serviceTask>
-    <serviceTask id="Task_BatchUpdate" name="Update saldo di aplikasi Android sekali per bulan (batch)"><incoming>F2</incoming><outgoing>F3</outgoing></serviceTask>
-    <userTask id="Task_CekSaldo" name="Buka aplikasi Android untuk cek saldo (data mungkin sudah usang)"><incoming>F3</incoming><outgoing>F4</outgoing></userTask>
-    <exclusiveGateway id="GW_Sukarela" name="Ingin tambah simpanan sukarela?"><incoming>F4</incoming><outgoing>F_Tidak</outgoing><outgoing>F_Ya</outgoing></exclusiveGateway>
-    <endEvent id="End_1" name="Selesai (tanpa sukarela)"><incoming>F_Tidak</incoming></endEvent>
-    <userTask id="Task_Transfer" name="Transfer sukarela ke rekening koperasi (mandiri)"><incoming>F_Ya</incoming><outgoing>F5</outgoing></userTask>
-    <userTask id="Task_LaporBukti" name="Lapor bukti transfer ke Kasir secara langsung (tatap muka)"><incoming>F5</incoming><outgoing>F6</outgoing></userTask>
-    <userTask id="Task_InputOracle" name="Kasir input nominal sukarela ke Oracle manual"><incoming>F6</incoming><outgoing>F7</outgoing></userTask>
-    <serviceTask id="Task_BatchUpdate" name="Saldo sukarela diperbarui di aplikasi pada batch awal bulan berikutnya"><incoming>F7</incoming><outgoing>F8</outgoing></serviceTask>
-    <endEvent id="End_2" name="Sukarela tercatat (saldo update terlambat ~1 bulan)"><incoming>F8</incoming></endEvent>
-    <sequenceFlow id="F1" sourceRef="Start_1" targetRef="Task_PotongWajib"/>
-    <sequenceFlow id="F2" sourceRef="Task_PotongWajib" targetRef="Task_BatchUpdate"/>
-    <sequenceFlow id="F3" sourceRef="Task_BatchUpdate" targetRef="Task_CekSaldo"/>
-    <sequenceFlow id="F4" sourceRef="Task_CekSaldo" targetRef="GW_Sukarela"/>
-    <sequenceFlow id="F_Tidak" name="Tidak" sourceRef="GW_Sukarela" targetRef="End_1"/>
-    <sequenceFlow id="F_Ya" name="Ya" sourceRef="GW_Sukarela" targetRef="Task_Transfer"/>
-    <sequenceFlow id="F5" sourceRef="Task_Transfer" targetRef="Task_LaporBukti"/>
-    <sequenceFlow id="F6" sourceRef="Task_LaporBukti" targetRef="Task_InputOracle"/>
-    <sequenceFlow id="F7" sourceRef="Task_InputOracle" targetRef="Task_BatchUpdate"/>
-    <sequenceFlow id="F8" sourceRef="Task_BatchUpdate" targetRef="End_2"/>
+    <sequenceFlow id="F1" sourceRef="Start_JatuhTempo" targetRef="Task_SiapkanDaftar" />
+    <sequenceFlow id="F6" sourceRef="Task_CatatManual" targetRef="Task_RekapBulanan" />
+    <sequenceFlow id="F7" sourceRef="Task_RekapBulanan" targetRef="Evt_AwalBulan" />
+    <sequenceFlow id="F9" sourceRef="Task_UpdateAplikasi" targetRef="End_Saldo" />
+    <sequenceFlow id="F11" sourceRef="Task_Tegur" targetRef="End_Tunggakan" />
+    <manualTask id="Task_Bayar" name="Membayar simpanan wajib atau sukarela">
+      <incoming>F2</incoming>
+      <outgoing>F3</outgoing>
+    </manualTask>
+    <manualTask id="Task_SiapkanDaftar" name="Menyiapkan daftar kewajiban simpanan">
+      <incoming>F1</incoming>
+      <outgoing>F2</outgoing>
+    </manualTask>
+    <eventBasedGateway id="GW_Tunggu" name="Menunggu pembayaran atau batas waktu">
+      <incoming>F3</incoming>
+      <outgoing>F4a</outgoing>
+      <outgoing>F4b</outgoing>
+    </eventBasedGateway>
+    <sequenceFlow id="F2" sourceRef="Task_SiapkanDaftar" targetRef="Task_Bayar" />
+    <sequenceFlow id="F3" sourceRef="Task_Bayar" targetRef="GW_Tunggu" />
+    <sequenceFlow id="F4a" name="Bayar" sourceRef="GW_Tunggu" targetRef="Evt_BuktiMasuk" />
+    <sequenceFlow id="F4b" name="Lewat waktu" sourceRef="GW_Tunggu" targetRef="Evt_Terlambat" />
+    <sequenceFlow id="F5" sourceRef="Evt_BuktiMasuk" targetRef="Task_CatatManual" />
+    <sequenceFlow id="F10" sourceRef="Evt_Terlambat" targetRef="Task_Tegur" />
+    <startEvent id="Start_JatuhTempo" name="Jadwal simpanan bulanan tiba">
+      <outgoing>F1</outgoing>
+      <timerEventDefinition />
+    </startEvent>
+    <intermediateCatchEvent id="Evt_Terlambat" name="Batas pembayaran terlewati">
+      <incoming>F4b</incoming>
+      <outgoing>F10</outgoing>
+      <timerEventDefinition />
+    </intermediateCatchEvent>
+    <intermediateCatchEvent id="Evt_BuktiMasuk" name="Bukti pembayaran diterima">
+      <incoming>F4a</incoming>
+      <outgoing>F5</outgoing>
+      <messageEventDefinition />
+    </intermediateCatchEvent>
+    <manualTask id="Task_CatatManual" name="Mencatat setoran pada pembukuan utama">
+      <incoming>F5</incoming>
+      <outgoing>F6</outgoing>
+    </manualTask>
+    <manualTask id="Task_Tegur" name="Menghubungi anggota yang belum setor">
+      <incoming>F10</incoming>
+      <outgoing>F11</outgoing>
+    </manualTask>
+    <endEvent id="End_Tunggakan" name="Tunggakan ditindaklanjuti">
+      <incoming>F11</incoming>
+    </endEvent>
+    <manualTask id="Task_RekapBulanan" name="Merekap transaksi untuk pembaruan aplikasi">
+      <incoming>F6</incoming>
+      <outgoing>F7</outgoing>
+    </manualTask>
+    <manualTask id="Task_UpdateAplikasi" name="Memperbarui saldo anggota di aplikasi">
+      <incoming>F8</incoming>
+      <outgoing>F9</outgoing>
+    </manualTask>
+    <sequenceFlow id="F8" sourceRef="Evt_AwalBulan" targetRef="Task_UpdateAplikasi" />
+    <endEvent id="End_Saldo" name="Informasi saldo diperbarui">
+      <incoming>F9</incoming>
+    </endEvent>
+    <intermediateCatchEvent id="Evt_AwalBulan" name="Awal bulan berikutnya">
+      <incoming>F7</incoming>
+      <outgoing>F8</outgoing>
+      <timerEventDefinition />
+    </intermediateCatchEvent>
   </process>
-  <bpmndi:BPMNDiagram id="Diag_1">
-    <bpmndi:BPMNPlane id="Plane_1" bpmnElement="Collab_1">
-      <bpmndi:BPMNShape id="Pool_1_di" bpmnElement="Pool_1" isHorizontal="true"><dc:Bounds x="100" y="50" width="1150" height="430"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Lane_Anggota_di" bpmnElement="Lane_Anggota" isHorizontal="true"><dc:Bounds x="130" y="50" width="1120" height="150"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Lane_Kasir_di" bpmnElement="Lane_Kasir" isHorizontal="true"><dc:Bounds x="130" y="200" width="1120" height="120"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Lane_Payroll_di" bpmnElement="Lane_Payroll" isHorizontal="true"><dc:Bounds x="130" y="320" width="1120" height="160"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Start_1_di" bpmnElement="Start_1"><dc:Bounds x="162" y="383" width="36" height="36"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_PotongWajib_di" bpmnElement="Task_PotongWajib"><dc:Bounds x="240" y="363" width="130" height="75"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_BatchUpdate_di" bpmnElement="Task_BatchUpdate"><dc:Bounds x="420" y="363" width="130" height="75"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_CekSaldo_di" bpmnElement="Task_CekSaldo"><dc:Bounds x="580" y="75" width="130" height="75"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="GW_Sukarela_di" bpmnElement="GW_Sukarela" isMarkerVisible="true"><dc:Bounds x="760" y="88" width="50" height="50"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="End_1_di" bpmnElement="End_1"><dc:Bounds x="862" y="95" width="36" height="36"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_Transfer_di" bpmnElement="Task_Transfer"><dc:Bounds x="870" y="75" width="130" height="75"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_LaporBukti_di" bpmnElement="Task_LaporBukti"><dc:Bounds x="1040" y="75" width="130" height="75"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_InputOracle_di" bpmnElement="Task_InputOracle"><dc:Bounds x="1040" y="228" width="130" height="75"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="End_2_di" bpmnElement="End_2"><dc:Bounds x="862" y="383" width="36" height="36"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="F1_di" bpmnElement="F1"><di:waypoint x="198" y="401"/><di:waypoint x="240" y="401"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="F2_di" bpmnElement="F2"><di:waypoint x="370" y="401"/><di:waypoint x="420" y="401"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="F3_di" bpmnElement="F3"><di:waypoint x="485" y="363"/><di:waypoint x="645" y="150"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="F4_di" bpmnElement="F4"><di:waypoint x="710" y="113"/><di:waypoint x="760" y="113"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="F_Tidak_di" bpmnElement="F_Tidak"><di:waypoint x="760" y="113"/><di:waypoint x="862" y="113"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="F_Ya_di" bpmnElement="F_Ya"><di:waypoint x="810" y="113"/><di:waypoint x="870" y="113"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="F5_di" bpmnElement="F5"><di:waypoint x="1000" y="113"/><di:waypoint x="1040" y="113"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="F6_di" bpmnElement="F6"><di:waypoint x="1105" y="150"/><di:waypoint x="1105" y="228"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="F7_di" bpmnElement="F7"><di:waypoint x="1040" y="266"/><di:waypoint x="880" y="401"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="F8_di" bpmnElement="F8"><di:waypoint x="880" y="401"/><di:waypoint x="862" y="401"/></bpmndi:BPMNEdge>
+  <bpmndi:BPMNDiagram id="Diagram_Proc_AsIs_Simpanan">
+    <bpmndi:BPMNPlane id="Plane_Proc_AsIs_Simpanan" bpmnElement="Collab_AsIs_Simpanan">
+      <bpmndi:BPMNShape id="Participant_AsIs_Simpanan_di" bpmnElement="Participant_AsIs_Simpanan" isHorizontal="true">
+        <dc:Bounds x="160" y="60" width="1360" height="530" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_4_Pembukuan_Utama_Aplikasi_Ang_di" bpmnElement="Lane_4_Pembukuan_Utama_Aplikasi_Ang" isHorizontal="true">
+        <dc:Bounds x="196" y="460" width="1324" height="130" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_3_Pengurus_di" bpmnElement="Lane_3_Pengurus" isHorizontal="true">
+        <dc:Bounds x="196" y="330" width="1324" height="130" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_2_Kasir_Keuangan_di" bpmnElement="Lane_2_Kasir_Keuangan" isHorizontal="true">
+        <dc:Bounds x="196" y="190" width="1324" height="140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_1_Anggota_di" bpmnElement="Lane_1_Anggota" isHorizontal="true">
+        <dc:Bounds x="196" y="60" width="1324" height="130" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Bayar_di" bpmnElement="Task_Bayar">
+        <dc:Bounds x="260" y="89" width="165" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SiapkanDaftar_di" bpmnElement="Task_SiapkanDaftar">
+        <dc:Bounds x="260" y="224" width="165" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_Tunggu_di" bpmnElement="GW_Tunggu">
+        <dc:Bounds x="485" y="235" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="427" y="270" width="86" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_JatuhTempo_di" bpmnElement="Start_JatuhTempo">
+        <dc:Bounds x="325" y="507" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="301" y="543" width="85" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Evt_Terlambat_di" bpmnElement="Evt_Terlambat">
+        <dc:Bounds x="612" y="377" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="599" y="413" width="62" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Evt_BuktiMasuk_di" bpmnElement="Evt_BuktiMasuk">
+        <dc:Bounds x="612" y="242" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="586" y="278" width="89" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CatatManual_di" bpmnElement="Task_CatatManual">
+        <dc:Bounds x="747" y="224" width="165" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Tegur_di" bpmnElement="Task_Tegur">
+        <dc:Bounds x="747" y="359" width="165" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Tunggakan_di" bpmnElement="End_Tunggakan">
+        <dc:Bounds x="962" y="377" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="947" y="413" width="67" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RekapBulanan_di" bpmnElement="Task_RekapBulanan">
+        <dc:Bounds x="977" y="489" width="165" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_UpdateAplikasi_di" bpmnElement="Task_UpdateAplikasi">
+        <dc:Bounds x="1297" y="489" width="165" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Saldo_di" bpmnElement="End_Saldo">
+        <dc:Bounds x="1362" y="107" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1342" y="69.5" width="75" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Evt_AwalBulan_di" bpmnElement="Evt_AwalBulan">
+        <dc:Bounds x="1202" y="507" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1193" y="543" width="54" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="F1_di" bpmnElement="F1">
+        <di:waypoint x="343" y="507" />
+        <di:waypoint x="343" y="296" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F6_di" bpmnElement="F6">
+        <di:waypoint x="912" y="260" />
+        <di:waypoint x="1060" y="260" />
+        <di:waypoint x="1060" y="489" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F7_di" bpmnElement="F7">
+        <di:waypoint x="1142" y="525" />
+        <di:waypoint x="1202" y="525" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F9_di" bpmnElement="F9">
+        <di:waypoint x="1381" y="489" />
+        <di:waypoint x="1381" y="143" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F11_di" bpmnElement="F11">
+        <di:waypoint x="912" y="395" />
+        <di:waypoint x="962" y="395" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F2_di" bpmnElement="F2">
+        <di:waypoint x="343" y="224" />
+        <di:waypoint x="343" y="161" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F3_di" bpmnElement="F3">
+        <di:waypoint x="425" y="125" />
+        <di:waypoint x="510" y="125" />
+        <di:waypoint x="510" y="235" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F4a_di" bpmnElement="F4a">
+        <di:waypoint x="535" y="260" />
+        <di:waypoint x="612" y="260" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="545" y="235" width="29" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F4b_di" bpmnElement="F4b">
+        <di:waypoint x="510" y="285" />
+        <di:waypoint x="510" y="395" />
+        <di:waypoint x="612" y="395" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="529" y="373" width="62" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F5_di" bpmnElement="F5">
+        <di:waypoint x="648" y="260" />
+        <di:waypoint x="747" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F10_di" bpmnElement="F10">
+        <di:waypoint x="648" y="395" />
+        <di:waypoint x="747" y="395" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F8_di" bpmnElement="F8">
+        <di:waypoint x="1238" y="525" />
+        <di:waypoint x="1297" y="525" />
+      </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
 </definitions>

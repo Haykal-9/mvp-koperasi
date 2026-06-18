@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-06-04T00:00:00.000Z" agent="Codex" version="24.7.0" type="device">
+  <diagram id="smartcoop-erd" name="Entity Relationship Diagram">
+    <mxGraphModel dx="1700" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Entity Relationship Diagram SmartCoop MVP" style="text;html=1;strokeColor=none;fillColor=none;fontSize=24;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="560" y="20" width="560" height="40" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="user" value="USER&#xa;PK id&#xa;email&#xa;password&#xa;role&#xa;nama" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fontFamily=Consolas;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="60" y="90" width="230" height="145" as="geometry"/>
+        </mxCell>
+        <mxCell id="member" value="MEMBER&#xa;PK id&#xa;nomor_anggota&#xa;nama&#xa;nik&#xa;alamat&#xa;no_hp&#xa;status&#xa;simpanan_pokok&#xa;simpanan_wajib&#xa;simpanan_sukarela&#xa;tanggal_masuk" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fontFamily=Consolas;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="60" y="300" width="260" height="250" as="geometry"/>
+        </mxCell>
+        <mxCell id="simpanan" value="SIMPANAN_TRANSACTION&#xa;PK id&#xa;FK member_id (konseptual)&#xa;member_nama (MVP)&#xa;jenis&#xa;tipe&#xa;nominal&#xa;keterangan&#xa;created_at" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fontFamily=Consolas;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="420" y="305" width="290" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="loan" value="LOAN&#xa;PK id&#xa;FK member_id (konseptual)&#xa;member_nama (MVP)&#xa;nominal&#xa;tenor_bulan&#xa;bunga_persen&#xa;tujuan&#xa;sisa_pokok&#xa;status&#xa;tanggal_cair" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fontFamily=Consolas;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="420" y="600" width="290" height="235" as="geometry"/>
+        </mxCell>
+        <mxCell id="installment" value="INSTALLMENT&#xa;PK id (rancangan DB)&#xa;FK loan_id&#xa;bulan_ke&#xa;jatuh_tempo&#xa;nominal_pokok&#xa;nominal_bunga&#xa;total_bayar&#xa;status&#xa;tanggal_bayar" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fontFamily=Consolas;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="790" y="610" width="280" height="220" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="product" value="PRODUCT&#xa;PK id&#xa;nama&#xa;kategori&#xa;harga&#xa;stok&#xa;batas_stok_minimum&#xa;deskripsi&#xa;foto_url&#xa;penjual_nama&#xa;status" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fontFamily=Consolas;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="790" y="90" width="270" height="230" as="geometry"/>
+        </mxCell>
+        <mxCell id="stock_change" value="STOCK_CHANGE&#xa;PK id&#xa;FK product_id&#xa;product_nama&#xa;tipe&#xa;jumlah&#xa;stok_setelah&#xa;keterangan&#xa;created_at" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fontFamily=Consolas;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="100" width="280" height="205" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="order" value="ORDER&#xa;PK id&#xa;nomor_order&#xa;FK pembeli_id (konseptual)&#xa;pembeli_nama (MVP)&#xa;total_harga&#xa;fee_koperasi&#xa;status&#xa;metode_bayar&#xa;created_at&#xa;komplain_alasan&#xa;komplain_tanggal&#xa;komplain_bukti" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fontFamily=Consolas;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="790" y="370" width="310" height="275" as="geometry"/>
+        </mxCell>
+        <mxCell id="order_item" value="ORDER_ITEM&#xa;PK id (rancangan DB)&#xa;FK order_id&#xa;FK product_id&#xa;product_nama&#xa;jumlah&#xa;harga_satuan&#xa;subtotal" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fontFamily=Consolas;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="405" width="280" height="185" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="journal" value="JOURNAL_ENTRY&#xa;PK id&#xa;tanggal&#xa;keterangan&#xa;akun_debit&#xa;akun_kredit&#xa;nominal&#xa;tipe_transaksi&#xa;(SIMPANAN, POS, PINJAMAN, MANUAL)" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fontFamily=Consolas;fillColor=#eeeeee;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="790" y="880" width="360" height="185" as="geometry"/>
+        </mxCell>
+        <mxCell id="cart_note" value="CART_ITEM disimpan pada session cookie, bukan tabel permanen. Field: product_id, jumlah." style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="670" width="270" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="mvp_note" value="Catatan rancangan: kode MVP memakai relasi berbasis nama untuk beberapa data mock. Pada implementasi database produksi, relasi tersebut sebaiknya diganti menjadi foreign key id." style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="60" y="870" width="420" height="95" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="r_user_member" value="profil login" style="startArrow=ERone;endArrow=ERone;html=1;rounded=0;" edge="1" parent="1" source="user" target="member"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="r_member_simpanan" value="1 ke 0..*" style="startArrow=ERone;endArrow=ERmany;html=1;rounded=0;" edge="1" parent="1" source="member" target="simpanan"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="r_member_loan" value="1 ke 0..*" style="startArrow=ERone;endArrow=ERmany;html=1;rounded=0;" edge="1" parent="1" source="member" target="loan"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="r_loan_installment" value="1 ke 0..*" style="startArrow=ERone;endArrow=ERmany;html=1;rounded=0;" edge="1" parent="1" source="loan" target="installment"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="r_product_stock" value="1 ke 0..*" style="startArrow=ERone;endArrow=ERmany;html=1;rounded=0;" edge="1" parent="1" source="product" target="stock_change"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="r_member_product" value="penjual" style="startArrow=ERone;endArrow=ERmany;dashed=1;html=1;rounded=0;" edge="1" parent="1" source="member" target="product"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="r_member_order" value="pembeli" style="startArrow=ERone;endArrow=ERmany;dashed=1;html=1;rounded=0;" edge="1" parent="1" source="member" target="order"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="r_order_item" value="1 ke 1..*" style="startArrow=ERone;endArrow=ERmany;html=1;rounded=0;" edge="1" parent="1" source="order" target="order_item"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="r_product_order_item" value="1 ke 0..*" style="startArrow=ERone;endArrow=ERmany;html=1;rounded=0;" edge="1" parent="1" source="product" target="order_item"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="r_simpanan_journal" value="auto journal" style="endArrow=open;dashed=1;html=1;rounded=0;" edge="1" parent="1" source="simpanan" target="journal"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="r_order_journal" value="auto journal" style="endArrow=open;dashed=1;html=1;rounded=0;" edge="1" parent="1" source="order" target="journal"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="r_loan_journal" value="auto journal" style="endArrow=open;dashed=1;html=1;rounded=0;" edge="1" parent="1" source="loan" target="journal"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

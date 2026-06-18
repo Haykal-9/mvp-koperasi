@@ -1,148 +1,421 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
-             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
-             xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
-             xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
-             targetNamespace="http://koperasi.id/bpmn"
-             id="ToBe_Pinjaman">
-  <collaboration id="Collab_1">
-    <participant id="Pool_1" name="KSP Koperasi — Pinjaman (To-Be)" processRef="Proc_1"/>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_Proc_ToBe_Pengajuan" targetNamespace="http://smartcoop.id/bpmn/revisi" exporter="Camunda Modeler" exporterVersion="5.47.0">
+  <documentation>Revisi BPMN To-Be: proses pinjaman digital dari pengajuan, penilaian kelayakan, akad, pencairan, jadwal angsuran, sampai pencatatan jurnal.</documentation>
+  <collaboration id="Collab_ToBe_Pengajuan">
+    <participant id="Participant_ToBe_Pengajuan" name="SmartCoop - To-Be Pengajuan Pinjaman" processRef="Proc_ToBe_Pengajuan" />
   </collaboration>
-  <process id="Proc_1" isExecutable="false">
-    <laneSet id="LS_1">
-      <lane id="Lane_Anggota" name="Anggota (Flutter App)">
-        <flowNodeRef>Start_1</flowNodeRef>
-        <flowNodeRef>Task_IsiFormFlutter</flowNodeRef>
-        <flowNodeRef>Task_TerimaNotifTolakAwal</flowNodeRef>
-        <flowNodeRef>Task_TerimaNotifApprove</flowNodeRef>
-        <flowNodeRef>Task_SetujuDigital</flowNodeRef>
-        <flowNodeRef>Task_HadirTTDFisik</flowNodeRef>
-        <flowNodeRef>Task_PantauAngsuranRT</flowNodeRef>
-        <flowNodeRef>End_Cair</flowNodeRef>
-        <flowNodeRef>End_TolakAwal</flowNodeRef>
-        <flowNodeRef>End_TolakOwner</flowNodeRef>
-      </lane>
-      <lane id="Lane_GoBackend" name="Go Backend (Credit Scoring Otomatis)">
-        <flowNodeRef>Task_CreditScoring</flowNodeRef>
-        <flowNodeRef>GW_LolosSkor</flowNodeRef>
-        <flowNodeRef>Task_NotifTolakAwal</flowNodeRef>
-        <flowNodeRef>Task_BuatAkadDigital</flowNodeRef>
-        <flowNodeRef>Task_NotifApprove</flowNodeRef>
-        <flowNodeRef>Task_ProsesCairan</flowNodeRef>
+  <process id="Proc_ToBe_Pengajuan" isExecutable="false">
+    <documentation>Revisi BPMN To-Be: proses pinjaman digital dari pengajuan, penilaian kelayakan, akad, pencairan, jadwal angsuran, sampai pencatatan jurnal.</documentation>
+    <laneSet id="LaneSet_Proc_ToBe_Pengajuan">
+      <lane id="Lane_4_SmartCoop" name="SmartCoop">
+        <flowNodeRef>Task_Ringkasan</flowNodeRef>
+        <flowNodeRef>IG_Pemeriksaan</flowNodeRef>
+        <flowNodeRef>Task_CekKewajiban</flowNodeRef>
+        <flowNodeRef>IG_Gabung</flowNodeRef>
+        <flowNodeRef>Task_InfoTolak</flowNodeRef>
+        <flowNodeRef>Evt_TidakHadir</flowNodeRef>
+        <flowNodeRef>PG_PascaCair</flowNodeRef>
         <flowNodeRef>Task_JadwalAngsuran</flowNodeRef>
+        <flowNodeRef>PG_JoinPascaCair</flowNodeRef>
+        <flowNodeRef>Task_NotifAktif</flowNodeRef>
+        <flowNodeRef>Task_JadwalAkad</flowNodeRef>
+        <flowNodeRef>GW_Akad</flowNodeRef>
       </lane>
-      <lane id="Lane_Owner" name="Owner (Backoffice Vue.js)">
-        <flowNodeRef>Task_ReviewOwner</flowNodeRef>
-        <flowNodeRef>GW_ApproveOwner</flowNodeRef>
-        <flowNodeRef>Task_NotifTolakOwner</flowNodeRef>
+      <lane id="Lane_3_Pengurus" name="Pengurus">
+        <flowNodeRef>Task_Nilai</flowNodeRef>
+        <flowNodeRef>GW_Putus</flowNodeRef>
       </lane>
-      <lane id="Lane_Kasir" name="Kasir (Backoffice Vue.js)">
-        <flowNodeRef>Task_KoordinasiJadwal</flowNodeRef>
-        <flowNodeRef>Task_TombolCairkan</flowNodeRef>
+      <lane id="Lane_2_Kasir_Keuangan" name="Kasir / Keuangan">
+        <flowNodeRef>Task_Cairkan</flowNodeRef>
+        <flowNodeRef>Task_Jurnal</flowNodeRef>
       </lane>
-      <lane id="Lane_Payroll" name="Sistem Payroll">
-        <flowNodeRef>Task_AktifAngsuran</flowNodeRef>
+      <lane id="Lane_1_Anggota" name="Anggota">
+        <flowNodeRef>Start_Pinjaman</flowNodeRef>
+        <flowNodeRef>Task_AjukanDigital</flowNodeRef>
+        <flowNodeRef>Task_Lengkapi</flowNodeRef>
+        <flowNodeRef>End_Tolak</flowNodeRef>
+        <flowNodeRef>End_BatalAkad</flowNodeRef>
+        <flowNodeRef>Evt_AkadMasuk</flowNodeRef>
+        <flowNodeRef>End_Aktif</flowNodeRef>
       </lane>
     </laneSet>
-    <startEvent id="Start_1" name="Anggota butuh pinjaman"><outgoing>F1</outgoing></startEvent>
-    <userTask id="Task_IsiFormFlutter" name="Isi form pengajuan di Flutter app (nominal, tenor, tujuan)"><incoming>F1</incoming><outgoing>F2</outgoing></userTask>
-    <serviceTask id="Task_CreditScoring" name="Go Backend: credit scoring otomatis (cek simpanan, tunggakan, limit maks 3x simpanan)"><incoming>F2</incoming><outgoing>F3</outgoing></serviceTask>
-    <exclusiveGateway id="GW_LolosSkor" name="Lolos credit scoring?"><incoming>F3</incoming><outgoing>F_TolakAwal</outgoing><outgoing>F_Lolos</outgoing></exclusiveGateway>
-    <serviceTask id="Task_NotifTolakAwal" name="Kirim notifikasi penolakan otomatis + alasan ke Flutter app Anggota"><incoming>F_TolakAwal</incoming><outgoing>F4</outgoing></serviceTask>
-    <userTask id="Task_TerimaNotifTolakAwal" name="Anggota terima notifikasi penolakan awal di Flutter app"><incoming>F4</incoming><outgoing>F_EndTolakAwal</outgoing></userTask>
-    <endEvent id="End_TolakAwal" name="Pengajuan tidak lolos validasi sistem"><incoming>F_EndTolakAwal</incoming></endEvent>
-    <userTask id="Task_ReviewOwner" name="Owner review detail pengajuan di dasbor backoffice Vue.js"><incoming>F_Lolos</incoming><outgoing>F5</outgoing></userTask>
-    <exclusiveGateway id="GW_ApproveOwner" name="Owner approve?"><incoming>F5</incoming><outgoing>F_TolakOwner</outgoing><outgoing>F_Approve</outgoing></exclusiveGateway>
-    <serviceTask id="Task_NotifTolakOwner" name="Kirim notifikasi penolakan Owner + alasan ke Flutter app Anggota"><incoming>F_TolakOwner</incoming><outgoing>F_EndTolakOwner</outgoing></serviceTask>
-    <endEvent id="End_TolakOwner" name="Pengajuan ditolak Owner"><incoming>F_EndTolakOwner</incoming></endEvent>
-    <serviceTask id="Task_BuatAkadDigital" name="Go Backend generate dokumen akad kredit digital"><incoming>F_Approve</incoming><outgoing>F6</outgoing></serviceTask>
-    <serviceTask id="Task_NotifApprove" name="Kirim push notification FCM + akad digital ke Flutter app Anggota"><incoming>F6</incoming><outgoing>F7</outgoing></serviceTask>
-    <userTask id="Task_TerimaNotifApprove" name="Anggota terima notifikasi persetujuan di Flutter app"><incoming>F7</incoming><outgoing>F8</outgoing></userTask>
-    <userTask id="Task_SetujuDigital" name="Anggota baca akad digital dan klik Setuju / input PIN di Flutter app"><incoming>F8</incoming><outgoing>F9</outgoing></userTask>
-    <userTask id="Task_KoordinasiJadwal" name="Kasir koordinasikan jadwal TTD fisik via fitur pengumuman sistem"><incoming>F9</incoming><outgoing>F10</outgoing></userTask>
-    <userTask id="Task_HadirTTDFisik" name="Anggota hadir fisik TTD akad kredit (materai untuk pinjaman di atas Rp5 juta)"><incoming>F10</incoming><outgoing>F11</outgoing></userTask>
-    <userTask id="Task_TombolCairkan" name="Kasir klik tombol Cairkan di dasbor backoffice Vue.js"><incoming>F11</incoming><outgoing>F12</outgoing></userTask>
-    <serviceTask id="Task_ProsesCairan" name="Go Backend proses transfer dana ke rekening/dompet Anggota otomatis"><incoming>F12</incoming><outgoing>F13</outgoing></serviceTask>
-    <serviceTask id="Task_JadwalAngsuran" name="Go Backend buat jadwal angsuran bulanan otomatis"><incoming>F13</incoming><outgoing>F14</outgoing></serviceTask>
-    <serviceTask id="Task_AktifAngsuran" name="Aktifkan pemotongan angsuran via payroll (tenor maks 5 tahun)"><incoming>F14</incoming><outgoing>F15</outgoing></serviceTask>
-    <userTask id="Task_PantauAngsuranRT" name="Anggota pantau sisa angsuran di Flutter app (saldo real-time)"><incoming>F15</incoming><outgoing>F16</outgoing></userTask>
-    <endEvent id="End_Cair" name="Dana cair, angsuran terpantau real-time di Flutter app"><incoming>F16</incoming></endEvent>
-    <sequenceFlow id="F1" sourceRef="Start_1" targetRef="Task_IsiFormFlutter"/>
-    <sequenceFlow id="F2" sourceRef="Task_IsiFormFlutter" targetRef="Task_CreditScoring"/>
-    <sequenceFlow id="F3" sourceRef="Task_CreditScoring" targetRef="GW_LolosSkor"/>
-    <sequenceFlow id="F_TolakAwal" name="Tidak lolos" sourceRef="GW_LolosSkor" targetRef="Task_NotifTolakAwal"/>
-    <sequenceFlow id="F4" sourceRef="Task_NotifTolakAwal" targetRef="Task_TerimaNotifTolakAwal"/>
-    <sequenceFlow id="F_EndTolakAwal" sourceRef="Task_TerimaNotifTolakAwal" targetRef="End_TolakAwal"/>
-    <sequenceFlow id="F_Lolos" name="Lolos" sourceRef="GW_LolosSkor" targetRef="Task_ReviewOwner"/>
-    <sequenceFlow id="F5" sourceRef="Task_ReviewOwner" targetRef="GW_ApproveOwner"/>
-    <sequenceFlow id="F_TolakOwner" name="Tolak" sourceRef="GW_ApproveOwner" targetRef="Task_NotifTolakOwner"/>
-    <sequenceFlow id="F_EndTolakOwner" sourceRef="Task_NotifTolakOwner" targetRef="End_TolakOwner"/>
-    <sequenceFlow id="F_Approve" name="Approve" sourceRef="GW_ApproveOwner" targetRef="Task_BuatAkadDigital"/>
-    <sequenceFlow id="F6" sourceRef="Task_BuatAkadDigital" targetRef="Task_NotifApprove"/>
-    <sequenceFlow id="F7" sourceRef="Task_NotifApprove" targetRef="Task_TerimaNotifApprove"/>
-    <sequenceFlow id="F8" sourceRef="Task_TerimaNotifApprove" targetRef="Task_SetujuDigital"/>
-    <sequenceFlow id="F9" sourceRef="Task_SetujuDigital" targetRef="Task_KoordinasiJadwal"/>
-    <sequenceFlow id="F10" sourceRef="Task_KoordinasiJadwal" targetRef="Task_HadirTTDFisik"/>
-    <sequenceFlow id="F11" sourceRef="Task_HadirTTDFisik" targetRef="Task_TombolCairkan"/>
-    <sequenceFlow id="F12" sourceRef="Task_TombolCairkan" targetRef="Task_ProsesCairan"/>
-    <sequenceFlow id="F13" sourceRef="Task_ProsesCairan" targetRef="Task_JadwalAngsuran"/>
-    <sequenceFlow id="F14" sourceRef="Task_JadwalAngsuran" targetRef="Task_AktifAngsuran"/>
-    <sequenceFlow id="F15" sourceRef="Task_AktifAngsuran" targetRef="Task_PantauAngsuranRT"/>
-    <sequenceFlow id="F16" sourceRef="Task_PantauAngsuranRT" targetRef="End_Cair"/>
+    <startEvent id="Start_Pinjaman" name="Anggota membutuhkan pinjaman">
+      <outgoing>F1</outgoing>
+    </startEvent>
+    <userTask id="Task_AjukanDigital" name="Mengisi pengajuan pinjaman digital">
+      <incoming>F1</incoming>
+      <outgoing>F2</outgoing>
+    </userTask>
+    <businessRuleTask id="Task_Ringkasan" name="Menyiapkan simulasi angsuran dan ringkasan kelayakan">
+      <incoming>F2</incoming>
+      <outgoing>F3</outgoing>
+    </businessRuleTask>
+    <inclusiveGateway id="IG_Pemeriksaan" name="Pemeriksaan yang diperlukan">
+      <incoming>F3</incoming>
+      <outgoing>F4a</outgoing>
+      <outgoing>F4b</outgoing>
+      <outgoing>F4c</outgoing>
+    </inclusiveGateway>
+    <sequenceFlow id="F1" sourceRef="Start_Pinjaman" targetRef="Task_AjukanDigital" />
+    <sequenceFlow id="F2" sourceRef="Task_AjukanDigital" targetRef="Task_Ringkasan" />
+    <sequenceFlow id="F4a" name="Riwayat kewajiban" sourceRef="IG_Pemeriksaan" targetRef="Task_CekKewajiban" />
+    <sequenceFlow id="F5a" sourceRef="Task_CekKewajiban" targetRef="IG_Gabung" />
+    <sequenceFlow id="F4b" name="Keputusan pengurus" sourceRef="IG_Pemeriksaan" targetRef="Task_Nilai" />
+    <sequenceFlow id="F5b" sourceRef="Task_Nilai" targetRef="IG_Gabung" />
+    <sequenceFlow id="F5c" sourceRef="Task_Lengkapi" targetRef="IG_Gabung" />
+    <sequenceFlow id="F6" sourceRef="IG_Gabung" targetRef="GW_Putus" />
+    <sequenceFlow id="F7_Tidak" name="Tidak" sourceRef="GW_Putus" targetRef="Task_InfoTolak" />
+    <sequenceFlow id="F9_Ya" name="Ya" sourceRef="GW_Putus" targetRef="Task_JadwalAkad" />
+    <sequenceFlow id="F8" sourceRef="Task_InfoTolak" targetRef="End_Tolak" />
+    <sequenceFlow id="F10" sourceRef="Task_JadwalAkad" targetRef="GW_Akad" />
+    <sequenceFlow id="F11a" name="Akad diterima" sourceRef="GW_Akad" targetRef="Evt_AkadMasuk" />
+    <sequenceFlow id="F11b" name="Lewat jadwal" sourceRef="GW_Akad" targetRef="Evt_TidakHadir" />
+    <sequenceFlow id="F12" sourceRef="Evt_AkadMasuk" targetRef="Task_Cairkan" />
+    <sequenceFlow id="F17" sourceRef="Evt_TidakHadir" targetRef="End_BatalAkad" />
+    <sequenceFlow id="F13" sourceRef="Task_Cairkan" targetRef="PG_PascaCair" />
+    <sequenceFlow id="F14a" sourceRef="PG_PascaCair" targetRef="Task_JadwalAngsuran" />
+    <sequenceFlow id="F14b" sourceRef="PG_PascaCair" targetRef="Task_Jurnal" />
+    <sequenceFlow id="F15a" sourceRef="Task_JadwalAngsuran" targetRef="PG_JoinPascaCair" />
+    <sequenceFlow id="F15b" sourceRef="Task_Jurnal" targetRef="PG_JoinPascaCair" />
+    <sequenceFlow id="F15c" sourceRef="PG_JoinPascaCair" targetRef="Task_NotifAktif" />
+    <sequenceFlow id="F16" sourceRef="Task_NotifAktif" targetRef="End_Aktif" />
+    <sequenceFlow id="F3" sourceRef="Task_Ringkasan" targetRef="IG_Pemeriksaan" />
+    <sequenceFlow id="F4c" name="Dokumen tambahan" sourceRef="IG_Pemeriksaan" targetRef="Task_Lengkapi" />
+    <userTask id="Task_Lengkapi" name="Melengkapi dokumen pendukung bila diminta">
+      <incoming>F4c</incoming>
+      <outgoing>F5c</outgoing>
+    </userTask>
+    <userTask id="Task_Nilai" name="Menilai kemampuan bayar dan tujuan pinjaman">
+      <incoming>F4b</incoming>
+      <outgoing>F5b</outgoing>
+    </userTask>
+    <serviceTask id="Task_CekKewajiban" name="Mengecek simpanan, pinjaman aktif, dan tunggakan">
+      <incoming>F4a</incoming>
+      <outgoing>F5a</outgoing>
+    </serviceTask>
+    <inclusiveGateway id="IG_Gabung">
+      <incoming>F5a</incoming>
+      <incoming>F5b</incoming>
+      <incoming>F5c</incoming>
+      <outgoing>F6</outgoing>
+    </inclusiveGateway>
+    <exclusiveGateway id="GW_Putus" name="Pinjaman disetujui?">
+      <incoming>F6</incoming>
+      <outgoing>F7_Tidak</outgoing>
+      <outgoing>F9_Ya</outgoing>
+    </exclusiveGateway>
+    <sendTask id="Task_InfoTolak" name="Menyampaikan keputusan penolakan atau revisi">
+      <incoming>F7_Tidak</incoming>
+      <outgoing>F8</outgoing>
+    </sendTask>
+    <endEvent id="End_Tolak" name="Pengajuan tidak dilanjutkan">
+      <incoming>F8</incoming>
+    </endEvent>
+    <intermediateCatchEvent id="Evt_TidakHadir" name="Jadwal akad terlewati">
+      <incoming>F11b</incoming>
+      <outgoing>F17</outgoing>
+      <timerEventDefinition />
+    </intermediateCatchEvent>
+    <endEvent id="End_BatalAkad" name="Pengajuan menunggu jadwal ulang">
+      <incoming>F17</incoming>
+    </endEvent>
+    <intermediateCatchEvent id="Evt_AkadMasuk" name="Akad ditandatangani">
+      <incoming>F11a</incoming>
+      <outgoing>F12</outgoing>
+      <messageEventDefinition />
+    </intermediateCatchEvent>
+    <userTask id="Task_Cairkan" name="Mencairkan dana pinjaman">
+      <incoming>F12</incoming>
+      <outgoing>F13</outgoing>
+    </userTask>
+    <parallelGateway id="PG_PascaCair">
+      <incoming>F13</incoming>
+      <outgoing>F14a</outgoing>
+      <outgoing>F14b</outgoing>
+    </parallelGateway>
+    <serviceTask id="Task_JadwalAngsuran" name="Membuat jadwal angsuran">
+      <incoming>F14a</incoming>
+      <outgoing>F15a</outgoing>
+    </serviceTask>
+    <serviceTask id="Task_Jurnal" name="Mencatat jurnal pinjaman">
+      <incoming>F14b</incoming>
+      <outgoing>F15b</outgoing>
+    </serviceTask>
+    <parallelGateway id="PG_JoinPascaCair">
+      <incoming>F15a</incoming>
+      <incoming>F15b</incoming>
+      <outgoing>F15c</outgoing>
+    </parallelGateway>
+    <sendTask id="Task_NotifAktif" name="Mengirim bukti pencairan dan jadwal angsuran">
+      <incoming>F15c</incoming>
+      <outgoing>F16</outgoing>
+    </sendTask>
+    <endEvent id="End_Aktif" name="Pinjaman aktif">
+      <incoming>F16</incoming>
+    </endEvent>
+    <sendTask id="Task_JadwalAkad" name="Mengirim jadwal akad dan pencairan">
+      <incoming>F9_Ya</incoming>
+      <outgoing>F10</outgoing>
+    </sendTask>
+    <eventBasedGateway id="GW_Akad" name="Menunggu akad">
+      <incoming>F10</incoming>
+      <outgoing>F11a</outgoing>
+      <outgoing>F11b</outgoing>
+    </eventBasedGateway>
   </process>
-  <bpmndi:BPMNDiagram id="Diag_1">
-    <bpmndi:BPMNPlane id="Plane_1" bpmnElement="Collab_1">
-      <bpmndi:BPMNShape id="Pool_1_di" bpmnElement="Pool_1" isHorizontal="true"><dc:Bounds x="80" y="50" width="1600" height="680"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Lane_Anggota_di" bpmnElement="Lane_Anggota" isHorizontal="true"><dc:Bounds x="110" y="50" width="1570" height="140"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Lane_GoBackend_di" bpmnElement="Lane_GoBackend" isHorizontal="true"><dc:Bounds x="110" y="190" width="1570" height="140"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Lane_Owner_di" bpmnElement="Lane_Owner" isHorizontal="true"><dc:Bounds x="110" y="330" width="1570" height="130"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Lane_Kasir_di" bpmnElement="Lane_Kasir" isHorizontal="true"><dc:Bounds x="110" y="460" width="1570" height="110"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Lane_Payroll_di" bpmnElement="Lane_Payroll" isHorizontal="true"><dc:Bounds x="110" y="570" width="1570" height="160"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Start_1_di" bpmnElement="Start_1"><dc:Bounds x="142" y="102" width="36" height="36"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_IsiFormFlutter_di" bpmnElement="Task_IsiFormFlutter"><dc:Bounds x="220" y="82" width="120" height="75"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_CreditScoring_di" bpmnElement="Task_CreditScoring"><dc:Bounds x="380" y="215" width="120" height="75"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="GW_LolosSkor_di" bpmnElement="GW_LolosSkor" isMarkerVisible="true"><dc:Bounds x="550" y="228" width="50" height="50"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_NotifTolakAwal_di" bpmnElement="Task_NotifTolakAwal"><dc:Bounds x="640" y="215" width="120" height="75"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_TerimaNotifTolakAwal_di" bpmnElement="Task_TerimaNotifTolakAwal"><dc:Bounds x="640" y="82" width="120" height="75"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="End_TolakAwal_di" bpmnElement="End_TolakAwal"><dc:Bounds x="802" y="102" width="36" height="36"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_ReviewOwner_di" bpmnElement="Task_ReviewOwner"><dc:Bounds x="800" y="355" width="120" height="75"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="GW_ApproveOwner_di" bpmnElement="GW_ApproveOwner" isMarkerVisible="true"><dc:Bounds x="970" y="368" width="50" height="50"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_NotifTolakOwner_di" bpmnElement="Task_NotifTolakOwner"><dc:Bounds x="1060" y="215" width="120" height="75"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="End_TolakOwner_di" bpmnElement="End_TolakOwner"><dc:Bounds x="1222" y="235" width="36" height="36"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_BuatAkadDigital_di" bpmnElement="Task_BuatAkadDigital"><dc:Bounds x="1100" y="355" width="120" height="75"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_NotifApprove_di" bpmnElement="Task_NotifApprove"><dc:Bounds x="1260" y="215" width="120" height="75"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_TerimaNotifApprove_di" bpmnElement="Task_TerimaNotifApprove"><dc:Bounds x="1260" y="82" width="120" height="75"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_SetujuDigital_di" bpmnElement="Task_SetujuDigital"><dc:Bounds x="1420" y="82" width="120" height="75"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_KoordinasiJadwal_di" bpmnElement="Task_KoordinasiJadwal"><dc:Bounds x="1420" y="478" width="120" height="75"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_HadirTTDFisik_di" bpmnElement="Task_HadirTTDFisik"><dc:Bounds x="1560" y="82" width="120" height="75"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_TombolCairkan_di" bpmnElement="Task_TombolCairkan"><dc:Bounds x="1560" y="478" width="120" height="75"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_ProsesCairan_di" bpmnElement="Task_ProsesCairan"><dc:Bounds x="1560" y="215" width="120" height="75"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_JadwalAngsuran_di" bpmnElement="Task_JadwalAngsuran"><dc:Bounds x="1400" y="215" width="120" height="75"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_AktifAngsuran_di" bpmnElement="Task_AktifAngsuran"><dc:Bounds x="1400" y="600" width="120" height="75"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_PantauAngsuranRT_di" bpmnElement="Task_PantauAngsuranRT"><dc:Bounds x="1220" y="82" width="120" height="75"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="End_Cair_di" bpmnElement="End_Cair"><dc:Bounds x="1102" y="102" width="36" height="36"/></bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="F1_di" bpmnElement="F1"><di:waypoint x="178" y="120"/><di:waypoint x="220" y="120"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="F2_di" bpmnElement="F2"><di:waypoint x="280" y="157"/><di:waypoint x="440" y="215"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="F3_di" bpmnElement="F3"><di:waypoint x="500" y="253"/><di:waypoint x="550" y="253"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="F_TolakAwal_di" bpmnElement="F_TolakAwal"><di:waypoint x="600" y="253"/><di:waypoint x="640" y="253"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="F4_di" bpmnElement="F4"><di:waypoint x="700" y="215"/><di:waypoint x="700" y="157"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="F_EndTolakAwal_di" bpmnElement="F_EndTolakAwal"><di:waypoint x="760" y="120"/><di:waypoint x="802" y="120"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="F_Lolos_di" bpmnElement="F_Lolos"><di:waypoint x="575" y="278"/><di:waypoint x="860" y="355"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="F5_di" bpmnElement="F5"><di:waypoint x="920" y="393"/><di:waypoint x="970" y="393"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="F_TolakOwner_di" bpmnElement="F_TolakOwner"><di:waypoint x="1020" y="393"/><di:waypoint x="1120" y="290"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="F_EndTolakOwner_di" bpmnElement="F_EndTolakOwner"><di:waypoint x="1180" y="253"/><di:waypoint x="1222" y="253"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="F_Approve_di" bpmnElement="F_Approve"><di:waypoint x="1020" y="393"/><di:waypoint x="1160" y="430"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="F6_di" bpmnElement="F6"><di:waypoint x="1220" y="393"/><di:waypoint x="1320" y="290"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="F7_di" bpmnElement="F7"><di:waypoint x="1320" y="215"/><di:waypoint x="1320" y="157"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="F8_di" bpmnElement="F8"><di:waypoint x="1380" y="120"/><di:waypoint x="1420" y="120"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="F9_di" bpmnElement="F9"><di:waypoint x="1480" y="157"/><di:waypoint x="1480" y="478"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="F10_di" bpmnElement="F10"><di:waypoint x="1480" y="553"/><di:waypoint x="1620" y="157"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="F11_di" bpmnElement="F11"><di:waypoint x="1620" y="157"/><di:waypoint x="1620" y="478"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="F12_di" bpmnElement="F12"><di:waypoint x="1620" y="553"/><di:waypoint x="1620" y="290"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="F13_di" bpmnElement="F13"><di:waypoint x="1560" y="253"/><di:waypoint x="1520" y="253"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="F14_di" bpmnElement="F14"><di:waypoint x="1460" y="290"/><di:waypoint x="1460" y="600"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="F15_di" bpmnElement="F15"><di:waypoint x="1400" y="638"/><di:waypoint x="1280" y="157"/></bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="F16_di" bpmnElement="F16"><di:waypoint x="1220" y="120"/><di:waypoint x="1138" y="120"/></bpmndi:BPMNEdge>
+  <bpmndi:BPMNDiagram id="Diagram_Proc_ToBe_Pengajuan">
+    <bpmndi:BPMNPlane id="Plane_Proc_ToBe_Pengajuan" bpmnElement="Collab_ToBe_Pengajuan">
+      <bpmndi:BPMNShape id="Participant_ToBe_Pengajuan_di" bpmnElement="Participant_ToBe_Pengajuan" isHorizontal="true">
+        <dc:Bounds x="160" y="60" width="2420" height="660" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_4_SmartCoop_di" bpmnElement="Lane_4_SmartCoop" isHorizontal="true">
+        <dc:Bounds x="196" y="495" width="2384" height="225" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_3_Pengurus_di" bpmnElement="Lane_3_Pengurus" isHorizontal="true">
+        <dc:Bounds x="196" y="340" width="2384" height="155" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_2_Kasir_Keuangan_di" bpmnElement="Lane_2_Kasir_Keuangan" isHorizontal="true">
+        <dc:Bounds x="196" y="200" width="2384" height="140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_1_Anggota_di" bpmnElement="Lane_1_Anggota" isHorizontal="true">
+        <dc:Bounds x="196" y="60" width="2384" height="140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_Pinjaman_di" bpmnElement="Start_Pinjaman">
+        <dc:Bounds x="270" y="112" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="253" y="148" width="70" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AjukanDigital_di" bpmnElement="Task_AjukanDigital">
+        <dc:Bounds x="390" y="94" width="165" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Ringkasan_di" bpmnElement="Task_Ringkasan">
+        <dc:Bounds x="378" y="534" width="190" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IG_Pemeriksaan_di" bpmnElement="IG_Pemeriksaan">
+        <dc:Bounds x="655" y="545" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="593" y="523" width="78" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Lengkapi_di" bpmnElement="Task_Lengkapi">
+        <dc:Bounds x="587" y="94" width="185" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Nilai_di" bpmnElement="Task_Nilai">
+        <dc:Bounds x="817" y="374" width="185" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CekKewajiban_di" bpmnElement="Task_CekKewajiban">
+        <dc:Bounds x="817" y="604" width="185" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IG_Gabung_di" bpmnElement="IG_Gabung">
+        <dc:Bounds x="1111" y="545" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_Putus_di" bpmnElement="GW_Putus" isMarkerVisible="true">
+        <dc:Bounds x="1225" y="393" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1226" y="355.5" width="47" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_InfoTolak_di" bpmnElement="Task_InfoTolak">
+        <dc:Bounds x="1347" y="524" width="185" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Tolak_di" bpmnElement="End_Tolak">
+        <dc:Bounds x="1422" y="112" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1400" y="74.5" width="79" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Evt_TidakHadir_di" bpmnElement="Evt_TidakHadir">
+        <dc:Bounds x="1632" y="532" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1560" y="536.5" width="62" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_BatalAkad_di" bpmnElement="End_BatalAkad">
+        <dc:Bounds x="1632" y="112" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1606" y="62" width="87" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Evt_AkadMasuk_di" bpmnElement="Evt_AkadMasuk">
+        <dc:Bounds x="1752" y="112" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1733" y="74.5" width="73" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Cairkan_di" bpmnElement="Task_Cairkan">
+        <dc:Bounds x="1847" y="234" width="165" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PG_PascaCair_di" bpmnElement="PG_PascaCair">
+        <dc:Bounds x="1905" y="545" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_JadwalAngsuran_di" bpmnElement="Task_JadwalAngsuran">
+        <dc:Bounds x="1847" y="624" width="165" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Jurnal_di" bpmnElement="Task_Jurnal">
+        <dc:Bounds x="2057" y="234" width="165" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PG_JoinPascaCair_di" bpmnElement="PG_JoinPascaCair">
+        <dc:Bounds x="2235" y="585" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotifAktif_di" bpmnElement="Task_NotifAktif">
+        <dc:Bounds x="2335" y="574" width="190" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Aktif_di" bpmnElement="End_Aktif">
+        <dc:Bounds x="2412" y="102" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2395" y="78" width="70" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_JadwalAkad_di" bpmnElement="Task_JadwalAkad">
+        <dc:Bounds x="1347" y="624" width="185" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_Akad_di" bpmnElement="GW_Akad">
+        <dc:Bounds x="1625" y="635" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1610.5" y="695" width="79" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="F1_di" bpmnElement="F1">
+        <di:waypoint x="306" y="130" />
+        <di:waypoint x="390" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F2_di" bpmnElement="F2">
+        <di:waypoint x="473" y="166" />
+        <di:waypoint x="473" y="534" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F4a_di" bpmnElement="F4a">
+        <di:waypoint x="680" y="595" />
+        <di:waypoint x="680" y="640" />
+        <di:waypoint x="817" y="640" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="733" y="608" width="49" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F5a_di" bpmnElement="F5a">
+        <di:waypoint x="1002" y="640" />
+        <di:waypoint x="1136" y="640" />
+        <di:waypoint x="1136" y="595" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F4b_di" bpmnElement="F4b">
+        <di:waypoint x="705" y="570" />
+        <di:waypoint x="760" y="570" />
+        <di:waypoint x="760" y="410" />
+        <di:waypoint x="817" y="410" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="758" y="418" width="53" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F5b_di" bpmnElement="F5b">
+        <di:waypoint x="1002" y="410" />
+        <di:waypoint x="1040" y="410" />
+        <di:waypoint x="1040" y="570" />
+        <di:waypoint x="1111" y="570" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F5c_di" bpmnElement="F5c">
+        <di:waypoint x="772" y="130" />
+        <di:waypoint x="1136" y="130" />
+        <di:waypoint x="1136" y="545" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F6_di" bpmnElement="F6">
+        <di:waypoint x="1161" y="570" />
+        <di:waypoint x="1200" y="570" />
+        <di:waypoint x="1200" y="418" />
+        <di:waypoint x="1225" y="418" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F7_Tidak_di" bpmnElement="F7_Tidak">
+        <di:waypoint x="1275" y="418" />
+        <di:waypoint x="1300" y="418" />
+        <di:waypoint x="1300" y="560" />
+        <di:waypoint x="1347" y="560" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1306" y="545" width="27" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F9_Ya_di" bpmnElement="F9_Ya">
+        <di:waypoint x="1250" y="443" />
+        <di:waypoint x="1250" y="660" />
+        <di:waypoint x="1347" y="660" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1313" y="643" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F8_di" bpmnElement="F8">
+        <di:waypoint x="1440" y="524" />
+        <di:waypoint x="1440" y="148" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F10_di" bpmnElement="F10">
+        <di:waypoint x="1532" y="660" />
+        <di:waypoint x="1625" y="660" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F11a_di" bpmnElement="F11a">
+        <di:waypoint x="1675" y="660" />
+        <di:waypoint x="1770" y="660" />
+        <di:waypoint x="1770" y="148" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1689" y="668" width="68" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F11b_di" bpmnElement="F11b">
+        <di:waypoint x="1650" y="635" />
+        <di:waypoint x="1650" y="568" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1661" y="597" width="64" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F12_di" bpmnElement="F12">
+        <di:waypoint x="1788" y="130" />
+        <di:waypoint x="1810" y="130" />
+        <di:waypoint x="1810" y="270" />
+        <di:waypoint x="1847" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F17_di" bpmnElement="F17">
+        <di:waypoint x="1650" y="532" />
+        <di:waypoint x="1650" y="148" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F13_di" bpmnElement="F13">
+        <di:waypoint x="1930" y="306" />
+        <di:waypoint x="1930" y="545" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F14a_di" bpmnElement="F14a">
+        <di:waypoint x="1930" y="595" />
+        <di:waypoint x="1930" y="624" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F14b_di" bpmnElement="F14b">
+        <di:waypoint x="1955" y="570" />
+        <di:waypoint x="2140" y="570" />
+        <di:waypoint x="2140" y="306" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F15a_di" bpmnElement="F15a">
+        <di:waypoint x="2012" y="660" />
+        <di:waypoint x="2119" y="660" />
+        <di:waypoint x="2119" y="610" />
+        <di:waypoint x="2235" y="610" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F15b_di" bpmnElement="F15b">
+        <di:waypoint x="2222" y="270" />
+        <di:waypoint x="2260" y="270" />
+        <di:waypoint x="2260" y="585" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F15c_di" bpmnElement="F15c">
+        <di:waypoint x="2285" y="610" />
+        <di:waypoint x="2335" y="610" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F16_di" bpmnElement="F16">
+        <di:waypoint x="2431" y="574" />
+        <di:waypoint x="2431" y="138" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F3_di" bpmnElement="F3">
+        <di:waypoint x="568" y="570" />
+        <di:waypoint x="655" y="570" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F4c_di" bpmnElement="F4c">
+        <di:waypoint x="680" y="545" />
+        <di:waypoint x="680" y="166" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="685" y="246" width="49" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
 </definitions>

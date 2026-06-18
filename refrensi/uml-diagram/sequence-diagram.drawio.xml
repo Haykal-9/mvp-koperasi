@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-06-04T00:00:00.000Z" agent="Codex" version="24.7.0" type="device">
+  <diagram id="seq-login" name="Sequence - Login">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Sequence Diagram - Autentikasi Login" style="text;html=1;strokeColor=none;fillColor=none;fontSize=22;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="470" y="25" width="460" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="u" value="Pengguna" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1"><mxGeometry x="75" y="95" width="50" height="80" as="geometry"/></mxCell>
+        <mxCell id="b" value="Browser" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="260" y="95" width="130" height="50" as="geometry"/></mxCell>
+        <mxCell id="h" value="AuthHandler" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="500" y="95" width="140" height="50" as="geometry"/></mxCell>
+        <mxCell id="m" value="mock.Users" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1"><mxGeometry x="740" y="95" width="140" height="50" as="geometry"/></mxCell>
+        <mxCell id="s" value="Session Cookie" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#eeeeee;strokeColor=#666666;" vertex="1" parent="1"><mxGeometry x="975" y="95" width="150" height="50" as="geometry"/></mxCell>
+        <mxCell id="t" value="Template" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#eeeeee;strokeColor=#666666;" vertex="1" parent="1"><mxGeometry x="1210" y="95" width="130" height="50" as="geometry"/></mxCell>
+        <mxCell id="llu" value="" style="endArrow=none;dashed=1;html=1;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="100" y="180" as="sourcePoint"/><mxPoint x="100" y="800" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="llb" value="" style="endArrow=none;dashed=1;html=1;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="325" y="150" as="sourcePoint"/><mxPoint x="325" y="800" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="llh" value="" style="endArrow=none;dashed=1;html=1;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="570" y="150" as="sourcePoint"/><mxPoint x="570" y="800" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="llm" value="" style="endArrow=none;dashed=1;html=1;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="810" y="150" as="sourcePoint"/><mxPoint x="810" y="800" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="lls" value="" style="endArrow=none;dashed=1;html=1;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="1050" y="150" as="sourcePoint"/><mxPoint x="1050" y="800" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="llt" value="" style="endArrow=none;dashed=1;html=1;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="1275" y="150" as="sourcePoint"/><mxPoint x="1275" y="800" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="l1" value="1. buka /login" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="100" y="205" as="sourcePoint"/><mxPoint x="325" y="205" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="l2" value="2. GET /login" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="325" y="245" as="sourcePoint"/><mxPoint x="570" y="245" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="l3" value="3. render auth/login" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="570" y="285" as="sourcePoint"/><mxPoint x="1275" y="285" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="l4" value="4. input email dan password" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="100" y="340" as="sourcePoint"/><mxPoint x="325" y="340" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="l5" value="5. POST /login" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="325" y="380" as="sourcePoint"/><mxPoint x="570" y="380" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="l6" value="6. FindUserByEmail(email)" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="570" y="420" as="sourcePoint"/><mxPoint x="810" y="420" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="l7" value="7. user data / nil" style="endArrow=open;dashed=1;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="810" y="460" as="sourcePoint"/><mxPoint x="570" y="460" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="l8" value="8. validasi password" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="570" y="500" as="sourcePoint"/><mxPoint x="570" y="540" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="l9" value="9. Set user_id, email, nama, role" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="570" y="575" as="sourcePoint"/><mxPoint x="1050" y="575" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="l10" value="10. redirect /dashboard" style="endArrow=open;dashed=1;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="570" y="625" as="sourcePoint"/><mxPoint x="325" y="625" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="l11" value="11. AuthRequired membaca sesi" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="325" y="680" as="sourcePoint"/><mxPoint x="1050" y="680" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="l12" value="12. akses halaman terlindungi" style="endArrow=open;dashed=1;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="1050" y="725" as="sourcePoint"/><mxPoint x="325" y="725" as="targetPoint"/></mxGeometry></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="seq-member" name="Sequence - Pendaftaran Anggota">
+    <mxGraphModel dx="1450" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1450" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Sequence Diagram - Pendaftaran dan Approval Anggota" style="text;html=1;strokeColor=none;fillColor=none;fontSize=22;fontStyle=1" vertex="1" parent="1"><mxGeometry x="430" y="25" width="620" height="40" as="geometry"/></mxCell>
+        <mxCell id="a" value="Anggota / Kasir" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1"><mxGeometry x="80" y="95" width="50" height="80" as="geometry"/></mxCell>
+        <mxCell id="o" value="Owner" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1"><mxGeometry x="80" y="655" width="50" height="80" as="geometry"/></mxCell>
+        <mxCell id="b" value="Browser" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="280" y="95" width="130" height="50" as="geometry"/></mxCell>
+        <mxCell id="mh" value="MemberHandler" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="540" y="95" width="150" height="50" as="geometry"/></mxCell>
+        <mxCell id="mock" value="mock.Members" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1"><mxGeometry x="815" y="95" width="150" height="50" as="geometry"/></mxCell>
+        <mxCell id="flash" value="Flash Session" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#eeeeee;strokeColor=#666666;" vertex="1" parent="1"><mxGeometry x="1080" y="95" width="150" height="50" as="geometry"/></mxCell>
+        <mxCell id="lla" value="" style="endArrow=none;dashed=1;html=1;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="105" y="180" as="sourcePoint"/><mxPoint x="105" y="820" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="llb" value="" style="endArrow=none;dashed=1;html=1;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="345" y="150" as="sourcePoint"/><mxPoint x="345" y="820" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="llh" value="" style="endArrow=none;dashed=1;html=1;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="615" y="150" as="sourcePoint"/><mxPoint x="615" y="820" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="llm" value="" style="endArrow=none;dashed=1;html=1;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="890" y="150" as="sourcePoint"/><mxPoint x="890" y="820" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="llf" value="" style="endArrow=none;dashed=1;html=1;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="1155" y="150" as="sourcePoint"/><mxPoint x="1155" y="820" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="m1" value="1. buka form /members/register" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="105" y="205" as="sourcePoint"/><mxPoint x="345" y="205" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="m2" value="2. GET /members/register" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="345" y="245" as="sourcePoint"/><mxPoint x="615" y="245" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="m3" value="3. tampilkan form" style="endArrow=open;dashed=1;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="615" y="285" as="sourcePoint"/><mxPoint x="345" y="285" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="m4" value="4. submit nama, nik, alamat, no_hp" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="105" y="340" as="sourcePoint"/><mxPoint x="345" y="340" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="m5" value="5. POST /members/register" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="345" y="380" as="sourcePoint"/><mxPoint x="615" y="380" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="m6" value="6. validasi field dan panjang NIK" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="615" y="420" as="sourcePoint"/><mxPoint x="615" y="460" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="m7" value="7. append Member status PENDING" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="615" y="500" as="sourcePoint"/><mxPoint x="890" y="500" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="m8" value="8. SetFlash success" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="615" y="540" as="sourcePoint"/><mxPoint x="1155" y="540" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="m9" value="9. redirect /members?status=PENDING" style="endArrow=open;dashed=1;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="615" y="585" as="sourcePoint"/><mxPoint x="345" y="585" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="m10" value="10. Owner klik Approve / Reject" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="105" y="690" as="sourcePoint"/><mxPoint x="345" y="690" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="m11" value="11. POST /members/:id/approve" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="345" y="730" as="sourcePoint"/><mxPoint x="615" y="730" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="m12" value="12. FindMemberByID dan cek status PENDING" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="615" y="770" as="sourcePoint"/><mxPoint x="890" y="770" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="m13" value="13. status AKTIF, generate nomor anggota" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="890" y="810" as="sourcePoint"/><mxPoint x="615" y="810" as="targetPoint"/></mxGeometry></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="seq-checkout" name="Sequence - Checkout POS">
+    <mxGraphModel dx="1500" dy="950" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="950" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Sequence Diagram - Keranjang, Checkout, dan Jurnal POS" style="text;html=1;strokeColor=none;fillColor=none;fontSize=22;fontStyle=1" vertex="1" parent="1"><mxGeometry x="430" y="25" width="660" height="40" as="geometry"/></mxCell>
+        <mxCell id="a" value="Anggota" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1"><mxGeometry x="70" y="95" width="50" height="80" as="geometry"/></mxCell>
+        <mxCell id="b" value="Browser" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="235" y="95" width="120" height="50" as="geometry"/></mxCell>
+        <mxCell id="oh" value="OrderHandler" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1"><mxGeometry x="445" y="95" width="145" height="50" as="geometry"/></mxCell>
+        <mxCell id="cart" value="Cart Session" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#eeeeee;strokeColor=#666666;" vertex="1" parent="1"><mxGeometry x="675" y="95" width="140" height="50" as="geometry"/></mxCell>
+        <mxCell id="prod" value="mock.Products" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1"><mxGeometry x="905" y="95" width="145" height="50" as="geometry"/></mxCell>
+        <mxCell id="ord" value="mock.Orders" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1"><mxGeometry x="1130" y="95" width="145" height="50" as="geometry"/></mxCell>
+        <mxCell id="jour" value="Journal &amp; Stock Log" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#eeeeee;strokeColor=#666666;" vertex="1" parent="1"><mxGeometry x="1325" y="95" width="145" height="50" as="geometry"/></mxCell>
+        <mxCell id="lla" value="" style="endArrow=none;dashed=1;html=1;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="95" y="180" as="sourcePoint"/><mxPoint x="95" y="870" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="llb" value="" style="endArrow=none;dashed=1;html=1;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="295" y="150" as="sourcePoint"/><mxPoint x="295" y="870" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="llh" value="" style="endArrow=none;dashed=1;html=1;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="517" y="150" as="sourcePoint"/><mxPoint x="517" y="870" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="llc" value="" style="endArrow=none;dashed=1;html=1;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="745" y="150" as="sourcePoint"/><mxPoint x="745" y="870" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="llp" value="" style="endArrow=none;dashed=1;html=1;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="977" y="150" as="sourcePoint"/><mxPoint x="977" y="870" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="llo" value="" style="endArrow=none;dashed=1;html=1;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="1202" y="150" as="sourcePoint"/><mxPoint x="1202" y="870" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="llj" value="" style="endArrow=none;dashed=1;html=1;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="1398" y="150" as="sourcePoint"/><mxPoint x="1398" y="870" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="c1" value="1. pilih produk dan jumlah" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="95" y="205" as="sourcePoint"/><mxPoint x="295" y="205" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="c2" value="2. POST /cart/add" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="295" y="245" as="sourcePoint"/><mxPoint x="517" y="245" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="c3" value="3. FindProductByID dan validasi stok" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="517" y="285" as="sourcePoint"/><mxPoint x="977" y="285" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="c4" value="4. AddOrIncrement cart" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="517" y="330" as="sourcePoint"/><mxPoint x="745" y="330" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="c5" value="5. GET /checkout" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="295" y="390" as="sourcePoint"/><mxPoint x="517" y="390" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="c6" value="6. resolveCart dari session dan produk" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="517" y="430" as="sourcePoint"/><mxPoint x="977" y="430" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="c7" value="7. submit metode bayar" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="95" y="490" as="sourcePoint"/><mxPoint x="295" y="490" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="c8" value="8. POST /checkout" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="295" y="530" as="sourcePoint"/><mxPoint x="517" y="530" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="c9" value="9. re-validasi stok dan bentuk OrderItem" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="517" y="570" as="sourcePoint"/><mxPoint x="977" y="570" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="c10" value="10. AppendOrder(order)" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="517" y="625" as="sourcePoint"/><mxPoint x="1202" y="625" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="c11" value="11. GenerateNomorOrder dan simpan order DIBAYAR" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="1202" y="665" as="sourcePoint"/><mxPoint x="1202" y="705" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="c12" value="12. AppendStockChange KELUAR_PENJUALAN" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="1202" y="735" as="sourcePoint"/><mxPoint x="1398" y="735" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="c13" value="13. tambah JournalEntry POS" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="1202" y="775" as="sourcePoint"/><mxPoint x="1398" y="775" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="c14" value="14. ClearCart dan redirect ke detail order" style="endArrow=open;dashed=1;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="517" y="825" as="sourcePoint"/><mxPoint x="295" y="825" as="targetPoint"/></mxGeometry></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="seq-loan" name="Sequence - Pinjaman">
+    <mxGraphModel dx="1500" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Sequence Diagram - Pengajuan, Pencairan, dan Angsuran Pinjaman" style="text;html=1;strokeColor=none;fillColor=none;fontSize=22;fontStyle=1" vertex="1" parent="1"><mxGeometry x="390" y="25" width="760" height="40" as="geometry"/></mxCell>
+        <mxCell id="ag" value="Anggota" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1"><mxGeometry x="70" y="95" width="50" height="80" as="geometry"/></mxCell>
+        <mxCell id="ow" value="Owner / Kasir" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1"><mxGeometry x="70" y="645" width="50" height="80" as="geometry"/></mxCell>
+        <mxCell id="br" value="Browser" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="245" y="95" width="120" height="50" as="geometry"/></mxCell>
+        <mxCell id="lh" value="LoanHandler" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="470" y="95" width="145" height="50" as="geometry"/></mxCell>
+        <mxCell id="loans" value="mock.Loans" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1"><mxGeometry x="715" y="95" width="145" height="50" as="geometry"/></mxCell>
+        <mxCell id="inst" value="Installments" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="955" y="95" width="145" height="50" as="geometry"/></mxCell>
+        <mxCell id="jour" value="JournalEntry" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#eeeeee;strokeColor=#666666;" vertex="1" parent="1"><mxGeometry x="1195" y="95" width="145" height="50" as="geometry"/></mxCell>
+        <mxCell id="llag" value="" style="endArrow=none;dashed=1;html=1;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="95" y="180" as="sourcePoint"/><mxPoint x="95" y="930" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="llbr" value="" style="endArrow=none;dashed=1;html=1;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="305" y="150" as="sourcePoint"/><mxPoint x="305" y="930" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="llh" value="" style="endArrow=none;dashed=1;html=1;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="542" y="150" as="sourcePoint"/><mxPoint x="542" y="930" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="lll" value="" style="endArrow=none;dashed=1;html=1;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="787" y="150" as="sourcePoint"/><mxPoint x="787" y="930" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="lli" value="" style="endArrow=none;dashed=1;html=1;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="1027" y="150" as="sourcePoint"/><mxPoint x="1027" y="930" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="llj" value="" style="endArrow=none;dashed=1;html=1;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="1267" y="150" as="sourcePoint"/><mxPoint x="1267" y="930" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="p1" value="1. isi nominal, tenor, tujuan" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="95" y="205" as="sourcePoint"/><mxPoint x="305" y="205" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="p2" value="2. POST /loans/apply" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="305" y="245" as="sourcePoint"/><mxPoint x="542" y="245" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="p3" value="3. validasi nominal, tenor, tujuan" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="542" y="285" as="sourcePoint"/><mxPoint x="542" y="325" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="p4" value="4. AppendLoan status PENDING" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="542" y="365" as="sourcePoint"/><mxPoint x="787" y="365" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="p5" value="5. redirect ke detail pinjaman" style="endArrow=open;dashed=1;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="542" y="415" as="sourcePoint"/><mxPoint x="305" y="415" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="p6" value="6. Owner approve / reject" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="95" y="685" as="sourcePoint"/><mxPoint x="305" y="685" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="p7" value="7. POST /loans/:id/approve" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="305" y="725" as="sourcePoint"/><mxPoint x="542" y="725" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="p8" value="8. status DISETUJUI" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="542" y="765" as="sourcePoint"/><mxPoint x="787" y="765" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="p9" value="9. POST /loans/:id/disburse" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="305" y="810" as="sourcePoint"/><mxPoint x="542" y="810" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="p10" value="10. status AKTIF dan tanggal cair" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="542" y="850" as="sourcePoint"/><mxPoint x="787" y="850" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="p11" value="11. GenerateInstallments()" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="542" y="890" as="sourcePoint"/><mxPoint x="1027" y="890" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="p12" value="12. AppendJournalEntry pencairan" style="endArrow=open;html=1;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="542" y="925" as="sourcePoint"/><mxPoint x="1267" y="925" as="targetPoint"/></mxGeometry></mxCell>
+        <mxCell id="note" value="Pembayaran angsuran memakai POST /loans/:id/pay: handler mencari installment BELUM/OVERDUE pertama, menandai DIBAYAR, mengurangi sisa pokok, menulis jurnal Kas vs Piutang Anggota, lalu mengubah status menjadi LUNAS jika semua installment dibayar." style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1"><mxGeometry x="235" y="470" width="860" height="95" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
